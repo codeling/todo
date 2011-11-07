@@ -1,5 +1,24 @@
 // holds all items of the todo list
-var data;
+var itemList;
+/*
+function Todo(id, todo, due, priority, completed)
+{
+    this.id        = id;
+    this.todo      = todo;
+    this.due       = due;
+    this.priority  = priority;
+    this.completed = completed;
+}
+
+function TodoList()
+{
+    parseFromJSON(json);
+    
+}
+
+var itemList = new TodoList();
+*/
+
 // holds all items which were deleted, so that we
 // can restore them in case delete on server fails
 // var deleted;
@@ -7,7 +26,7 @@ var data;
 // communication with server (AJAX):
 function sendDelete(id)
 {
-    var stuff = new Object('todo');
+    var stuff = new Object();
     stuff.id = id;
     $.ajax({
         type: 'POST',
@@ -21,8 +40,11 @@ function sendDelete(id)
             }
             // TODO: instead of full-reload, just delete the one row!
             reload();
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            alert("textStatus: "+textStatus + "; errorThrown: "+errorThrown);
         }
-    });
+   });
 }
 
 function deleteItem(id)
@@ -38,7 +60,7 @@ function deleteItem(id)
 function toggleCompleted(id, completed)
 {
     showWorking();
-    var stuff = new Object('todo');
+    var stuff = new Object();
     stuff.id = id;
     stuff.completed = completed;
     $.ajax({
@@ -53,8 +75,74 @@ function toggleCompleted(id, completed)
             }
             // TODO: instead of full-reload, just toggle the one row!
             reload();
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            alert("textStatus: "+textStatus + "; errorThrown: "+errorThrown);
         }
     });
+}
+
+function html_entity_decode(str)
+{
+    var conversionElement = document.createElement('textarea');
+    conversionElement.innerHTML = str;
+    var returnValue = conversionElement.value;
+//    conversionElement.parentNode.removeChild(conversionElement);
+    return returnValue;
+}
+    
+
+function modifyItem(id)
+{
+    var item = null;
+    for (var i=0; i<itemList.length; ++i)
+    {
+        if (itemList[i].id == id) {
+            item = itemList[i]
+            break;
+        }
+    }
+    if (item == null)
+    {
+        alert('Konnte ToDo mit ID='+id+' nicht finden!');
+        return;
+    }
+    // set values:
+    
+    $('#modify_id').val(item.id);
+    $('#modify_todo').val(html_entity_decode(item.todo));
+    $('#modify_due').val(item.due);
+    $('#modify_priority').val(item.priority);
+    // set up store function:
+    $('#modify_save').click(function() {
+        // store... 
+        var stuff = new Object();
+        stuff.id = $('#modify_id').val();
+        stuff.todo = $('#modify_todo').val();
+        stuff.due  = $('#modify_due').val();
+        stuff.priority = $('#modify_priority').val();
+        $.ajax({
+            type: 'POST',
+            url: 'update.php',
+            data: stuff,
+            success: function(returnValue) {
+                if (isNaN(returnValue))
+                {
+                    alert('Fehler beim Updaten: '+returnValue);
+                    // TODO: handle that case (toggle back locally as well...?`)
+                }
+                // TODO: instead of full-reload, just toggle the one row!
+                reload();
+                // ... and if everything went fine, close dialog:
+                $('#modify_dialog').dialog('close');
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                alert("textStatus: "+textStatus + "; errorThrown: "+errorThrown);
+            }
+        });
+    });
+    // show dialog:
+    $('#modify_dialog').dialog({modal: true, minHeight: 250, minWidth: 550});
 }
 
 function addItem(lineNr, id, todo, due, priority, completed)
@@ -72,19 +160,24 @@ function addItem(lineNr, id, todo, due, priority, completed)
         toggleCompleted(id, (completed==0)?1:0);
     });
     $('#modify'+id).click(function() {
-        alert('Editing of item '+id+': Not implemented yet!');
+        modifyItem(id);
     });
     $('#delete'+id).click(function() {
         deleteItem(id);
     });
 }
 
-function updateTable(data)
+function updateTable()
 {
 //    $("#todoTable").append('<div class="line"><span class="todo">Todo</span><span class="due">Fällig</span><span class="delete"></span></div>');
-    for (var i=0; i<data.length; i++)
+    for (var i=0; i<itemList.length; i++)
     {
-        addItem(i, data[i].id, data[i].todo, data[i].due, data[i].priority, data[i].completed);
+        addItem(i,
+                itemList[i].id,
+                itemList[i].todo,
+                itemList[i].due,
+                itemList[i].priority,
+                itemList[i].completed);
     }
 }
 
@@ -105,15 +198,15 @@ function reload()
         async: false
     }).responseText;
     $('#todoTable').empty();
-    data = JSON.parse(jsontext);
-    updateTable(data);
+    itemList = JSON.parse(jsontext);
+    updateTable();
     setTimeout('hideWorking()', 1000);
 }
 
 function enter()
 {
     showWorking();
-    var stuff = new Object('todo');
+    var stuff = new Object();
     stuff.todo = $('#todo').val();
     stuff.due =  $('#due').val();
     stuff.priority = $('#priority').val();
@@ -132,17 +225,15 @@ function enter()
             }
             else
             {
-                // TODO: data.length not valid always!!!
-                addItem(data.length, parseInt(returnValue), stuff.todo, stuff.due, stuff.priority, 0);
+                // addItem(itemList.length, parseInt(returnValue), stuff.todo, stuff.due, stuff.priority, 0);
                 $('#todo').val('');
                 $('#due').val('');
                 $('#priority').val('');
             }
             // TODO: insert at correct position!
-            // reload();
+            reload();
         },
-        error: function(jqXHR, textStatus, errorThrown)
-        {
+        error: function(jqXHR, textStatus, errorThrown) {
             alert("textStatus: "+textStatus + "; errorThrown: "+errorThrown);
         }
     });
@@ -152,7 +243,7 @@ function refresh()
 {
     showWorking();
     reload();
-// TODO: make changes locally, never refresh
+// TODO: make changes locally, never refresh, change listener
 //    setTimeout('refresh()', 30000);
 }
 

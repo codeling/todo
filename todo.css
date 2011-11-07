@@ -6,6 +6,7 @@ body {
 h1 {
     font-size: 16pt;
     font-weight: bold;
+    margin-bottom: 5px;
 }
 h2 {
     font-size: 14pt;
@@ -80,4 +81,7 @@ input[type="image"]
     background-color:#FC5;
     float: right;
 }
-
+span.modify_desc {
+    display: inline-block;
+    width: 60px;
+}
