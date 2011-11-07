@@ -1,0 +1,83 @@
+body {
+    font-family:Tahoma,sans-serif;
+    background-color: #FFC;
+    font-size: 9pt;
+}
+h1 {
+    font-size: 16pt;
+    font-weight: bold;
+}
+h2 {
+    font-size: 14pt;
+    font-weight: bold;
+}
+div.line {
+    min-width: 610px;
+    padding: 0px;
+    margin: 0px;
+/*    height: 16px;*/
+}
+div.line_odd {
+    background-color: #FC5;
+}
+.line_input,
+.line_header {
+    border-bottom: 1px solid black;
+}
+.line_input span,
+.line_header span {
+    padding-top: 3px;
+    padding-bottom: 2px;
+}
+.line_input input[type="image"]
+{
+    padding-left: 20px;
+    vertical-align: middle;
+}
+.line_header {
+    background-color: #FC5;
+}
+input[type="text"]
+{
+    font-family:Tahoma,sans-serif;
+    font-size: 9pt;
+}
+input[type="image"]
+{
+    vertical-align: bottom;
+    height: 16px;
+}
+.line span {
+    padding-left: 0;
+    padding-right: 0;
+/*    border: 1px solid black;*/
+    vertical-align: middle;
+}
+.todo {
+    display:inline-block;
+    width: 65%;
+    text-align: left;
+    padding-left: 4px !important;
+}
+.todo_completed {
+    text-decoration: line-through;
+}
+.due {
+    display:inline-block;
+    width: 15%;
+    min-width: 125px;
+    text-align: left;
+}
+.priority
+{
+    display:inline-block;
+    width: 5%;
+    min-width: 30px;
+    text-align: center;
+}
+#working {
+    padding: 5px;
+    background-color:#FC5;
+    float: right;
+}
+
