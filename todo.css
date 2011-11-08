@@ -1,6 +1,6 @@
 body {
     font-family:Tahoma,sans-serif;
-    background-color: #FFC;
+    background-color: #FFD;
     font-size: 9pt;
 }
 h1 {
@@ -14,12 +14,9 @@ h2 {
 }
 div.line {
     min-width: 610px;
-    padding: 0px;
-    margin: 0px;
-/*    height: 16px;*/
 }
 div.line_odd {
-    background-color: #FC5;
+    background-color: #FE9;
 }
 .line_input,
 .line_header {
@@ -27,8 +24,8 @@ div.line_odd {
 }
 .line_input span,
 .line_header span {
-    padding-top: 3px;
-    padding-bottom: 2px;
+    padding-top: 3px !important;
+    padding-bottom: 2px !important;
 }
 .line_input input[type="image"]
 {
@@ -36,7 +33,7 @@ div.line_odd {
     vertical-align: middle;
 }
 .line_header {
-    background-color: #FC5;
+    background-color: #FE9;
 }
 input[type="text"]
 {
@@ -47,12 +44,6 @@ input[type="image"]
 {
     vertical-align: bottom;
     height: 16px;
-}
-.line span {
-    padding-left: 0;
-    padding-right: 0;
-/*    border: 1px solid black;*/
-    vertical-align: middle;
 }
 .todo {
     display:inline-block;
@@ -78,7 +69,7 @@ input[type="image"]
 }
 #working {
     padding: 5px;
-    background-color:#FC5;
+    background-color:#FE9;
     float: right;
 }
 span.modify_desc {
