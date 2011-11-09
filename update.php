@@ -18,8 +18,8 @@
             "SET description='$todo', ".
                 "dueDate=".((strcmp($due, '') == 0)?"NULL":"'$due'").", ".
                 "priority=$priority ".
-            "WHERE id=$id"
-    $returnVal = $db->query();
+            "WHERE id=$id";
+    $returnVal = $db->query($sql);
     if ($returnVal == FALSE) {
         echo $db->error;
     } else {

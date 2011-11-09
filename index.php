@@ -12,7 +12,8 @@
     <link rel="stylesheet" type="text/css" href="todo.css" />
  </head>
   <body>
-    <div id="status"></div>
+    <div id="status">&nbsp;</div>
+    <div id="log">Starte Log</div>
     <div id="working">Arbeite...</div>
     <h1>To Do</h1>
     <form method="POST" onsubmit="return false;" id="inputform">
@@ -41,6 +42,8 @@
         </div>
         <input type="image" src="Modify.png" name="modify_save" id="modify_save" value="Speichern" />
       </form>
+    </div>
+    <div id="log_dialog" style="display:none">
     </div>
   </body>
 </html>

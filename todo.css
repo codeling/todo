@@ -74,6 +74,14 @@ input[type="image"]
     background-color:#FE9;
     float: right;
 }
+#log {
+    font-size: 6pt;
+    float: right;
+    background-color:#FE9;
+    margin-top: -12px;
+    margin-left: 2px;
+    margin-right: 2px;
+}
 span.modify_desc {
     display: inline-block;
     width: 60px;
