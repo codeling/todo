@@ -131,10 +131,10 @@ function modifyItem(id)
                     alert('Fehler beim Updaten: '+returnValue);
                     // TODO: handle that case (toggle back locally as well...?`)
                 }
+                $('#modify_dialog').dialog('close');
                 // TODO: instead of full-reload, just toggle the one row!
                 reload();
                 // ... and if everything went fine, close dialog:
-                $('#modify_dialog').dialog('close');
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 alert("textStatus: "+textStatus + "; errorThrown: "+errorThrown);
@@ -145,11 +145,39 @@ function modifyItem(id)
     $('#modify_dialog').dialog({modal: true, minHeight: 250, minWidth: 550});
 }
 
+function fillStr(str, fillchar, count)
+{
+    var fillStr = '';
+    for (var i=0; i < (count - str.toString().length); ++i)
+    {
+        fillStr += fillchar;
+    }
+    return fillStr + str;
+}
+
+function formatDate(date)
+{
+    return ''+
+        date.getFullYear()               +'-'+
+        fillStr(date.getMonth(), '0', 2) +'-'+
+        fillStr(date.getDate() , '0', 2);
+}
+
+
 function addItem(lineNr, id, todo, due, priority, completed)
 {
+    var dueString = '-';
+    if (due != null) {
+        dueDate = new Date(due);
+        if (isNaN(dueDate.getFullYear())) {
+            dueString = 'invalid';
+        } else {
+            dueString = formatDate(dueDate);            // dueDate.toLocaleDateString(); //
+        }
+    }
     $('#todoTable').append('<div class="line'+((lineNr%2!=0)?' line_odd':'')+'">'+
         '<span class="todo'+((completed==1)?' todo_completed':'')+'">'+(lineNr+1)+'. '+todo+'</span>'+
-        '<span class="due">'+((due == null)?'-':due)+'</span>'+
+        '<span class="due">'+dueString+'</span>'+
         '<span class="priority">'+priority+'</span>'+
         '<span class="completed"><input type="checkbox" id="completed'+id+'" '+
             ((completed==1)?'checked="true" ':'')+'/></span>'+
@@ -169,6 +197,7 @@ function addItem(lineNr, id, todo, due, priority, completed)
 
 function updateTable()
 {
+    var open = 0;
 //    $("#todoTable").append('<div class="line"><span class="todo">Todo</span><span class="due">Fällig</span><span class="delete"></span></div>');
     for (var i=0; i<itemList.length; i++)
     {
@@ -178,7 +207,11 @@ function updateTable()
                 itemList[i].due,
                 itemList[i].priority,
                 itemList[i].completed);
+        if (itemList[i].completed == 0) {
+            open++;
+        }
     }
+    $('#status').html('Noch zu erledigen: '+open);
 }
 
 function hideWorking()
@@ -200,7 +233,7 @@ function reload()
     $('#todoTable').empty();
     itemList = JSON.parse(jsontext);
     updateTable();
-    setTimeout('hideWorking()', 1000);
+    hideWorking();
 }
 
 function enter()
@@ -218,10 +251,6 @@ function enter()
             if (isNaN(returnValue))
             {
                 alert('Fehler beim Einfügen: '+returnValue);
-            }
-            else if (returnValue == -1)
-            {
-                alert('Bitte alle Felder ausfüllen!');
             }
             else
             {
@@ -251,4 +280,22 @@ function stopSubmit()
 {
     return false;
 }
+
+$(document).ready(function(){
+    $("#due").datepicker({
+        showOn: 'both',
+        buttonImageOnly: true,
+        buttonImage: 'calendar.png',
+        dateFormat: 'yy-mm-dd',
+        showAnim: '' 
+    });
+    $("#modify_due").datepicker({
+        showOn: 'both',
+        buttonImageOnly: true,
+        buttonImage: 'calendar.png',
+        dateFormat: 'yy-mm-dd',
+        showAnim: '' 
+    });
+    refresh();
+});
 

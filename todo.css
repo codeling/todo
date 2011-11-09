@@ -67,8 +67,10 @@ input[type="image"]
     min-width: 30px;
     text-align: center;
 }
+#status,
 #working {
-    padding: 5px;
+    padding: 3px;
+    margin: 2px;
     background-color:#FE9;
     float: right;
 }

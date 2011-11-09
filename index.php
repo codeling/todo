@@ -11,7 +11,8 @@
     <script type="text/javascript" src="todo.js"></script>
     <link rel="stylesheet" type="text/css" href="todo.css" />
  </head>
-  <body onload="refresh()">
+  <body>
+    <div id="status"></div>
     <div id="working">Arbeite...</div>
     <h1>To Do</h1>
     <form method="POST" onsubmit="return false;" id="inputform">
