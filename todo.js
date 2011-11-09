@@ -24,7 +24,7 @@ var itemList = new TodoList();
 // var deleted;
 
 var logItems = new Array("Starte Log");
-const logLines = 4; 
+var logLines = 4; /* const, but IE doesn't support that */
 
 function updateLog(element, maxCount)
 {
@@ -41,10 +41,16 @@ function updateLog(element, maxCount)
     $(element).html(logOutput);
 }
 
+function hideLog()
+{
+    $('#log').css('display', 'none');
+}
+
 function log(logStr)
 {
     logItems.push(logStr);
     updateLog('#log', logLines);
+    $('#log').css('display', 'block');
 }
 
 
@@ -142,7 +148,7 @@ function modifyItem(id)
     
     $('#modify_id').val(item.id);
     $('#modify_todo').val(html_entity_decode(item.todo));
-    $('#modify_due').val(item.due);
+    $('#modify_due').val(formatDate(item.due));
     $('#modify_priority').val(item.priority);
     // set up store function:
     $('#modify_save').click(function() {
@@ -198,8 +204,29 @@ function fillStr(str, fillchar, count)
     return fillStr + str;
 }
 
-function formatDate(date)
+function parseDate(dateStr)
 {
+    var parts = dateStr.split(' ');
+    if (parts.length != 2)
+    {
+        return null;
+    }
+    var datePart = parts[0].split("-");   
+    var timePart = parts[1].split(":");
+    return new Date(datePart[0], datePart[1], datePart[2], timePart[0], timePart[1], timePart[2], 0);
+}
+ 
+
+function formatDate(dateStr)
+{
+    if (dateStr == null)
+    {
+        return '-';
+    }
+    date = parseDate(dateStr);
+    if (date == null || isNaN(date.getFullYear())) {
+        return 'invalid';
+    }
     return ''+
         date.getFullYear()               +'-'+
         fillStr(date.getMonth()+1, '0', 2) +'-'+
@@ -208,15 +235,7 @@ function formatDate(date)
 
 function addItem(lineNr, id, todo, due, priority, completed)
 {
-    var dueString = '-';
-    if (due != null) {
-        dueDate = new Date(due);
-        if (isNaN(dueDate.getFullYear())) {
-            dueString = 'invalid';
-        } else {
-            dueString = formatDate(dueDate);            // dueDate.toLocaleDateString(); //
-        }
-    }
+    var dueString = formatDate(due);
     $('#todoTable').append('<div class="line'+((lineNr%2!=0)?' line_odd':'')+'">'+
         '<span class="todo'+((completed==1)?' todo_completed':'')+'">'+(lineNr+1)+'. '+todo+'</span>'+
         '<span class="due">'+dueString+'</span>'+
@@ -329,18 +348,20 @@ $(document).ready(function(){
         buttonImageOnly: true,
         buttonImage: 'calendar.png',
         dateFormat: 'yy-mm-dd',
-        showAnim: '' 
+        showAnim: ''
     });
     $("#modify_due").datepicker({
         showOn: 'both',
         buttonImageOnly: true,
         buttonImage: 'calendar.png',
         dateFormat: 'yy-mm-dd',
-        showAnim: '' 
+        showAnim: ''
     });
     $("#log").click(function() {
         // fill log
         updateLog('#log_dialog', logItems.length);
+        $('#log_dialog').html($('#log_dialog').html()+
+                '<br /><a href="javascript:hideLog()">Log verbergen</a>');
         $('#log_dialog').dialog({
             modal: true,
             minHeight: 150,
