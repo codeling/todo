@@ -99,6 +99,7 @@ span.modify_desc {
     background-color: #F00;
     width: 40%;
     display: inline-block;
+    border-right: 1px solid black;
 }
 #progress_done {
     background-color: #0F0;
