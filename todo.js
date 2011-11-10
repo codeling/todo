@@ -259,6 +259,7 @@ function addItem(lineNr, id, todo, due, priority, completed)
 function updateTable()
 {
     var open = 0;
+    var done = 0;
 //    $("#todoTable").append('<div class="line"><span class="todo">Todo</span><span class="due">Fällig</span><span class="delete"></span></div>');
     for (var i=0; i<itemList.length; i++)
     {
@@ -270,9 +271,15 @@ function updateTable()
                 itemList[i].completed);
         if (itemList[i].completed == 0) {
             open++;
+        } else {
+            done++;
         }
     }
-    $('#status').html('Noch zu erledigen: '+open);
+    var count = done+open;
+    
+    $('#progress_todo').css('width', (75*open/count)+'%');
+    $('#progress_done').css('width', (75*done/count)+'%');
+    $('#progress_status').html('Erledigt: '+Math.round(100*done/count)+'% Offen: '+open);
 }
 
 function hideWorking()

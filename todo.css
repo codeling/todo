@@ -12,15 +12,24 @@ h2 {
     font-size: 14pt;
     font-weight: bold;
 }
+#progress,
+#todoTable,
 div.line {
-    min-width: 610px;
+    min-width: 570px;
 }
 div.line_odd {
     background-color: #FE9;
 }
-.line_input,
+#todoTable {
+    border: 1px solid black;
+}
 .line_header {
     border-bottom: 1px solid black;
+}
+.line_header,
+.line_input {
+    border-left: 1px solid black;
+    border-right: 1px solid black;
 }
 .line_input span,
 .line_header span {
@@ -47,7 +56,7 @@ input[type="image"]
 }
 .todo {
     display:inline-block;
-    width: 65%;
+    width: 67%;
     text-align: left;
     padding-left: 4px !important;
 }
@@ -56,18 +65,15 @@ input[type="image"]
 }
 .due {
     display:inline-block;
-    width: 15%;
-    min-width: 125px;
+    width: 100px;
     text-align: left;
 }
 .priority
 {
     display:inline-block;
-    width: 5%;
-    min-width: 30px;
+    width: 30px;
     text-align: center;
 }
-#status,
 #working {
     padding: 3px;
     margin: 2px;
@@ -85,4 +91,22 @@ input[type="image"]
 span.modify_desc {
     display: inline-block;
     width: 60px;
+}
+#progress {
+    border: 1px solid black;
+}
+#progress_todo {
+    background-color: #F00;
+    width: 40%;
+    display: inline-block;
+}
+#progress_done {
+    background-color: #0F0;
+    width: 40%;
+    display: inline-block;
+}
+#progress_status {
+    padding-left: 5px;
+    padding-right: 5px;
+    float: right;
 }
