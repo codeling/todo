@@ -229,7 +229,7 @@ function formatDate(dateStr)
     }
     return ''+
         date.getFullYear()               +'-'+
-        fillStr(date.getMonth()+1, '0', 2) +'-'+
+        fillStr(date.getMonth(), '0', 2) +'-'+
         fillStr(date.getDate() , '0', 2);
 }
 
@@ -242,7 +242,7 @@ function addItem(lineNr, id, todo, due, priority, completed)
         '<span class="priority">'+priority+'</span>'+
         '<span class="completed"><input type="checkbox" id="completed'+id+'" '+
             ((completed==1)?'checked="true" ':'')+'/></span>'+
-        '<span class="modify"><input type="image" value="Bearbeiten" id="modify'+id+'" src="Modify.png" /></span>'+
+        '<span class="modify"><input type="image" value="Bearbeiten" id="modify'+id+'" src="pencil.png" /></span>'+
         '<span class="delete"><input type="image" value="Löschen" id="delete'+id+'" src="Delete.png" /></span>'+
     '</div>');
     $('#completed'+id).click(function() {

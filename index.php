@@ -39,7 +39,7 @@
           <span class="modify_desc">Priorität</span>
           <input type="text" id="modify_priority" name="modify_priority" size="3" maxlength="4" />
         </div>
-        <input type="image" src="Modify.png" name="modify_save" id="modify_save" value="Speichern" />
+        <input type="image" src="pencil.png" name="modify_save" id="modify_save" value="Speichern" />
       </form>
     </div>
     <div id="log_dialog" style="display:none">

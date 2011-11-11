@@ -15,7 +15,7 @@ h2 {
 #progress,
 #todoTable,
 div.line {
-    min-width: 570px;
+    min-width: 600px;
 }
 div.line_odd {
     background-color: #FE9;
@@ -56,16 +56,19 @@ input[type="image"]
 }
 .todo {
     display:inline-block;
-    width: 67%;
+    width: 65%;
     text-align: left;
     padding-left: 4px !important;
+}
+.todo input[type="text"] {
+    width: 85%;
 }
 .todo_completed {
     text-decoration: line-through;
 }
 .due {
     display:inline-block;
-    width: 100px;
+    width: 120px;
     text-align: left;
 }
 .priority
