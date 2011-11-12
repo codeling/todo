@@ -186,7 +186,7 @@ function modifyItem(id)
     $('#modify_dialog').dialog({
         modal: true,
         minHeight: 150,
-        minWidth: 400,
+        minWidth: 600,
         title: 'ToDo Eintrag verändern',
         close: function(ev,ui) {
             log('Dialog geschlossen');
@@ -372,7 +372,7 @@ $(document).ready(function(){
         $('#log_dialog').dialog({
             modal: true,
             minHeight: 150,
-            minWidth: 400,
+            minWidth: 600,
             title: 'Log'
         });
     });
