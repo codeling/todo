@@ -213,10 +213,9 @@ function parseDate(dateStr)
     }
     var datePart = parts[0].split("-");   
     var timePart = parts[1].split(":");
-    return new Date(datePart[0], datePart[1], datePart[2], timePart[0], timePart[1], timePart[2], 0);
+    return new Date(datePart[0], datePart[1]-1, datePart[2], timePart[0], timePart[1], timePart[2], 0);
 }
  
-
 function formatDate(dateStr)
 {
     if (dateStr == null)
@@ -229,7 +228,7 @@ function formatDate(dateStr)
     }
     return ''+
         date.getFullYear()               +'-'+
-        fillStr(date.getMonth(), '0', 2) +'-'+
+        fillStr(date.getMonth()+1, '0', 2) +'-'+
         fillStr(date.getDate() , '0', 2);
 }
 
