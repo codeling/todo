@@ -36,8 +36,11 @@
           <span class="modify_desc">Fällig: </span>
           <input type="text" id="modify_due" name="modify_due" size="10" maxlength="20" />
         </div><div class="modify_line">
-          <span class="modify_desc">Priorität</span>
+          <span class="modify_desc">Priorität:</span>
           <input type="text" id="modify_priority" name="modify_priority" size="3" maxlength="4" />
+        </div><div class="modify_line">
+          <span class="modify_desc">Notizen:</span>
+          <textarea type="text" id="modify_notes" name="modify_notes" rows="10" cols="50"></textarea>
         </div>
         <input type="image" src="images/pencil.png" name="modify_save" id="modify_save" value="Speichern" />
       </form>

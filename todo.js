@@ -150,6 +150,7 @@ function modifyItem(id)
     $('#modify_todo').val(html_entity_decode(item.todo));
     $('#modify_due').val(formatDate(item.due));
     $('#modify_priority').val(item.priority);
+    $('#modify_notes').val(html_entity_decode(item.notes));
     // set up store function:
     $('#modify_save').click(function() {
         // store... 
@@ -158,6 +159,7 @@ function modifyItem(id)
         stuff.todo = $('#modify_todo').val();
         stuff.due  = $('#modify_due').val();
         stuff.priority = $('#modify_priority').val();
+        stuff.notes = $('#modify_notes').val();
         log('Speichere Veränderungen...');
         $.ajax({
             type: 'POST',
@@ -232,11 +234,11 @@ function formatDate(dateStr)
         fillStr(date.getDate() , '0', 2);
 }
 
-function addItem(lineNr, id, todo, due, priority, completed)
+function addItem(lineNr, id, todo, due, priority, completed, hasNote)
 {
     var dueString = formatDate(due);
     $('#todoTable').append('<div class="line'+((lineNr%2!=0)?' line_odd':'')+'">'+
-        '<span class="todo'+((completed==1)?' todo_completed':'')+'">'+(lineNr+1)+'. '+todo+'</span>'+
+        '<span class="todo'+((completed==1)?' todo_completed':'')+'">'+(lineNr+1)+'. '+todo+(hasNote?'<img src="images/note.png" />':'')+'</span>'+
         '<span class="due">'+dueString+'</span>'+
         '<span class="priority">'+priority+'</span>'+
         '<span class="completed"><input type="checkbox" id="completed'+id+'" '+
@@ -267,7 +269,8 @@ function updateTable()
                 itemList[i].todo,
                 itemList[i].due,
                 itemList[i].priority,
-                itemList[i].completed);
+                itemList[i].completed,
+                itemList[i].notes != null);
         if (itemList[i].completed == 0) {
             open++;
         } else {

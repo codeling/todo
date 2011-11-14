@@ -16,12 +16,13 @@
     else
     {
         $sql = "INSERT INTO todo ".
-                "(creationDate, description, dueDate, priority) ".
+                "(creationDate, description, dueDate, priority, notes) ".
             "VALUES ".
                 "(UTC_TIMESTAMP(), ".
                 "'$todo', ".
                 ((strcmp($due, '') == 0)?"NULL":"'$due'").", ".
-                "$priority)";
+                $priority.", ".
+                "NULL)";   // notes currently null
         if ($db->query($sql) == FALSE)
         {
             echo $db->error;
