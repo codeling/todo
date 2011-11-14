@@ -242,8 +242,8 @@ function addItem(lineNr, id, todo, due, priority, completed)
         '<span class="priority">'+priority+'</span>'+
         '<span class="completed"><input type="checkbox" id="completed'+id+'" '+
             ((completed==1)?'checked="true" ':'')+'/></span>'+
-        '<span class="modify"><input type="image" value="Bearbeiten" id="modify'+id+'" src="pencil.png" /></span>'+
-        '<span class="delete"><input type="image" value="Löschen" id="delete'+id+'" src="Delete.png" /></span>'+
+        '<span class="modify"><input type="image" value="Bearbeiten" id="modify'+id+'" src="images/pencil.png" /></span>'+
+        '<span class="delete"><input type="image" value="Löschen" id="delete'+id+'" src="images/Delete.png" /></span>'+
     '</div>');
     $('#completed'+id).click(function() {
         toggleCompleted(id, (completed==0)?1:0);
@@ -353,14 +353,14 @@ $(document).ready(function(){
     $("#due").datepicker({
         showOn: 'both',
         buttonImageOnly: true,
-        buttonImage: 'calendar.png',
+        buttonImage: 'images/calendar.png',
         dateFormat: 'yy-mm-dd',
         showAnim: ''
     });
     $("#modify_due").datepicker({
         showOn: 'both',
         buttonImageOnly: true,
-        buttonImage: 'calendar.png',
+        buttonImage: 'images/calendar.png',
         dateFormat: 'yy-mm-dd',
         showAnim: ''
     });
