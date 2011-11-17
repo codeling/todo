@@ -1,15 +1,16 @@
 // holds all items of the todo list
 var itemList;
-/*
-function Todo(id, todo, due, priority, completed)
+
+function Todo(id, todo, due, priority, completed, notes)
 {
     this.id        = id;
     this.todo      = todo;
     this.due       = due;
     this.priority  = priority;
     this.completed = completed;
+    this.notes     = notes;
 }
-
+/*
 function TodoList()
 {
     parseFromJSON(json);
@@ -54,12 +55,104 @@ function log(logStr)
 }
 
 
-// communication with server (AJAX):
+function ItemSort(item1, item2)
+{
+    var less = (item1.completed < item2.completed) ||
+        (item1.completed == item2.completed &&
+        parseInt(item1.priority) > parseInt(item2.priority)) ||
+        (item1.completed == item2.completed && item1.priority == item2.priority &&
+        item1.todo < item2.todo);
+    // log('item1: c='+item1.completed+', p='+item1.priority+'; item2: c='+item2.completed+', p='+item2.priority+'; less: '+less);
+    if (less) {
+        return -1;
+    } else if (item1.completed == item2.completed && item1.priority == item2.priority && item1.todo == item2.todo) {
+        return 0;
+    } else {
+        return 1;
+    }
+}
+
+
+function findItem(id)
+{
+    for (var i=0; i<itemList.length; ++i) {
+        if (itemList[i].id == id) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+
+function deleteLocally(id)
+{
+    var index = findItem(id);
+    if (index == -1)
+    {
+        alert('Eintrag nicht gefunden! Möglicherweise wurde er bereits gelöscht?')
+        return;
+    }
+    itemList.splice(index, 1);
+    renderTable();
+    updateProgress();
+//    TODO: just delete the one element from the list... but also update oddrow!
+//    $('#todo'+id).remove();
+
+}
+
+
+function modifyLocally(item)
+{
+    var index = findItem(item.id);
+    if (index == -1)
+    {
+        alert('Fehler: Eintrag nicht gefunden!');
+        return;
+    }
+    itemList[index].todo     = item.todo;
+    itemList[index].priority = item.priority;
+    itemList[index].due      = item.due;
+    itemList[index].notes    = item.notes;
+    itemList.sort(ItemSort);
+    renderTable();
+}
+
+
+function addLocally(newItem)
+{
+    var insertIdx = 0;
+    while(insertIdx<itemList.length && 
+        itemList[insertIdx].complete == 0 &&
+        itemList[insertIdx].priority > newItem.priority)
+    {
+        ++insertIdx;
+    }
+    itemList.splice(insertIdx, 0, newItem);
+    renderTable();
+    updateProgress();
+}
+
+
+function toggleLocally(item)
+{
+    var index = findItem(id);
+    if (index == -1)
+    {
+        alert('Fehler: Eintrag nicht gefunden!');
+        return;
+    }
+    itemList[index].completed = (itemList[index] == 0)? 1 : 0;
+    itemList.sort(ItemSort);
+    renderTable();
+    updateProgress();
+}
+
 function sendDelete(id)
 {
     log('Lösche Eintrag...');
     var stuff = new Object();
     stuff.id = id;
+    deleteLocally(id);
     $.ajax({
         type: 'POST',
         url: 'delete.php',
@@ -70,10 +163,9 @@ function sendDelete(id)
                 log('Fehler beim Löschen: '+returnValue);
                 alert('Fehler beim Löschen: '+returnValue);
                 // TODO: handle that case (undelete locally as well...?`)
+                reload();
             } else {
                 log('Erfolgreich gelöscht.');
-            // TODO: instead of full-reload, just delete the one row!
-                reload();
             }
         },
         error: function(jqXHR, textStatus, errorThrown) {
@@ -98,6 +190,7 @@ function toggleCompleted(id, completed)
     var stuff = new Object();
     stuff.id = id;
     stuff.completed = completed;
+    toggleLocally(stuff);
     $.ajax({
         type: 'POST',
         url: 'complete.php',
@@ -107,11 +200,9 @@ function toggleCompleted(id, completed)
             {
                 log('Fehler beim Updaten: '+returnValue);
                 alert('Fehler beim Updaten: '+returnValue);
-                // TODO: handle that case (toggle back locally as well...?`)
+                reload();
             } else {
                 log('Erfolgreich geändert!');
-                // TODO: instead of full-reload, just toggle the one row!
-                reload();
             }
         },
         error: function(jqXHR, textStatus, errorThrown) {
@@ -133,17 +224,12 @@ function html_entity_decode(str)
 function modifyItem(id)
 {
     log('Öffne Dialog zum Verändern des Eintrags...');
-    var item = null;
-    for (var i=0; i<itemList.length; ++i) {
-        if (itemList[i].id == id) {
-            item = itemList[i]
-            break;
-        }
-    }
-    if (item == null) {
+    var index = findItem(id);
+    if (index == -1) {
         alert('Konnte ToDo mit ID='+id+' nicht finden!');
         return;
     }
+    var item = itemList[index];
     // set values:
     
     $('#modify_id').val(item.id);
@@ -161,6 +247,7 @@ function modifyItem(id)
         stuff.priority = $('#modify_priority').val();
         stuff.notes = $('#modify_notes').val();
         log('Speichere Veränderungen...');
+        modifyLocally(stuff);
         $.ajax({
             type: 'POST',
             url: 'update.php',
@@ -169,14 +256,13 @@ function modifyItem(id)
                 if (isNaN(returnValue)) {
                     log('Fehler beim Updaten: '+returnValue);
                     alert('Fehler beim Updaten: '+returnValue);
-                    // TODO: handle that case (toggle back locally as well...?`)
+                    // TODO: handle that case (modify back locally as well...?`)
+                    // simple and sound alternative for the moment: reload from server
+                    reload();
                 } else {
                     // if everything went fine, close dialog:
                     log('Speichern erfolgreichen, schließe Dialog');
                     $('#modify_dialog').dialog('close');
-                
-                    // TODO: instead of full-reload, just toggle the one row!
-                    reload();
                 }
             },
             error: function(jqXHR, textStatus, errorThrown) {
@@ -209,12 +295,14 @@ function fillStr(str, fillchar, count)
 function parseDate(dateStr)
 {
     var parts = dateStr.split(' ');
-    if (parts.length != 2)
-    {
+    if (parts.length < 1 || parts.length > 2) {
         return null;
     }
-    var datePart = parts[0].split("-");   
-    var timePart = parts[1].split(":");
+    var datePart = parts[0].split("-");
+    var timePart = new Array(0, 0, 0);
+    if (parts.length > 1) {
+         timePart = parts[1].split(":");
+    }
     return new Date(datePart[0], datePart[1]-1, datePart[2], timePart[0], timePart[1], timePart[2], 0);
 }
  
@@ -234,10 +322,10 @@ function formatDate(dateStr)
         fillStr(date.getDate() , '0', 2);
 }
 
-function addItem(lineNr, id, todo, due, priority, completed, hasNote)
+function renderItem(lineNr, id, todo, due, priority, completed, hasNote)
 {
     var dueString = formatDate(due);
-    $('#todoTable').append('<div class="line'+((lineNr%2!=0)?' line_odd':'')+'">'+
+    $('#todoTable').append('<div class="line'+((lineNr%2!=0)?' line_odd':'')+'" id="todo'+id+'">'+
         '<span class="todo'+((completed==1)?' todo_completed':'')+'">'+(lineNr+1)+'. '+todo+(hasNote?'<img src="images/note.png" />':'')+'</span>'+
         '<span class="due">'+dueString+'</span>'+
         '<span class="priority">'+priority+'</span>'+
@@ -257,20 +345,27 @@ function addItem(lineNr, id, todo, due, priority, completed, hasNote)
     });
 }
 
-function updateTable()
+function renderTable()
 {
-    var open = 0;
-    var done = 0;
-//    $("#todoTable").append('<div class="line"><span class="todo">Todo</span><span class="due">Fällig</span><span class="delete"></span></div>');
+    $('#todoTable').empty();
     for (var i=0; i<itemList.length; i++)
     {
-        addItem(i,
+        renderItem(i,
                 itemList[i].id,
                 itemList[i].todo,
                 itemList[i].due,
                 itemList[i].priority,
                 itemList[i].completed,
                 itemList[i].notes != null);
+    }
+}
+
+function updateProgress()
+{
+    var open = 0;
+    var done = 0;
+    for (var i=0; i<itemList.length; i++)
+    {
         if (itemList[i].completed == 0) {
             open++;
         } else {
@@ -278,7 +373,6 @@ function updateTable()
         }
     }
     var count = done+open;
-    
     $('#progress_todo').css('width', (75*open/count)+'%');
     $('#progress_done').css('width', (75*done/count)+'%');
     $('#progress_status').html('Erledigt: '+Math.round(100*done/count)+'% Offen: '+open);
@@ -301,9 +395,10 @@ function reload()
         url: 'query.php',
         async: false
     }).responseText;
-    $('#todoTable').empty();
     itemList = JSON.parse(jsontext);
-    updateTable();
+    itemList.sort(ItemSort);
+    renderTable();
+    updateProgress();
     hideWorking();
     log("Laden beendet!");
 }
@@ -313,9 +408,13 @@ function enter()
     showWorking();
     log('Lege neuen Eintrag an...');
     var stuff = new Object();
+    stuff.id = -1;
     stuff.todo = $('#todo').val();
     stuff.due =  $('#due').val();
     stuff.priority = $('#priority').val();
+    stuff.notes = '';
+    stuff.completed = 0;
+    addLocally(stuff);
     $.ajax({
         type: 'POST',
         url: 'enter.php',
@@ -325,6 +424,7 @@ function enter()
             {
                 log('Fehler beim Einfügen: '+returnValue);
                 alert('Fehler beim Einfügen: '+returnValue);
+                reload();
             }
             else
             {
@@ -332,9 +432,24 @@ function enter()
                 $('#todo').val('');
                 $('#due').val('');
                 $('#priority').val('');
-                reload();
-                // TODO: use local cache!
-                // addItem(itemList.length, parseInt(returnValue), stuff.todo, stuff.due, stuff.priority, 0);
+                // update id in inserted object: todo: make safe against parallel edits!
+                var index = findItem(-1);
+                var id = parseInt(returnValue);
+                itemList[index].id = id;
+                // also update id in 
+                $('#todo-1').attr('id', 'todo'+id);
+                $('#completed-1').attr('id', 'completed'+id);
+                $('#modify-1').attr('id', 'modify'+id);
+                $('#delete-1').attr('id', 'delete'+id);
+                $('#completed'+id).click(function() {
+                    toggleCompleted(id, 1);
+                });
+                $('#modify'+id).click(function() {
+                    modifyItem(id);
+                });
+                $('#delete'+id).click(function() {
+                    deleteItem(id);
+                });
             }
         },
         error: function(jqXHR, textStatus, errorThrown) {
