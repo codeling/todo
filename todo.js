@@ -134,7 +134,7 @@ function addLocally(newItem)
 {
     var insertIdx = 0;
     while(insertIdx<itemList.length && 
-        itemList[insertIdx].complete == 0 &&
+        itemList[insertIdx].completed == 0 &&
         itemList[insertIdx].priority > newItem.priority)
     {
         ++insertIdx;
@@ -249,7 +249,6 @@ function modifyItem(id)
     }
     var item = itemList[index];
     // set values:
-    
     $('#modify_id').val(item.id);
     $('#modify_todo').val(html_entity_decode(item.todo));
     $('#modify_due').val(formatDate(item.due));
@@ -264,7 +263,6 @@ function modifyItem(id)
         stuff.due  = $('#modify_due').val();
         stuff.priority = $('#modify_priority').val();
         stuff.notes = $('#modify_notes').val().trim();
-        stuff.notes = (stuff.notes != '')? stuff.notes : null ;
         currentlyModified = stuff;
         log('Speichere Veränderungen...');
         $.ajax({
@@ -328,9 +326,9 @@ function parseDate(dateStr)
  
 function formatDate(dateStr)
 {
-    if (dateStr == null)
+    if (dateStr == null || dateStr == '')
     {
-        return '-';
+        return '';
     }
     date = parseDate(dateStr);
     if (date == null || isNaN(date.getFullYear())) {
@@ -376,7 +374,7 @@ function renderTable()
                 itemList[i].due,
                 itemList[i].priority,
                 itemList[i].completed,
-                itemList[i].notes != null);
+                itemList[i].notes != null && itemList[i].notes != '');
     }
 }
 
@@ -436,7 +434,7 @@ function enter()
     stuff.todo = $('#todo').val();
     stuff.due =  $('#due').val();
     stuff.priority = $('#priority').val();
-    stuff.notes = null;
+    stuff.notes = '';
     stuff.completed = 0;
     addLocally(stuff);
     $.ajax({
