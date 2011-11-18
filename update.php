@@ -14,13 +14,16 @@
         die;
     }
     $priority = (int)$_REQUEST['priority'];
-    $notes    = $db->real_escape_string(htmlentities($_REQUEST['notes'], ENT_QUOTES, "UTF-8"));
+    $notes    = (strcmp($_REQUEST['notes'], 'null')==0) ? "NULL" :
+        "'".$db->real_escape_string(htmlentities($_REQUEST['notes'], ENT_QUOTES, "UTF-8"))."'";
+    // ech ("isNull: ".((strcmp($_REQUEST['notes'], 'null')==0)?"true":"false")." notes=".$_REQUEST['notes']);
     $sql = "UPDATE todo ".
             "SET description='$todo', ".
                 "dueDate=".((strcmp($due, '') == 0)?"NULL":"'$due'").", ".
                 "priority=$priority, ".
-                "notes='$notes' ".
+                "notes=$notes ".
             "WHERE id=$id";
+//    echo $sql;
     $returnVal = $db->query($sql);
     if ($returnVal == FALSE) {
         echo $db->error;

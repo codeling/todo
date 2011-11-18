@@ -1,6 +1,8 @@
 // holds all items of the todo list
 var itemList;
 
+var currentlyModified = null;
+
 function Todo(id, todo, due, priority, completed, notes)
 {
     this.id        = id;
@@ -92,12 +94,22 @@ function deleteLocally(id)
         alert('Eintrag nicht gefunden! Möglicherweise wurde er bereits gelöscht?')
         return;
     }
+    currentlyModified = itemList[index];
     itemList.splice(index, 1);
     renderTable();
     updateProgress();
-//    TODO: just delete the one element from the list... but also update oddrow!
+//    TODO: just delete the one element from the list... 
+//    PROBLEM: we also have to update oddrow then!
 //    $('#todo'+id).remove();
+}
 
+
+function undeleteLocally()
+{
+    if (currentlyModified == null) {
+        alert('Can\'t undelete item!');
+    }
+    addLocally(currentlyModified);
 }
 
 
@@ -135,13 +147,13 @@ function addLocally(newItem)
 
 function toggleLocally(item)
 {
-    var index = findItem(id);
+    var index = findItem(item.id);
     if (index == -1)
     {
         alert('Fehler: Eintrag nicht gefunden!');
         return;
     }
-    itemList[index].completed = (itemList[index] == 0)? 1 : 0;
+    itemList[index].completed = (itemList[index].completed == 0)? 1 : 0;
     itemList.sort(ItemSort);
     renderTable();
     updateProgress();
@@ -162,11 +174,11 @@ function sendDelete(id)
             {
                 log('Fehler beim Löschen: '+returnValue);
                 alert('Fehler beim Löschen: '+returnValue);
-                // TODO: handle that case (undelete locally as well...?`)
-                reload();
+                undeleteLocally();
             } else {
                 log('Erfolgreich gelöscht.');
             }
+            currentlyModified = null;
         },
         error: function(jqXHR, textStatus, errorThrown) {
             alert("textStatus: "+textStatus + "; errorThrown: "+errorThrown);
@@ -191,6 +203,7 @@ function toggleCompleted(id, completed)
     stuff.id = id;
     stuff.completed = completed;
     toggleLocally(stuff);
+    currentlyModified = stuff;
     $.ajax({
         type: 'POST',
         url: 'complete.php',
@@ -200,10 +213,15 @@ function toggleCompleted(id, completed)
             {
                 log('Fehler beim Updaten: '+returnValue);
                 alert('Fehler beim Updaten: '+returnValue);
-                reload();
+                if (currentlyModified == null) {
+                    alert('Kann das zu verändernde Objekt auch lokal nicht mehr finden.');
+                } else {
+                    toggleLocally(currentlyModified);
+                }
             } else {
                 log('Erfolgreich geändert!');
             }
+            currentlyModified = null;
         },
         error: function(jqXHR, textStatus, errorThrown) {
             alert("textStatus: "+textStatus + "; errorThrown: "+errorThrown);
@@ -245,9 +263,10 @@ function modifyItem(id)
         stuff.todo = $('#modify_todo').val();
         stuff.due  = $('#modify_due').val();
         stuff.priority = $('#modify_priority').val();
-        stuff.notes = $('#modify_notes').val();
+        stuff.notes = $('#modify_notes').val().trim();
+        stuff.notes = (stuff.notes != '')? stuff.notes : null ;
+        currentlyModified = stuff;
         log('Speichere Veränderungen...');
-        modifyLocally(stuff);
         $.ajax({
             type: 'POST',
             url: 'update.php',
@@ -256,13 +275,14 @@ function modifyItem(id)
                 if (isNaN(returnValue)) {
                     log('Fehler beim Updaten: '+returnValue);
                     alert('Fehler beim Updaten: '+returnValue);
-                    // TODO: handle that case (modify back locally as well...?`)
-                    // simple and sound alternative for the moment: reload from server
-                    reload();
+                // just keep dialog open...then changed values aren't lost
                 } else {
                     // if everything went fine, close dialog:
                     log('Speichern erfolgreichen, schließe Dialog');
                     $('#modify_dialog').dialog('close');
+                    // only set locally now, else it could be confusing
+                    modifyLocally(currentlyModified);
+                    currentlyModified = null;
                 }
             },
             error: function(jqXHR, textStatus, errorThrown) {
@@ -395,7 +415,11 @@ function reload()
         url: 'query.php',
         async: false
     }).responseText;
-    itemList = JSON.parse(jsontext);
+    try {
+        itemList = JSON.parse(jsontext);
+    } catch (e) {
+        alert('Server lieferte ungültige Daten "'+jsontext+'"; Fehlermeldung des JSON-Parsers: '+e);
+    }
     itemList.sort(ItemSort);
     renderTable();
     updateProgress();
@@ -412,7 +436,7 @@ function enter()
     stuff.todo = $('#todo').val();
     stuff.due =  $('#due').val();
     stuff.priority = $('#priority').val();
-    stuff.notes = '';
+    stuff.notes = null;
     stuff.completed = 0;
     addLocally(stuff);
     $.ajax({
@@ -424,7 +448,9 @@ function enter()
             {
                 log('Fehler beim Einfügen: '+returnValue);
                 alert('Fehler beim Einfügen: '+returnValue);
-                reload();
+                // remove the item from local list; the  data of it
+                // will still remain in the edit fields anyway!
+                deleteLocally(-1);
             }
             else
             {
@@ -432,7 +458,8 @@ function enter()
                 $('#todo').val('');
                 $('#due').val('');
                 $('#priority').val('');
-                // update id in inserted object: todo: make safe against parallel edits!
+                // update id in inserted object:
+                // TODO: make safe against parallel edits!
                 var index = findItem(-1);
                 var id = parseInt(returnValue);
                 itemList[index].id = id;
@@ -462,7 +489,8 @@ function refresh()
 {
     showWorking();
     reload();
-// TODO: make changes locally, never refresh, change listener
+// TODO: change listener, or if that proves impossible,
+// refresh every 5-10 minues
 //    setTimeout('refresh()', 30000);
 }
 
