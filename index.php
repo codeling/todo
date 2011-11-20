@@ -11,7 +11,8 @@
     <link rel="stylesheet" type="text/css" href="todo.css" />
  </head>
   <body>
-    <div id="log">Starte Log</div>
+    <div id="smallLog">Starte Log</div>
+    <div id="logLink"><a href="javascript:toggleLog()">Log anzeigen</a></div>
     <div id="working">Arbeite...</div>
     <h1>To Do</h1>
     <div id="progress"><span id="progress_done">&nbsp;</span><span id="progress_todo">&nbsp;</span><span id="progress_status">Erledigt: 0% Offen: 0</span></div>

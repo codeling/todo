@@ -2,9 +2,12 @@
 var itemList;
 
 var currentlyModified = null;
+var logItems = new Array("Starte Log");
+var logLines = 3; /* const, but IE doesn't support that keyword */
+var logVisible = true;
 
-function Todo(id, todo, due, priority, completed, notes)
-{
+
+function Todo(id, todo, due, priority, completed, notes) {
     this.id        = id;
     this.todo      = todo;
     this.due       = due;
@@ -12,30 +15,13 @@ function Todo(id, todo, due, priority, completed, notes)
     this.completed = completed;
     this.notes     = notes;
 }
-/*
-function TodoList()
-{
-    parseFromJSON(json);
-    
-}
 
-var itemList = new TodoList();
-*/
 
-// holds all items which were deleted, so that we
-// can restore them in case delete on server fails
-// var deleted;
-
-var logItems = new Array("Starte Log");
-var logLines = 4; /* const, but IE doesn't support that */
-
-function updateLog(element, maxCount)
-{
+function updateLog(element, maxCount) {
     var logOutput = '';
     var start = Math.max(0, logItems.length-maxCount);
     var end   = Math.min(start+maxCount, logItems.length);
-    for (var i=start; i<end; ++i)
-    {
+    for (var i=start; i<end; ++i) {
         logOutput += '' + i + ': ' + logItems[i];
         if (i<end-1) {
             logOutput += '<br />';
@@ -44,21 +30,22 @@ function updateLog(element, maxCount)
     $(element).html(logOutput);
 }
 
-function hideLog()
-{
-    $('#log').css('display', 'none');
+
+function toggleLog() {
+    $('#smallLog').css('display', (logVisible)? 'none': 'block');
+    $('#logLink').css('display', (logVisible)? 'block': 'none');
+    logVisible = !logVisible;
 }
 
-function log(logStr)
-{
+
+function log(logStr) {
     logItems.push(logStr);
-    updateLog('#log', logLines);
-    $('#log').css('display', 'block');
+    updateLog('#smallLog', logLines);
+    $('#smallLog').css('display', 'block');
 }
 
 
-function ItemSort(item1, item2)
-{
+function ItemSort(item1, item2) {
     var less = (item1.completed < item2.completed) ||
         (item1.completed == item2.completed &&
         parseInt(item1.priority) > parseInt(item2.priority)) ||
@@ -75,8 +62,7 @@ function ItemSort(item1, item2)
 }
 
 
-function findItem(id)
-{
+function findItem(id) {
     for (var i=0; i<itemList.length; ++i) {
         if (itemList[i].id == id) {
             return i;
@@ -86,11 +72,9 @@ function findItem(id)
 }
 
 
-function deleteLocally(id)
-{
+function deleteLocally(id) {
     var index = findItem(id);
-    if (index == -1)
-    {
+    if (index == -1) {
         alert('Eintrag nicht gefunden! Möglicherweise wurde er bereits gelöscht?')
         return;
     }
@@ -104,8 +88,7 @@ function deleteLocally(id)
 }
 
 
-function undeleteLocally()
-{
+function undeleteLocally() {
     if (currentlyModified == null) {
         alert('Can\'t undelete item!');
     }
@@ -113,8 +96,7 @@ function undeleteLocally()
 }
 
 
-function modifyLocally(item)
-{
+function modifyLocally(item) {
     var index = findItem(item.id);
     if (index == -1)
     {
@@ -130,13 +112,11 @@ function modifyLocally(item)
 }
 
 
-function addLocally(newItem)
-{
+function addLocally(newItem) {
     var insertIdx = 0;
     while(insertIdx<itemList.length && 
         itemList[insertIdx].completed == 0 &&
-        itemList[insertIdx].priority > newItem.priority)
-    {
+        itemList[insertIdx].priority > newItem.priority) {
         ++insertIdx;
     }
     itemList.splice(insertIdx, 0, newItem);
@@ -145,11 +125,9 @@ function addLocally(newItem)
 }
 
 
-function toggleLocally(item)
-{
+function toggleLocally(item) {
     var index = findItem(item.id);
-    if (index == -1)
-    {
+    if (index == -1) {
         alert('Fehler: Eintrag nicht gefunden!');
         return;
     }
@@ -159,19 +137,18 @@ function toggleLocally(item)
     updateProgress();
 }
 
-function sendDelete(id)
-{
+
+function sendDelete(id) {
     log('Lösche Eintrag...');
     var stuff = new Object();
     stuff.id = id;
     deleteLocally(id);
-    $.ajax({
+    $.ajax( {
         type: 'POST',
         url: 'delete.php',
         data: stuff,
         success: function(returnValue) {
-            if (returnValue != 1)
-            {
+            if (returnValue != 1) {
                 log('Fehler beim Löschen: '+returnValue);
                 alert('Fehler beim Löschen: '+returnValue);
                 undeleteLocally();
@@ -186,22 +163,26 @@ function sendDelete(id)
    });
 }
 
-function deleteItem(id)
-{
-    if (!confirm('Eintrag wirklich löschen?'))
-    {
+
+function deleteItem(id) {
+    if (!confirm('Eintrag wirklich löschen?')) {
         return;
     }
     showWorking();
     sendDelete(id);
 }
 
-function toggleCompleted(id, completed)
-{
+
+function toggleCompleted(id) {
     showWorking();
+    var index = findItem(id);
+    if (index == -1) {
+        alert('Eintrag nicht gefunden!');
+        return;
+    }
     var stuff = new Object();
     stuff.id = id;
-    stuff.completed = completed;
+    stuff.completed = itemList[index].completed == 0 ? 1 : 0;
     toggleLocally(stuff);
     currentlyModified = stuff;
     $.ajax({
@@ -209,8 +190,7 @@ function toggleCompleted(id, completed)
         url: 'complete.php',
         data: stuff,
         success: function(returnValue) {
-            if (returnValue != 1)
-            {
+            if (returnValue != 1) {
                 log('Fehler beim Updaten: '+returnValue);
                 alert('Fehler beim Updaten: '+returnValue);
                 if (currentlyModified == null) {
@@ -229,18 +209,17 @@ function toggleCompleted(id, completed)
     });
 }
 
-function html_entity_decode(str)
-{
+
+function html_entity_decode(str) {
     var conversionElement = document.createElement('textarea');
     conversionElement.innerHTML = str;
     var returnValue = conversionElement.value;
-//    conversionElement.parentNode.removeChild(conversionElement);
+    // destroy created element?
     return returnValue;
 }
     
 
-function modifyItem(id)
-{
+function modifyItem(id) {
     log('Öffne Dialog zum Verändern des Eintrags...');
     var index = findItem(id);
     if (index == -1) {
@@ -289,7 +268,7 @@ function modifyItem(id)
         });
     });
     // show dialog:
-    $('#modify_dialog').dialog({
+    $('#modify_dialog').dialog( {
         modal: true,
         minHeight: 150,
         minWidth: 600,
@@ -300,18 +279,17 @@ function modifyItem(id)
     });
 }
 
-function fillStr(str, fillchar, count)
-{
+
+function fillStr(str, fillchar, count) {
     var fillStr = '';
-    for (var i=0; i < (count - str.toString().length); ++i)
-    {
+    for (var i=0; i < (count - str.toString().length); ++i) {
         fillStr += fillchar;
     }
     return fillStr + str;
 }
 
-function parseDate(dateStr)
-{
+
+function parseDate(dateStr) {
     var parts = dateStr.split(' ');
     if (parts.length < 1 || parts.length > 2) {
         return null;
@@ -324,10 +302,9 @@ function parseDate(dateStr)
     return new Date(datePart[0], datePart[1]-1, datePart[2], timePart[0], timePart[1], timePart[2], 0);
 }
  
-function formatDate(dateStr)
-{
-    if (dateStr == null || dateStr == '')
-    {
+
+function formatDate(dateStr) {
+    if (dateStr == null || dateStr == '') {
         return '';
     }
     date = parseDate(dateStr);
@@ -340,8 +317,21 @@ function formatDate(dateStr)
         fillStr(date.getDate() , '0', 2);
 }
 
-function renderItem(lineNr, id, todo, due, priority, completed, hasNote)
-{
+
+function setListener(id) {
+    $('#completed'+id).click(function() {
+        toggleCompleted(id);
+    });
+    $('#modify'+id).click(function() {
+        modifyItem(id);
+    });
+    $('#delete'+id).click(function() {
+        deleteItem(id);
+    });
+}
+
+
+function renderItem(lineNr, id, todo, due, priority, completed, hasNote) {
     var dueString = formatDate(due);
     $('#todoTable').append('<div class="line'+((lineNr%2!=0)?' line_odd':'')+'" id="todo'+id+'">'+
         '<span class="todo'+((completed==1)?' todo_completed':'')+'">'+(lineNr+1)+'. '+todo+(hasNote?'<img src="images/note.png" />':'')+'</span>'+
@@ -352,22 +342,14 @@ function renderItem(lineNr, id, todo, due, priority, completed, hasNote)
         '<span class="modify"><input type="image" value="Bearbeiten" id="modify'+id+'" src="images/pencil.png" /></span>'+
         '<span class="delete"><input type="image" value="Löschen" id="delete'+id+'" src="images/Delete.png" /></span>'+
     '</div>');
-    $('#completed'+id).click(function() {
-        toggleCompleted(id, (completed==0)?1:0);
-    });
-    $('#modify'+id).click(function() {
-        modifyItem(id);
-    });
-    $('#delete'+id).click(function() {
-        deleteItem(id);
-    });
+    if (id != -1) {
+        setListener(id);
+    }
 }
 
-function renderTable()
-{
+function renderTable() {
     $('#todoTable').empty();
-    for (var i=0; i<itemList.length; i++)
-    {
+    for (var i=0; i<itemList.length; i++) {
         renderItem(i,
                 itemList[i].id,
                 itemList[i].todo,
@@ -378,12 +360,10 @@ function renderTable()
     }
 }
 
-function updateProgress()
-{
+function updateProgress() {
     var open = 0;
     var done = 0;
-    for (var i=0; i<itemList.length; i++)
-    {
+    for (var i=0; i<itemList.length; i++) {
         if (itemList[i].completed == 0) {
             open++;
         } else {
@@ -396,18 +376,18 @@ function updateProgress()
     $('#progress_status').html('Erledigt: '+Math.round(100*done/count)+'% Offen: '+open);
 }
 
-function hideWorking()
-{
+
+function hideWorking() {
     $('#working').css('display', 'none');
 }
 
-function showWorking()
-{
+
+function showWorking() {
     $('#working').css('display', 'block');
 }
 
-function reload()
-{
+
+function reload() {
     log("Lade ToDo-Liste neu...");
     var jsontext = $.ajax({
         url: 'query.php',
@@ -425,8 +405,8 @@ function reload()
     log("Laden beendet!");
 }
 
-function enter()
-{
+
+function enter() {
     showWorking();
     log('Lege neuen Eintrag an...');
     var stuff = new Object();
@@ -437,21 +417,18 @@ function enter()
     stuff.notes = '';
     stuff.completed = 0;
     addLocally(stuff);
-    $.ajax({
+    $.ajax( {
         type: 'POST',
         url: 'enter.php',
         data: stuff,
         success: function(returnValue) {
-            if (isNaN(returnValue))
-            {
+            if (isNaN(returnValue)) {
                 log('Fehler beim Einfügen: '+returnValue);
                 alert('Fehler beim Einfügen: '+returnValue);
                 // remove the item from local list; the  data of it
                 // will still remain in the edit fields anyway!
                 deleteLocally(-1);
-            }
-            else
-            {
+            } else {
                 log('Einfügen erfolgreich!');
                 $('#todo').val('');
                 $('#due').val('');
@@ -466,15 +443,7 @@ function enter()
                 $('#completed-1').attr('id', 'completed'+id);
                 $('#modify-1').attr('id', 'modify'+id);
                 $('#delete-1').attr('id', 'delete'+id);
-                $('#completed'+id).click(function() {
-                    toggleCompleted(id, 1);
-                });
-                $('#modify'+id).click(function() {
-                    modifyItem(id);
-                });
-                $('#delete'+id).click(function() {
-                    deleteItem(id);
-                });
+                setListener(id);
             }
         },
         error: function(jqXHR, textStatus, errorThrown) {
@@ -483,8 +452,8 @@ function enter()
     });
 }
 
-function refresh()
-{
+
+function refresh() {
     showWorking();
     reload();
 // TODO: change listener, or if that proves impossible,
@@ -492,26 +461,26 @@ function refresh()
 //    setTimeout('refresh()', 30000);
 }
 
-$(document).ready(function(){
-    $("#due").datepicker({
+$(document).ready(function() {
+    $("#due").datepicker( {
         showOn: 'both',
         buttonImageOnly: true,
         buttonImage: 'images/calendar.png',
         dateFormat: 'yy-mm-dd',
         showAnim: ''
     });
-    $("#modify_due").datepicker({
+    $("#modify_due").datepicker( {
         showOn: 'both',
         buttonImageOnly: true,
         buttonImage: 'images/calendar.png',
         dateFormat: 'yy-mm-dd',
         showAnim: ''
     });
-    $("#log").click(function() {
+    $("#smallLog").click(function() {
         // fill log
         updateLog('#log_dialog', logItems.length);
         $('#log_dialog').html($('#log_dialog').html()+
-                '<br /><a href="javascript:hideLog()">Log verbergen</a>');
+                '<br /><a href="javascript:toggleLog()">Loganzeige ein/ausblenden</a>');
         $('#log_dialog').dialog({
             modal: true,
             minHeight: 150,

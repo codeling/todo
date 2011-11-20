@@ -14,17 +14,14 @@
     }
     $todo = "'".$todo."'";
     $due  = (strcmp($due, '') == 0) ? "NULL" : "'$due'";
-    else
-    {
-        $sql = "INSERT INTO todo ".
-                "(creationDate, description, dueDate, priority, notes) ".
-            "VALUES ".
-                "(UTC_TIMESTAMP(), $todo, $due, $priority, NULL)";
-        if ($db->query($sql) == FALSE) {
-            echo $db->error;
-        } else {
-            echo $db->insert_id;
-        }
+    $sql = "INSERT INTO todo ".
+            "(creationDate, description, dueDate, priority, notes) ".
+        "VALUES ".
+            "(UTC_TIMESTAMP(), $todo, $due, $priority, NULL)";
+    if ($db->query($sql) == FALSE) {
+        echo $db->error;
+    } else {
+        echo $db->insert_id;
     }
     $db->close();
 ?>
