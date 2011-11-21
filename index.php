@@ -42,6 +42,9 @@
         </div><div class="modify_line">
           <span class="modify_desc">Notizen:</span>
           <textarea type="text" id="modify_notes" name="modify_notes" rows="10" cols="50"></textarea>
+        </div><div class="modify_line">
+          <span class="modify_desc">Projekt:</span>
+          <input type="text" id="modify_project" name="modify_project" size="60" maxlength="255" />
         </div>
         <input type="image" src="images/pencil.png" name="modify_save" id="modify_save" value="Speichern" />
       </form>

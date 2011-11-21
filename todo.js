@@ -7,13 +7,14 @@ var logLines = 3; /* const, but IE doesn't support that keyword */
 var logVisible = true;
 
 
-function Todo(id, todo, due, priority, completed, notes) {
+function Todo(id, todo, due, priority, completed, notes, project) {
     this.id        = id;
     this.todo      = todo;
     this.due       = due;
     this.priority  = priority;
     this.completed = completed;
     this.notes     = notes;
+    this.project   = project;
 }
 
 
@@ -107,6 +108,7 @@ function modifyLocally(item) {
     itemList[index].priority = item.priority;
     itemList[index].due      = item.due;
     itemList[index].notes    = item.notes;
+    itemList[index].project  = item.project;
     itemList.sort(ItemSort);
     renderTable();
 }
@@ -233,11 +235,12 @@ function modifyItem(id) {
     $('#modify_due').val(formatDate(item.due));
     $('#modify_priority').val(item.priority);
     $('#modify_notes').val(html_entity_decode(item.notes));
+    $('#modify_project').val(html_entity_decode(item.project));
     // set up store function:
     // show dialog:
     $('#modify_dialog').dialog( {
         modal: true,
-        minHeight: 150,
+        minHeight: 180,
         minWidth: 600,
         title: 'ToDo Eintrag verändern',
         close: function(ev,ui) {
@@ -298,32 +301,35 @@ function setListener(id) {
 }
 
 
-function renderItem(lineNr, id, todo, due, priority, completed, hasNote) {
-    var dueString = formatDate(due);
-    $('#todoTable').append('<div class="line'+((lineNr%2!=0)?' line_odd':'')+'" id="todo'+id+'">'+
-        '<span class="todo'+((completed==1)?' todo_completed':'')+'">'+(lineNr+1)+'. '+todo+(hasNote?'<img src="images/note.png" />':'')+'</span>'+
+function renderItem(idx) {
+//, id, todo, due, priority, completed, hasNote) {
+    var it = itemList[idx];
+    var hasNote = it.notes != null && it.notes != '';
+    var hasProj = it.project != null && it.project != '';
+    var dueString = formatDate(it.due);
+    $('#todoTable').append('<div class="line'+((idx%2!=0)?' line_odd':'')+'" id="todo'+it.id+'">'+
+        '<span class="todo'+((it.completed==1)?' todo_completed':'')+'">'+
+            '<span class="todo_lineNr">'+(idx+1)+'</span>. '+
+            (hasProj ? '<span class="todo_project">'+it.project+': </span>':'')+
+            it.todo+
+            (hasNote ? '<img src="images/note.png" />':'')+
+        '</span>'+
         '<span class="due">'+dueString+'</span>'+
-        '<span class="priority">'+priority+'</span>'+
-        '<span class="completed"><input type="checkbox" id="completed'+id+'" '+
-            ((completed==1)?'checked="true" ':'')+'/></span>'+
-        '<span class="modify"><input type="image" value="Bearbeiten" id="modify'+id+'" src="images/pencil.png" /></span>'+
-        '<span class="delete"><input type="image" value="Löschen" id="delete'+id+'" src="images/Delete.png" /></span>'+
+        '<span class="priority">'+it.priority+'</span>'+
+        '<span class="completed"><input type="checkbox" id="completed'+it.id+'" '+
+            ((it.completed==1)?'checked="true" ':'')+'/></span>'+
+        '<span class="modify"><input type="image" value="Bearbeiten" id="modify'+it.id+'" src="images/pencil.png" /></span>'+
+        '<span class="delete"><input type="image" value="Löschen" id="delete'+it.id+'" src="images/Delete.png" /></span>'+
     '</div>');
-    if (id != -1) {
-        setListener(id);
+    if (it.id != -1) {
+        setListener(it.id);
     }
 }
 
 function renderTable() {
     $('#todoTable').empty();
     for (var i=0; i<itemList.length; i++) {
-        renderItem(i,
-                itemList[i].id,
-                itemList[i].todo,
-                itemList[i].due,
-                itemList[i].priority,
-                itemList[i].completed,
-                itemList[i].notes != null && itemList[i].notes != '');
+        renderItem(i);
     }
 }
 
@@ -376,13 +382,7 @@ function reload() {
 function enter() {
     showWorking();
     log('Lege neuen Eintrag an...');
-    var stuff = new Object();
-    stuff.id = -1;
-    stuff.todo = $('#todo').val();
-    stuff.due =  $('#due').val();
-    stuff.priority = $('#priority').val();
-    stuff.notes = '';
-    stuff.completed = 0;
+    var stuff = new Todo(-1, $('#todo').val, $('#due').val(), $('#priority').val(), 0, '', '');
     addLocally(stuff);
     $.ajax( {
         type: 'POST',
@@ -448,12 +448,14 @@ $(document).ready(function() {
 
     $('#modify_save').click(function() {
         // store... 
-        var stuff = new Object();
-        stuff.id = $('#modify_id').val();
-        stuff.todo = $('#modify_todo').val();
-        stuff.due  = $('#modify_due').val();
-        stuff.priority = $('#modify_priority').val();
-        stuff.notes = $('#modify_notes').val().trim();
+        var stuff = new Todo( 
+            $('#modify_id').val(),
+            $('#modify_todo').val(),
+            $('#modify_due').val(),
+            $('#modify_priority').val(),
+            0,  // currently not taken into account on server, and not modifiable at server
+            $('#modify_notes').val().trim(),
+            $('#modify_project').val());
         currentlyModified = stuff;
         log('Speichere Veränderungen...');
         $.ajax({

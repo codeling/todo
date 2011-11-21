@@ -66,6 +66,14 @@ input[type="image"]
 .todo_completed {
     text-decoration: line-through;
 }
+.todo_lineNr {
+    display: inline-block;
+    width: 20px;
+    text-align:right;
+}
+.todo_project {
+    font-style: italic;
+}
 .due {
     display:inline-block;
     width: 120px;

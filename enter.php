@@ -15,9 +15,9 @@
     $todo = "'".$todo."'";
     $due  = (strcmp($due, '') == 0) ? "NULL" : "'$due'";
     $sql = "INSERT INTO todo ".
-            "(creationDate, description, dueDate, priority, notes) ".
+            "(creationDate, description, dueDate, priority, notes, project) ".
         "VALUES ".
-            "(UTC_TIMESTAMP(), $todo, $due, $priority, NULL)";
+            "(UTC_TIMESTAMP(), $todo, $due, $priority, NULL, NULL)";
     if ($db->query($sql) == FALSE) {
         echo $db->error;
     } else {
