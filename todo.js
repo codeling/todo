@@ -234,39 +234,6 @@ function modifyItem(id) {
     $('#modify_priority').val(item.priority);
     $('#modify_notes').val(html_entity_decode(item.notes));
     // set up store function:
-    $('#modify_save').click(function() {
-        // store... 
-        var stuff = new Object();
-        stuff.id = $('#modify_id').val();
-        stuff.todo = $('#modify_todo').val();
-        stuff.due  = $('#modify_due').val();
-        stuff.priority = $('#modify_priority').val();
-        stuff.notes = $('#modify_notes').val().trim();
-        currentlyModified = stuff;
-        log('Speichere Veränderungen...');
-        $.ajax({
-            type: 'POST',
-            url: 'update.php',
-            data: stuff,
-            success: function(returnValue) {
-                if (isNaN(returnValue)) {
-                    log('Fehler beim Updaten: '+returnValue);
-                    alert('Fehler beim Updaten: '+returnValue);
-                // just keep dialog open...then changed values aren't lost
-                } else {
-                    // if everything went fine, close dialog:
-                    log('Speichern erfolgreichen, schließe Dialog');
-                    $('#modify_dialog').dialog('close');
-                    // only set locally now, else it could be confusing
-                    modifyLocally(currentlyModified);
-                    currentlyModified = null;
-                }
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                alert("textStatus: "+textStatus + "; errorThrown: "+errorThrown);
-            }
-        });
-    });
     // show dialog:
     $('#modify_dialog').dialog( {
         modal: true,
@@ -462,6 +429,7 @@ function refresh() {
 }
 
 $(document).ready(function() {
+
     $("#due").datepicker( {
         showOn: 'both',
         buttonImageOnly: true,
@@ -469,6 +437,7 @@ $(document).ready(function() {
         dateFormat: 'yy-mm-dd',
         showAnim: ''
     });
+
     $("#modify_due").datepicker( {
         showOn: 'both',
         buttonImageOnly: true,
@@ -476,6 +445,41 @@ $(document).ready(function() {
         dateFormat: 'yy-mm-dd',
         showAnim: ''
     });
+
+    $('#modify_save').click(function() {
+        // store... 
+        var stuff = new Object();
+        stuff.id = $('#modify_id').val();
+        stuff.todo = $('#modify_todo').val();
+        stuff.due  = $('#modify_due').val();
+        stuff.priority = $('#modify_priority').val();
+        stuff.notes = $('#modify_notes').val().trim();
+        currentlyModified = stuff;
+        log('Speichere Veränderungen...');
+        $.ajax({
+            type: 'POST',
+            url: 'update.php',
+            data: stuff,
+            success: function(returnValue) {
+                if (isNaN(returnValue)) {
+                    log('Fehler beim Updaten: '+returnValue);
+                    alert('Fehler beim Updaten: '+returnValue);
+                // just keep dialog open...then changed values aren't lost
+                } else {
+                    // if everything went fine, close dialog:
+                    log('Speichern erfolgreichen, schließe Dialog');
+                    $('#modify_dialog').dialog('close');
+                    // only set locally now, else it could be confusing
+                    modifyLocally(currentlyModified);
+                    currentlyModified = null;
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                alert("textStatus: "+textStatus + "; errorThrown: "+errorThrown);
+            }
+        });
+    });
+
     $("#smallLog").click(function() {
         // fill log
         updateLog('#log_dialog', logItems.length);
