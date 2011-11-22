@@ -7,14 +7,31 @@ var logLines = 3; /* const, but IE doesn't support that keyword */
 var logVisible = true;
 
 
-function Todo(id, todo, due, priority, completed, notes, project) {
-    this.id        = id;
+function Todo(id, todo, due, priority,
+        completed, notes, project, version) {
+    this.id        = parseInt(id);
     this.todo      = todo;
     this.due       = due;
-    this.priority  = priority;
-    this.completed = completed;
+    this.priority  = parseInt(priority);
+    this.completed = parseInt(completed);
     this.notes     = notes;
     this.project   = project;
+    this.version   = parseInt(version);
+}
+/*
+    alert("id: "+itemList[i].id+"; priority: "+itemList[i].priority+
+        "; todo: "+itemList[i].todo+"; completed: "+itemList[i].completed+
+        "; version: "+itemList[i].version)
+*/
+
+
+
+function copyTodo(item)
+{
+    return new Todo(
+        item.id, item.todo, item.due, item.priority, item.completed,
+        item.notes, item.project, item.version
+    );
 }
 
 
@@ -49,13 +66,17 @@ function log(logStr) {
 function ItemSort(item1, item2) {
     var less = (item1.completed < item2.completed) ||
         (item1.completed == item2.completed &&
-        parseInt(item1.priority) > parseInt(item2.priority)) ||
+        item1.priority > item2.priority) ||
         (item1.completed == item2.completed && item1.priority == item2.priority &&
-        item1.todo < item2.todo);
+        ((item1.project!=null)?item1.project+item1.todo:item1.todo) <
+        ((item2.project!=null)?item2.project+item2.todo:item2.todo));
     // log('item1: c='+item1.completed+', p='+item1.priority+'; item2: c='+item2.completed+', p='+item2.priority+'; less: '+less);
     if (less) {
         return -1;
-    } else if (item1.completed == item2.completed && item1.priority == item2.priority && item1.todo == item2.todo) {
+    } else if (item1.completed == item2.completed &&
+               item1.priority == item2.priority &&
+               item1.todo == item2.todo &&
+               item1.project == item2.project) {
         return 0;
     } else {
         return 1;
@@ -73,14 +94,9 @@ function findItem(id) {
 }
 
 
-function deleteLocally(id) {
-    var index = findItem(id);
-    if (index == -1) {
-        alert('Eintrag nicht gefunden! Möglicherweise wurde er bereits gelöscht?')
-        return;
-    }
-    currentlyModified = itemList[index];
-    itemList.splice(index, 1);
+function deleteLocally(idx) {
+    currentlyModified = copyTodo(itemList[idx]);
+    itemList.splice(idx, 1);
     renderTable();
     updateProgress();
 //    TODO: just delete the one element from the list... 
@@ -109,6 +125,7 @@ function modifyLocally(item) {
     itemList[index].due      = item.due;
     itemList[index].notes    = item.notes;
     itemList[index].project  = item.project;
+    itemList[index].version  = item.version;
     itemList.sort(ItemSort);
     renderTable();
 }
@@ -133,7 +150,8 @@ function toggleLocally(item) {
         alert('Fehler: Eintrag nicht gefunden!');
         return;
     }
-    itemList[index].completed = (itemList[index].completed == 0)? 1 : 0;
+    itemList[index].completed = item.completed;
+    itemList[index].version = item.version;
     itemList.sort(ItemSort);
     renderTable();
     updateProgress();
@@ -142,9 +160,15 @@ function toggleLocally(item) {
 
 function sendDelete(id) {
     log('Lösche Eintrag...');
+    var idx = findItem(id);
+    if (idx == -1) {
+        alert('Kann den zu löschenden Eintrag nicht finden!');
+        return;
+    }
     var stuff = new Object();
     stuff.id = id;
-    deleteLocally(id);
+    stuff.version = itemList[idx].version;
+    deleteLocally(idx);
     $.ajax( {
         type: 'POST',
         url: 'delete.php',
@@ -160,7 +184,7 @@ function sendDelete(id) {
             currentlyModified = null;
         },
         error: function(jqXHR, textStatus, errorThrown) {
-            alert("textStatus: "+textStatus + "; errorThrown: "+errorThrown);
+            alert('Übertragungsfehler beim Löschen!');
         }
    });
 }
@@ -170,13 +194,11 @@ function deleteItem(id) {
     if (!confirm('Eintrag wirklich löschen?')) {
         return;
     }
-    showWorking();
     sendDelete(id);
 }
 
 
 function toggleCompleted(id) {
-    showWorking();
     var index = findItem(id);
     if (index == -1) {
         alert('Eintrag nicht gefunden!');
@@ -185,8 +207,8 @@ function toggleCompleted(id) {
     var stuff = new Object();
     stuff.id = id;
     stuff.completed = itemList[index].completed == 0 ? 1 : 0;
-    toggleLocally(stuff);
-    currentlyModified = stuff;
+    stuff.version   = itemList[index].version;
+    currentlyModified = copyTodo(itemList[index]);
     $.ajax({
         type: 'POST',
         url: 'complete.php',
@@ -195,18 +217,23 @@ function toggleCompleted(id) {
             if (returnValue != 1) {
                 log('Fehler beim Updaten: '+returnValue);
                 alert('Fehler beim Updaten: '+returnValue);
-                if (currentlyModified == null) {
-                    alert('Kann das zu verändernde Objekt auch lokal nicht mehr finden.');
+                // reset checkbox:
+                var checked = $('#completed'+currentlyModified.id).attr('checked');
+                if (checked=='checked') {
+                    $('#completed'+currentlyModified.id).removeAttr('checked');
                 } else {
-                    toggleLocally(currentlyModified);
+                    $('#completed'+currentlyModified.id).attr('checked', 'checked');
                 }
             } else {
+                currentlyModified.completed = stuff.completed;
+                currentlyModified.version   = stuff.version + 1;
+                toggleLocally(currentlyModified);
                 log('Erfolgreich geändert!');
             }
             currentlyModified = null;
         },
         error: function(jqXHR, textStatus, errorThrown) {
-            alert("textStatus: "+textStatus + "; errorThrown: "+errorThrown);
+            alert('Übertragungsfehler beim ändern!');
         }
     });
 }
@@ -350,13 +377,8 @@ function updateProgress() {
 }
 
 
-function hideWorking() {
-    $('#working').css('display', 'none');
-}
-
-
-function showWorking() {
-    $('#working').css('display', 'block');
+function toggleWorking(show) {
+    $('#working').css('display', show? 'block':'none');
 }
 
 
@@ -371,18 +393,32 @@ function reload() {
     } catch (e) {
         alert('Server lieferte ungültige Daten "'+jsontext+'"; Fehlermeldung des JSON-Parsers: '+e);
     }
+    for (var i=0; i<itemList.length; ++i) {
+        // make "proper" Todo items out of the loaded values:
+        itemList[i].id        = parseInt(itemList[i].id);
+        itemList[i].priority  = parseInt(itemList[i].priority);
+        itemList[i].completed = parseInt(itemList[i].completed);
+        itemList[i].version   = parseInt(itemList[i].version);
+    }
     itemList.sort(ItemSort);
     renderTable();
     updateProgress();
-    hideWorking();
     log("Laden beendet!");
 }
 
 
 function enter() {
-    showWorking();
     log('Lege neuen Eintrag an...');
-    var stuff = new Todo(-1, $('#todo').val, $('#due').val(), $('#priority').val(), 0, '', '');
+    if ($('#enter_todo').val().length == 0) {
+        alert('Todo darf nicht leer sein!');
+        return;
+    }
+    if (findItem(-1) != -1) {
+        alert('Anderer Einfüge-Vorgang ist noch am Laufen; bitte warte dessen Beendigung ab, bevor du einen weiteren Eintrag hinzufügst!');
+        return;
+    }
+    var stuff = new Todo(-1, $('#enter_todo').val(), $('#enter_due').val(),
+            $('#enter_priority').val(), 0, '', '', 1);
     addLocally(stuff);
     $.ajax( {
         type: 'POST',
@@ -394,18 +430,15 @@ function enter() {
                 alert('Fehler beim Einfügen: '+returnValue);
                 // remove the item from local list; the  data of it
                 // will still remain in the edit fields anyway!
-                deleteLocally(-1);
+                deleteLocally(findItem(-1));
             } else {
                 log('Einfügen erfolgreich!');
                 $('#todo').val('');
                 $('#due').val('');
                 $('#priority').val('');
-                // update id in inserted object:
-                // TODO: make safe against parallel edits!
                 var index = findItem(-1);
                 var id = parseInt(returnValue);
                 itemList[index].id = id;
-                // also update id in 
                 $('#todo-1').attr('id', 'todo'+id);
                 $('#completed-1').attr('id', 'completed'+id);
                 $('#modify-1').attr('id', 'modify'+id);
@@ -414,15 +447,16 @@ function enter() {
             }
         },
         error: function(jqXHR, textStatus, errorThrown) {
-            alert("textStatus: "+textStatus + "; errorThrown: "+errorThrown);
+            alert('Übertragungsfehler beim Einfügen!');
         }
     });
 }
 
 
 function refresh() {
-    showWorking();
+    toggleWorking(true);
     reload();
+    toggleWorking(false);
 // TODO: change listener, or if that proves impossible,
 // refresh every 5-10 minues
 //    setTimeout('refresh()', 30000);
@@ -430,7 +464,7 @@ function refresh() {
 
 $(document).ready(function() {
 
-    $("#due").datepicker( {
+    $("#enter_due").datepicker( {
         showOn: 'both',
         buttonImageOnly: true,
         buttonImage: 'images/calendar.png',
@@ -448,14 +482,20 @@ $(document).ready(function() {
 
     $('#modify_save').click(function() {
         // store... 
-        var stuff = new Todo( 
-            $('#modify_id').val(),
+        var id = parseInt($('#modify_id').val());
+        var idx = findItem(id);
+        if (idx == -1) {
+            alert('Eintrag nicht gefunden!');
+            return;
+        }
+        var stuff = new Todo(id,
             $('#modify_todo').val(),
             $('#modify_due').val(),
             $('#modify_priority').val(),
             0,  // currently not taken into account on server, and not modifiable at server
             $('#modify_notes').val().trim(),
-            $('#modify_project').val());
+            $('#modify_project').val(),
+            itemList[idx].version);
         currentlyModified = stuff;
         log('Speichere Veränderungen...');
         $.ajax({
@@ -472,18 +512,18 @@ $(document).ready(function() {
                     log('Speichern erfolgreichen, schließe Dialog');
                     $('#modify_dialog').dialog('close');
                     // only set locally now, else it could be confusing
+                    currentlyModified.version = currentlyModified.version+1;
                     modifyLocally(currentlyModified);
                     currentlyModified = null;
                 }
             },
             error: function(jqXHR, textStatus, errorThrown) {
-                alert("textStatus: "+textStatus + "; errorThrown: "+errorThrown);
+                alert('Übertragungsfehler beim Bearbeiten!');
             }
         });
     });
 
     $("#smallLog").click(function() {
-        // fill log
         updateLog('#log_dialog', logItems.length);
         $('#log_dialog').html($('#log_dialog').html()+
                 '<br /><a href="javascript:toggleLog()">Loganzeige ein/ausblenden</a>');

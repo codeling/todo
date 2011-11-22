@@ -1,6 +1,7 @@
  <?php
     require("db.php");
-    $sql = "SELECT id, description as todo, dueDate as due, priority, completed, notes, project ".
+    $sql = "SELECT id, description as todo, dueDate as due, priority, ".
+            "completed, notes, project, version ".
            "FROM todo WHERE completed=0 ".
            "OR completionDate > (NOW() - INTERVAL 31 DAY)";
     $qResult = $db->query($sql);

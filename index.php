@@ -22,7 +22,7 @@
 </span><span class="due"> Fällig</span><span class="priority">Priorität</span>
       </div>
       <div class="line line_input">
-        <span class="todo"><input type="text" id="todo" name="todo" size="60" maxlength="255" /></span><span class="due"><input type="text" id="due" name="due" size="10" maxlength="20" /></span><span class="priority"><input type="text" id="priority" name="priority" size="3" maxlength="4" /></span><span class="actions"><input type="image" src="images/Add.png" name="save" value="Speichern" onclick="enter()" /></span>
+        <span class="todo"><input type="text" id="enter_todo" name="enter_todo" size="60" maxlength="255" /></span><span class="due"><input type="text" id="enter_due" name="enter_due" size="10" maxlength="20" /></span><span class="priority"><input type="text" id="enter_priority" name="enter_priority" size="3" maxlength="4" /></span><span class="actions"><input type="image" src="images/Add.png" name="save" value="Speichern" onclick="enter()" /></span>
       </div>
     </form>
     <div id="todoTable">

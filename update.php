@@ -7,7 +7,7 @@
     $priority = (int)$_REQUEST['priority'];
     $notes    = $db->real_escape_string(htmlentities($_REQUEST['notes'], ENT_QUOTES, "UTF-8"));
     $project  = $db->real_escape_string(htmlentities($_REQUEST['project'], ENT_QUOTES, "UTF-8"));
-    // checks:
+    $version  = (int)$_REQUEST['version'];
     if (strcmp($todo, '') == 0) {
         echo "Die Beschreibung darf nicht leer sein!";
         die;
@@ -24,14 +24,22 @@
                 "dueDate=$due, ".
                 "priority=$priority, ".
                 "notes=$notes, ".
-                "project=$project ".
-            "WHERE id=$id";
-//    echo $sql;
+                "project=$project, ".
+                "version=".($version+1)." ".
+            "WHERE id=$id AND version=$version";
     $returnVal = $db->query($sql);
+
     if ($returnVal == FALSE) {
         echo $db->error;
+        die;
+    }
+    $affectedRows = $db->affected_rows;
+    if ($affectedRows < 1) {
+        echo "In der Datenbank ist eine andere Version gespeichert als du gesendet hast. Es scheint so als wäre der Eintrag in der Zwischenzeit verändert worden! Bitte lade die Einträge neu!";
+    } else if ($affectedRows > 1) {
+        echo "Schwerwiegender Applikationslogik-Fehler: Mehr als einen Eintrag verändert!";
     } else {
-        echo $returnVal;
+        echo $affectedRows;
     }
     $db->close();
 ?>
