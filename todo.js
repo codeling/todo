@@ -417,8 +417,16 @@ function enter() {
         alert('Anderer Einfüge-Vorgang ist noch am Laufen; bitte warte dessen Beendigung ab, bevor du einen weiteren Eintrag hinzufügst!');
         return;
     }
-    var stuff = new Todo(-1, $('#enter_todo').val(), $('#enter_due').val(),
-            $('#enter_priority').val(), 0, '', '', 1);
+    var todo = $('#enter_todo').val();
+    var colon = todo.lastIndexOf(":");
+    var project = '';
+    if (colon != -1) {
+        project = todo.substr(0, colon);
+        if (todo.charAt(colon+1) == ' ') { colon++; }
+        todo = todo.substr(colon+1);
+    }
+    var stuff = new Todo(-1, todo, $('#enter_due').val(),
+            $('#enter_priority').val(), 0, '', project, 1);
     addLocally(stuff);
     $.ajax( {
         type: 'POST',
@@ -433,9 +441,9 @@ function enter() {
                 deleteLocally(findItem(-1));
             } else {
                 log('Einfügen erfolgreich!');
-                $('#todo').val('');
-                $('#due').val('');
-                $('#priority').val('');
+                $('#enter_todo').val('');
+                $('#enter_due').val('');
+                $('#enter_priority').val('');
                 var index = findItem(-1);
                 var id = parseInt(returnValue);
                 itemList[index].id = id;
