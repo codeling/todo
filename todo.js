@@ -13,6 +13,7 @@ function Todo(id, todo, due, priority,
     this.todo      = todo;
     this.due       = due;
     this.priority  = parseInt(priority);
+    this.priority  = isNaN(this.priority) ? 0 : this.priority;
     this.completed = parseInt(completed);
     this.notes     = notes;
     this.project   = project;
