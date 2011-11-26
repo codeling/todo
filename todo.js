@@ -260,7 +260,7 @@ function modifyItem(id) {
     // set values:
     $('#modify_id').val(item.id);
     $('#modify_todo').val(html_entity_decode(item.todo));
-    $('#modify_due').val(formatDate(item.due));
+    $('#modify_due').val(formatDate(parseDate(item.due)));
     $('#modify_priority').val(item.priority);
     $('#modify_notes').val(html_entity_decode(item.notes));
     $('#modify_project').val(html_entity_decode(item.project));
@@ -288,6 +288,9 @@ function fillStr(str, fillchar, count) {
 
 
 function parseDate(dateStr) {
+    if (dateStr == null || dateStr == '') {
+        return null;
+    }
     var parts = dateStr.split(' ');
     if (parts.length < 1 || parts.length > 2) {
         return null;
@@ -301,12 +304,11 @@ function parseDate(dateStr) {
 }
  
 
-function formatDate(dateStr) {
-    if (dateStr == null || dateStr == '') {
+function formatDate(date) {
+    if (date == null){
         return '';
     }
-    date = parseDate(dateStr);
-    if (date == null || isNaN(date.getFullYear())) {
+    if (isNaN(date.getFullYear())) {
         return 'invalid';
     }
     return ''+
@@ -334,7 +336,9 @@ function renderItem(idx) {
     var it = itemList[idx];
     var hasNote = it.notes != null && it.notes != '';
     var hasProj = it.project != null && it.project != '';
-    var dueString = formatDate(it.due);
+    var today   = new Date();
+    var dueDate = parseDate(it.due);
+    var dueString = formatDate(dueDate);
     $('#todoTable').append('<div class="line'+((idx%2!=0)?' line_odd':'')+'" id="todo'+it.id+'">'+
         '<span class="todo'+((it.completed==1)?' todo_completed':'')+'">'+
             '<span class="todo_lineNr">'+(idx+1)+'</span>. '+
@@ -342,7 +346,10 @@ function renderItem(idx) {
             it.todo+
             (hasNote ? '<img src="images/note.png" />':'')+
         '</span>'+
-        '<span class="due">'+dueString+'</span>'+
+        '<span class="due">'+
+            ((dueDate != null && (today - dueDate) > 0) ?
+                '<img src="images/exclamation.png" height="16px" />':'')+
+            dueString+'</span>'+
         '<span class="priority">'+it.priority+'</span>'+
         '<span class="completed"><input type="checkbox" id="completed'+it.id+'" '+
             ((it.completed==1)?'checked="true" ':'')+'/></span>'+
