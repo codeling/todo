@@ -64,7 +64,7 @@ input[type="image"]
     width: 85%;
 }
 .todo_completed {
-    text-decoration: line-through;
+    color: #777;
 }
 .todo_lineNr {
     display: inline-block;

@@ -339,17 +339,20 @@ function renderItem(idx) {
     var today   = new Date();
     var dueDate = parseDate(it.due);
     var dueString = formatDate(dueDate);
-    $('#todoTable').append('<div class="line'+((idx%2!=0)?' line_odd':'')+'" id="todo'+it.id+'">'+
-        '<span class="todo'+((it.completed==1)?' todo_completed':'')+'">'+
+    $('#todoTable').append('<div class="line'+
+            ((idx%2!=0)?' line_odd':'')+
+            ((it.completed==1)?' todo_completed':'')+
+            '" id="todo'+it.id+'">'+
+        '<span class="todo">'+
             '<span class="todo_lineNr">'+(idx+1)+'</span>. '+
             (hasProj ? '<span class="todo_project">'+it.project+': </span>':'')+
             it.todo+
             (hasNote ? '<img src="images/note.png" />':'')+
         '</span>'+
-        '<span class="due">'+
-            ((dueDate != null && (today - dueDate) > 0) ?
-                '<img src="images/exclamation.png" height="16px" />':'')+
-            dueString+'</span>'+
+        '<span class="due">'+ dueString+
+                ((it.completed==0 && dueDate != null && (today - dueDate) > 0) ?
+                ' <img src="images/exclamation.png" height="16px" />':'')+
+                '</span>'+
         '<span class="priority">'+it.priority+'</span>'+
         '<span class="completed"><input type="checkbox" id="completed'+it.id+'" '+
             ((it.completed==1)?'checked="true" ':'')+'/></span>'+
