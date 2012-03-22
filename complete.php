@@ -3,7 +3,7 @@
     $id = (int)$_REQUEST['id'];
     $completed = (int)$_REQUEST['completed'];
     $version   = (int)$_REQUEST['version'];
-    $result = $db->query("UPDATE todo SET completed=$completed, completionDate=NOW() WHERE id=$id AND version=$version");
+    $result = $db->query("UPDATE todo SET completed=$completed, completionDate=NOW(), version=$version+1 WHERE id=$id AND version=$version");
     if ($result == FALSE) {
         echo $db->error;
         die;
