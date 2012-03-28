@@ -40,6 +40,18 @@
           <span class="modify_desc">Priorität:</span>
           <input type="text" id="modify_priority" name="modify_priority" size="3" maxlength="4" />
         </div><div class="modify_line">
+		  <span class="modify_desc">Wiederholung:</span>
+		  <select name="modify_recurrenceMode" id="modify_recurrenceMode">
+		    <option value="0">Nicht wiederholen</option>
+			<option value="1">Wöchentlich</option>
+			<option value="2">Zwei-Wöchentlich</option>
+			<option value="3">Monatlich</option>
+			<option value="4">Zwei-Monatlich</option>
+			<option value="5">Einmal pro Quartal</option>
+			<option value="6">Halbjährlich</option>
+			<option value="7">Jährlich</option>
+		  </select>
+		</div><div class="modify_line">
           <span class="modify_desc">Notizen:</span>
           <textarea type="text" id="modify_notes" name="modify_notes" rows="10" cols="50"></textarea>
         </div><div class="modify_line">

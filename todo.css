@@ -108,7 +108,7 @@ input[type="image"]
 }
 span.modify_desc {
     display: inline-block;
-    width: 60px;
+    width: 80px;
     vertical-align: top;
 }
 #progress {

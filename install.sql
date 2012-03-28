@@ -9,6 +9,19 @@ CREATE TABLE `todo` (
   `notes` varchar(10000) DEFAULT '',
   `project` varchar(255) DEFAULT NULL,
   `version` int(11) NOT NULL DEFAULT '1',
+  `recurrenceMode` tinyint NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 ;
 
+/**
+recurrenceMode values:
+0 - not recurring
+1 - recurring daily
+2 - recurring weekly
+3 - recurring bi-weekly
+4 - recurring monthly
+5 - recurring bi-monthly
+6 - recurring quarterly
+7 - recurring half-yearly
+8 - recurring yearly
+*/

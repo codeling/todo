@@ -8,6 +8,7 @@
     $notes    = $db->real_escape_string(htmlentities($_REQUEST['notes'], ENT_QUOTES, "UTF-8"));
     $project  = $db->real_escape_string(htmlentities($_REQUEST['project'], ENT_QUOTES, "UTF-8"));
     $version  = (int)$_REQUEST['version'];
+	$recurrenceMode = (int)$_REQUEST['recurrenceMode'];
     if (strcmp($todo, '') == 0) {
         echo "Die Beschreibung darf nicht leer sein!";
         die;
@@ -25,7 +26,8 @@
                 "priority=$priority, ".
                 "notes=$notes, ".
                 "project=$project, ".
-                "version=".($version+1)." ".
+                "version=".($version+1).", ".
+				"recurrenceMode=".$recurrenceMode." ".
             "WHERE id=$id AND version=$version";
     $returnVal = $db->query($sql);
 
