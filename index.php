@@ -43,13 +43,13 @@
 		  <span class="modify_desc">Wiederholung:</span>
 		  <select name="modify_recurrenceMode" id="modify_recurrenceMode">
 		    <option value="0">Nicht wiederholen</option>
-			<option value="1">Wöchentlich</option>
-			<option value="2">Zwei-Wöchentlich</option>
-			<option value="3">Monatlich</option>
-			<option value="4">Zwei-Monatlich</option>
-			<option value="5">Einmal pro Quartal</option>
-			<option value="6">Halbjährlich</option>
-			<option value="7">Jährlich</option>
+			<option value="7">Wöchentlich</option>
+			<option value="14">Zwei-Wöchentlich</option>
+			<option value="30">Monatlich</option>
+			<option value="60">Zwei-Monatlich</option>
+			<option value="91">Einmal pro Quartal</option>
+			<option value="182">Halbjährlich</option>
+			<option value="365">Jährlich</option>
 		  </select>
 		</div><div class="modify_line">
           <span class="modify_desc">Notizen:</span>

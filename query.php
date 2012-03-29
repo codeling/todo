@@ -1,15 +1,14 @@
  <?php
     require("db.php");
+    $sql = "UPDATE todo SET completed=0, dueDate=(completionDate+recurrenceMode) WHERE ".
+        "recurrenceMode != 0 AND completionDate < (NOW() - INTERVAL recurrenceMode/2 DAY)";
+    $qResult = dbQueryOrDie($db, $sql);
+
     $sql = "SELECT id, description as todo, dueDate as due, priority, ".
             "completed, notes, project, version, recurrenceMode ".
            "FROM todo WHERE completed=0 ".
            "OR completionDate > (NOW() - INTERVAL 31 DAY)";
-    $qResult = $db->query($sql);
-    if ($qResult == FALSE)
-    {
-        echo $db->error;
-        die;
-    }
+    $qResult = dbQueryOrDie($db, $sql);
     $allResults = array();
     while ($stuff = $qResult->fetch_object())
     {

@@ -29,12 +29,8 @@
                 "version=".($version+1).", ".
 				"recurrenceMode=".$recurrenceMode." ".
             "WHERE id=$id AND version=$version";
-    $returnVal = $db->query($sql);
+    dbQueryOrDie($db, $sql);
 
-    if ($returnVal == FALSE) {
-        echo $db->error;
-        die;
-    }
     $affectedRows = $db->affected_rows;
     if ($affectedRows < 1) {
         echo "In der Datenbank ist eine andere Version gespeichert als du gesendet hast. Es scheint so als wäre der Eintrag in der Zwischenzeit verändert worden! Bitte lade die Einträge neu!";

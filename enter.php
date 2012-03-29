@@ -20,11 +20,8 @@
             "(creationDate, description, dueDate, priority, notes, project) ".
         "VALUES ".
             "(UTC_TIMESTAMP(), $todo, $due, $priority, NULL, $project)";
-    if ($db->query($sql) == FALSE) {
-        echo $db->error;
-    } else {
-        echo $db->insert_id;
-    }
+    dbQueryOrDie($db, $sql);
+    echo $db->insert_id;
     $db->close();
 ?>
 

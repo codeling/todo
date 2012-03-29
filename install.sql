@@ -9,7 +9,7 @@ CREATE TABLE `todo` (
   `notes` varchar(10000) DEFAULT '',
   `project` varchar(255) DEFAULT NULL,
   `version` int(11) NOT NULL DEFAULT '1',
-  `recurrenceMode` tinyint NOT NULL DEFAULT '0',
+  `recurrenceMode` int(11) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 ;
 
@@ -25,3 +25,10 @@ recurrenceMode values:
 7 - recurring half-yearly
 8 - recurring yearly
 */
+
+CREATE TABLE `recurringCompletionHistory` (
+  `todo_id` int(11) NOT NULL,
+  `completionDate` datetime NOT NULL,
+  PRIMARY KEY (`todo_id`, `completionDate`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 ;
+
