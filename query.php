@@ -1,6 +1,6 @@
  <?php
     require("db.php");
-    $sql = "UPDATE todo SET completed=0, dueDate=(completionDate+recurrenceMode) WHERE ".
+    $sql = "UPDATE todo SET completed=0, dueDate=date_add(completionDate, INTERVAL recurrenceMode DAY) WHERE ".
         "recurrenceMode != 0 AND completionDate < (NOW() - INTERVAL recurrenceMode/2 DAY)";
     $qResult = dbQueryOrDie($db, $sql);
 
