@@ -48,6 +48,7 @@
 			<option value="30">Monatlich</option>
 			<option value="60">Zwei-Monatlich</option>
 			<option value="91">Einmal pro Quartal</option>
+            <option value="121">Einmal pro Jahresdrittel</option>
 			<option value="182">Halbjährlich</option>
 			<option value="365">Jährlich</option>
 		  </select>
