@@ -2,10 +2,6 @@
 var itemList;
 
 var currentlyModified = null;
-var logItems = new Array("Starte Log");
-var logLines = 3; /* const, but IE doesn't support that keyword */
-var logVisible = true;
-
 
 function Todo(id, todo, due, priority,
         completed, notes, project,
@@ -21,12 +17,6 @@ function Todo(id, todo, due, priority,
     this.version   = parseInt(version);
 	this.recurrenceMode = parseInt(recurrenceMode);
 }
-/*
-    alert("id: "+itemList[i].id+"; priority: "+itemList[i].priority+
-        "; todo: "+itemList[i].todo+"; completed: "+itemList[i].completed+
-        "; version: "+itemList[i].version)
-*/
-
 
 
 function copyTodo(item)
@@ -35,34 +25,6 @@ function copyTodo(item)
         item.id, item.todo, item.due, item.priority, item.completed,
         item.notes, item.project, item.version, item.recurrenceMode
     );
-}
-
-
-function updateLog(element, maxCount) {
-    var logOutput = '';
-    var start = Math.max(0, logItems.length-maxCount);
-    var end   = Math.min(start+maxCount, logItems.length);
-    for (var i=start; i<end; ++i) {
-        logOutput += '' + i + ': ' + logItems[i];
-        if (i<end-1) {
-            logOutput += '<br />';
-        }
-    }
-    $(element).html(logOutput);
-}
-
-
-function toggleLog() {
-    $('#smallLog').css('display', (logVisible)? 'none': 'block');
-    $('#logLink').css('display', (logVisible)? 'block': 'none');
-    logVisible = !logVisible;
-}
-
-
-function log(logStr) {
-    logItems.push(logStr);
-    updateLog('#smallLog', logLines);
-    $('#smallLog').css('display', 'block');
 }
 
 
