@@ -130,3 +130,16 @@ span.modify_desc {
     padding-right: 5px;
     float: right;
 }
+#statistiklink {
+    float: right;
+	margin-right: 10px;
+}
+.statbar_row {
+    vertical-align:bottom;
+}
+.statbar {
+    background-color: blue;
+}
+.linkblock {
+    float:right;
+}

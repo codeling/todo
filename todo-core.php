@@ -8,7 +8,7 @@ class TodoLang {
     static $langfile = "lang-de.ini";
     static $langstrings;
 	function _($key) {
-	    return self::$langstrings[$key];
+	    return isset(self::$langstrings[$key]) ? self::$langstrings[$key] : '???'.$key.'???';
 	}
 }
 
