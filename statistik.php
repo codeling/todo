@@ -38,7 +38,7 @@
             $height = (int)( $val_scale * $stuff[2] );
             $bar_row .= '<td class="statbar_row"><div class="statbar" '.
 			    'style="width: '. $width .'px;'.
-				'height:'. $height.'px;" >&nbsp;</div></td>';
+				'height:'. $height.'px;" >'.$stuff[2].'</div></td>';
     		$value_row .= '<td><div class="statvalue">'.$stuff[1].'</div></td>';
         }
 		$bar_row   .= '<td>Maximum: '.$maxVal.'</td>';
@@ -75,13 +75,13 @@
       <h1><?php echo(TodoLang::_("STATISTICS")); ?></h1>
       <h2><?php echo(TodoLang::_("STATS_PERIODIC")); ?></h2>
       <h3><?php echo(TodoLang::_("STATS_WEEKLY")); ?></h3>
-	  <?php printPeriodicStat('WEEK', 48, 10); ?>
+	  <?php printPeriodicStat('WEEK', 100, 10); ?>
 
       <h3><?php echo(TodoLang::_("STATS_MONTHLY")); ?></h3>
-	  <?php printPeriodicStat('MONTH', 48, 12); ?>
+	  <?php printPeriodicStat('MONTH', 100, 12); ?>
 
       <h3><?php echo(TodoLang::_("STATS_YEARLY")); ?></h3>
-	  <?php printPeriodicStat('YEAR', 48, 3); ?>
+	  <?php printPeriodicStat('YEAR', 100, 3); ?>
 
       <h2><?php echo(TodoLang::_("STATS_DUE")); ?></h2>
       

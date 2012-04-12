@@ -139,6 +139,8 @@ span.modify_desc {
 }
 .statbar {
     background-color: blue;
+	color: white;
+	text-align: center;
 }
 .linkblock {
     float:right;
