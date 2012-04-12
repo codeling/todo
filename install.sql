@@ -13,22 +13,9 @@ CREATE TABLE `todo` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 ;
 
-/**
-recurrenceMode values:
-0 - not recurring
-1 - recurring daily
-2 - recurring weekly
-3 - recurring bi-weekly
-4 - recurring monthly
-5 - recurring bi-monthly
-6 - recurring quarterly
-7 - recurring half-yearly
-8 - recurring yearly
-*/
-
-CREATE TABLE `recurringCompletionHistory` (
+CREATE TABLE `recurringCopied` (
   `todo_id` int(11) NOT NULL,
-  `completionDate` datetime NOT NULL,
-  PRIMARY KEY (`todo_id`, `completionDate`)
+  `copiedDate` datetime NOT NULL,
+  PRIMARY KEY (`todo_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ;
 
