@@ -1,14 +1,17 @@
 <?php
     include "todo-core.php";
     include("db.php");
-	function printPeriodicStat($periodName, $maxHeight, $valCount) {
+	function printPeriodicStat($periodName, $maxHeight, $valCount, $groupName=null) {
 	    global $db;
-		$ChartWidth = 480;
-        $sql = "SELECT YEAR(completionDate), ".$periodName."(completionDate), COUNT(*) ".
+		if ($groupName == null) {
+		    $groupName = $periodName;
+		}
+		$ChartWidth = 800;
+        $sql = "SELECT YEAR(completionDate), ".$groupName."(completionDate), COUNT(*) ".
             "FROM `todo` ".
             "WHERE completionDate > (NOW() - INTERVAL ".$valCount." ".$periodName.") ".
-            "GROUP BY YEAR(completionDate), ".$periodName."(completionDate) ".
-            "ORDER BY YEAR(completionDate), ".$periodName."(completionDate)";
+            "GROUP BY YEAR(completionDate), ".$groupName."(completionDate) ".
+            "ORDER BY YEAR(completionDate), ".$groupName."(completionDate)";
         $qResult = dbQueryOrDie($db, $sql);
         $item = array();
     	$bar_row = '';
@@ -39,7 +42,7 @@
             $bar_row .= '<td class="statbar_row"><div class="statbar" '.
 			    'style="width: '. $width .'px;'.
 				'height:'. $height.'px;" >'.$stuff[2].'</div></td>';
-    		$value_row .= '<td><div class="statvalue">'.$stuff[1].'</div></td>';
+    		$value_row .= '<td><div class="statvalue" style="width: '.$width.'px;">'.$stuff[1].'</div></td>';
         }
 		$bar_row   .= '<td>Maximum: '.$maxVal.'</td>';
 		$value_row .= '<td>Minimum: '.$minVal.'</td>';
@@ -74,14 +77,18 @@
       <div class="linkblock"><a href="index.php"><?php echo(TodoLang::_("BACK_TO_TODO"));?></a></div>
       <h1><?php echo(TodoLang::_("STATISTICS")); ?></h1>
       <h2><?php echo(TodoLang::_("STATS_PERIODIC")); ?></h2>
+
+      <h3><?php echo(TodoLang::_("STATS_DAILY")); ?></h3>
+	  <?php printPeriodicStat('DAY', 100, 30, 'DATE'); ?>
+
       <h3><?php echo(TodoLang::_("STATS_WEEKLY")); ?></h3>
-	  <?php printPeriodicStat('WEEK', 100, 10); ?>
+	  <?php printPeriodicStat('WEEK', 100, 52); ?>
 
       <h3><?php echo(TodoLang::_("STATS_MONTHLY")); ?></h3>
-	  <?php printPeriodicStat('MONTH', 100, 12); ?>
+	  <?php printPeriodicStat('MONTH', 100, 24); ?>
 
       <h3><?php echo(TodoLang::_("STATS_YEARLY")); ?></h3>
-	  <?php printPeriodicStat('YEAR', 100, 3); ?>
+	  <?php printPeriodicStat('YEAR', 100, 5); ?>
 
       <h2><?php echo(TodoLang::_("STATS_DUE")); ?></h2>
       
