@@ -1,3 +1,6 @@
+/**************/
+/* Common CSS */
+
 body {
     font-family:Tahoma,sans-serif;
     background-color: #FFD;
@@ -12,6 +15,13 @@ h2 {
     font-size: 14pt;
     font-weight: bold;
 }
+.linkblock {
+    float:right;
+} 
+
+/*************/
+/* ToDo List */
+
 #progress,
 #todoTable,
 div.line {
@@ -130,18 +140,25 @@ span.modify_desc {
     padding-right: 5px;
     float: right;
 }
+
+/*******************/
+/* Statistics page */
+
 #statistiklink {
     float: right;
 	margin-right: 10px;
 }
-.statbar_row {
+.stat_row_bar {
     vertical-align:bottom;
 }
 .statbar {
     background-color: blue;
 	color: white;
+}
+.statvalue {
+    word-wrap: break-word;
+}
+.statbar, .statvalue {
 	text-align: center;
 }
-.linkblock {
-    float:right;
-}
+

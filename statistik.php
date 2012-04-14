@@ -22,42 +22,47 @@
         $value_row = '';
         $maxVal = 0;
         $minVal = 999999;
+        $sum = 0;
         while ($stuff = $qResult->fetch_array())
         {
             $item[] = $stuff;
-            if ((int)$stuff[2] > $maxVal) {
-                $maxVal = $stuff[2];
-            }
-            if ((int)$stuff[2] < $minVal) {
-                $minVal = $stuff[2];
-            }
-        }
-        if (count($item) > $valCount) {
-            $item = array_splice($item, count($item)-$valCount, $valCount);
+            $curValue = (int)$stuff[2];
+            $maxVal = max($curValue, $maxVal);
+            $minVal = min($curValue, $minVal);
+            $sum   += $curValue;
         }
         if (count($item) < $valCount) {
             $valCount = count($item);
+        }
+        $avg = ((float)$sum) / $valCount;
+        // if too many items retrieved, delete oldest
+        if (count($item) > $valCount) {
+            $item = array_splice($item, count($item)-$valCount, $valCount);
         }
         $val_scale = (float)$maxHeight/$maxVal;
         $width = (($ChartWidth-($valCount*4)) / ($valCount));
         foreach($item as $stuff)
         {
             $height = (int)( $val_scale * $stuff[2] );
-            $bar_row .= '<td class="statbar_row"><div class="statbar" '.
+            $bar_row .= '<td class="stat_row_bar"><div class="statbar" '.
                 'style="width: '. $width .'px;'.
                 'height:'. $height.'px;" >'.$stuff[2].'</div></td>';
-            $value_row .= '<td><div class="statvalue" style="width: '.$width.'px;">'.$stuff[1].'</div></td>';
+            $value_row .= '<td class="stat_row_value">'.
+                '<div class="statvalue" '.
+                'style="width: '.$width.'px;">'.$stuff[1].'</div></td>';
         }
-        $bar_row   .= '<td>Maximum: '.$maxVal.'</td>';
-        $value_row .= '<td>Minimum: '.$minVal.'</td>';
+        $bar_row .= '<td class="stat_row_characteristics" rowspan="2">'
+                 .TodoLang::_("MAXIMUM").': '.$maxVal.'<br/>'
+                 .TodoLang::_("AVERAGE").': '.sprintf("%.2f", $avg).'<br/>'
+                 .TodoLang::_("MINIMUM").': '.$minVal.'</td>';
     ?>
       <table>
         <tr>
-          <td>Finished Todos</td>
+          <td class="stat_row_header"><?php echo(TodoLang::_("STAT_FINISHED"));?></td>
           <?php echo($bar_row); ?>
         </tr>
         <tr>
-          <td><?php echo($periodName);?></td>
+          <td class="stat_row_header"><?php echo(TodoLang::_("STAT_".$periodName));?></td>
           <?php echo($value_row); ?>
         </tr>
       </table>
@@ -78,38 +83,32 @@
     <link rel="stylesheet" type="text/css" href="todo.css" />
  </head>
   <body>
-      <div class="linkblock"><a href="index.php"><?php echo(TodoLang::_("BACK_TO_TODO"));?></a></div>
+      <div class="linkblock"><a href="index.php"><?php echo(TodoLang::_("TO_TODO"));?></a></div>
       <h1><?php echo(TodoLang::_("STATISTICS")); ?></h1>
-      <h2><?php echo(TodoLang::_("STATS_PERIODIC_COMPLETION")); ?></h2>
+      <div id="main_content">
+<?php
+    $dates = array("completion", "creation");
+    foreach ($dates as $dateName)
+    {
+?>
+      <h2><?php echo(TodoLang::_("STATS_PERIODIC_".strtoupper($dateName))); ?></h2>
 
       <h3><?php echo(TodoLang::_("STATS_DAILY")); ?></h3>
-      <?php printPeriodicStat('DAY', 100, 30, 'completionDate', 'DATE'); ?>
+      <?php printPeriodicStat('DAY', 100, 30, $dateName.'Date', 'DATE'); ?>
 
       <h3><?php echo(TodoLang::_("STATS_WEEKLY")); ?></h3>
-      <?php printPeriodicStat('WEEK', 100, 52); ?>
+      <?php printPeriodicStat('WEEK', 100, 26, $dateName.'Date'); ?>
 
       <h3><?php echo(TodoLang::_("STATS_MONTHLY")); ?></h3>
-      <?php printPeriodicStat('MONTH', 100, 24); ?>
+      <?php printPeriodicStat('MONTH', 100, 24, $dateName.'Date'); ?>
 
       <h3><?php echo(TodoLang::_("STATS_YEARLY")); ?></h3>
-      <?php printPeriodicStat('YEAR', 100, 5); ?>
-	  
-      <h2><?php echo(TodoLang::_("STATS_PERIODIC_CREATION")); ?></h2>
-
-      <h3><?php echo(TodoLang::_("STATS_DAILY")); ?></h3>
-      <?php printPeriodicStat('DAY', 100, 30, 'creationDate', 'DATE'); ?>
-
-      <h3><?php echo(TodoLang::_("STATS_WEEKLY")); ?></h3>
-      <?php printPeriodicStat('WEEK', 100, 52, 'creationDate'); ?>
-
-      <h3><?php echo(TodoLang::_("STATS_MONTHLY")); ?></h3>
-      <?php printPeriodicStat('MONTH', 100, 24, 'creationDate'); ?>
-
-      <h3><?php echo(TodoLang::_("STATS_YEARLY")); ?></h3>
-      <?php printPeriodicStat('YEAR', 100, 5, 'creationDate'); ?>
-
-      <h2><?php echo(TodoLang::_("STATS_DUE")); ?></h2>
-      
+      <?php printPeriodicStat('YEAR', 100, 5, $dateName.'Date'); ?>
+<?php
+    }
+?>
+<!-- to implement...  <h2><?php echo(TodoLang::_("STATS_DUE")); ?></h2> -->
+    </div>
 </body>
 </html>
 <?php
