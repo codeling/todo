@@ -5,10 +5,11 @@
     $todo     = $db->real_escape_string(htmlentities($_REQUEST['todo'], ENT_QUOTES, "UTF-8"));
     $due      = $db->real_escape_string(htmlentities($_REQUEST['due'], ENT_QUOTES, "UTF-8"));
     $priority = (int)$_REQUEST['priority'];
+    $effort   = (int)$_REQUEST['effort'];
     $notes    = $db->real_escape_string(htmlentities($_REQUEST['notes'], ENT_QUOTES, "UTF-8"));
     $project  = $db->real_escape_string(htmlentities($_REQUEST['project'], ENT_QUOTES, "UTF-8"));
     $version  = (int)$_REQUEST['version'];
-	$recurrenceMode = (int)$_REQUEST['recurrenceMode'];
+    $recurrenceMode = (int)$_REQUEST['recurrenceMode'];
     if (strcmp($todo, '') == 0) {
         echo "Die Beschreibung darf nicht leer sein!";
         die;
@@ -24,10 +25,11 @@
             "SET description=$todo, ".
                 "dueDate=$due, ".
                 "priority=$priority, ".
+                "effort=$effort, ".
                 "notes=$notes, ".
                 "project=$project, ".
                 "version=".($version+1).", ".
-				"recurrenceMode=".$recurrenceMode." ".
+                "recurrenceMode=".$recurrenceMode." ".
             "WHERE id=$id AND version=$version";
     dbQueryOrDie($db, $sql);
 

@@ -89,13 +89,13 @@ input[type="image"]
     width: 120px;
     text-align: left;
 }
-.priority
-{
+.effort,
+.priority {
     display:inline-block;
-    width: 30px;
+    width: 50px;
     text-align: center;
 }
-.priority input {
+.priority input, .effort input {
     width: 30px;
 }
 #working {

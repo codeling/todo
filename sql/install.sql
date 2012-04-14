@@ -3,6 +3,7 @@ CREATE TABLE `todo` (
   `creationDate` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
   `description` varchar(255) NOT NULL DEFAULT '',
   `priority` int(4) NOT NULL DEFAULT '0',
+  `effort` int(4) NOT NULL DEFAULT 1,
   `completed` tinyint(1) NOT NULL DEFAULT '0',
   `completionDate` datetime DEFAULT NULL,
   `dueDate` datetime DEFAULT NULL,

@@ -3,27 +3,29 @@ var itemList;
 
 var currentlyModified = null;
 
-function Todo(id, todo, due, priority,
+function Todo(id, todo, due, priority, effort,
         completed, notes, project,
-		version, recurrenceMode) {
+        version, recurrenceMode) {
     this.id        = parseInt(id);
     this.todo      = todo;
     this.due       = due;
     this.priority  = parseInt(priority);
     this.priority  = isNaN(this.priority) ? 0 : this.priority;
+    this.effort    = parseInt(effort);
     this.completed = parseInt(completed);
     this.notes     = notes;
     this.project   = project;
     this.version   = parseInt(version);
-	this.recurrenceMode = parseInt(recurrenceMode);
+    this.recurrenceMode = parseInt(recurrenceMode);
 }
 
 
 function copyTodo(item)
 {
     return new Todo(
-        item.id, item.todo, item.due, item.priority, item.completed,
-        item.notes, item.project, item.version, item.recurrenceMode
+        item.id, item.todo, item.due, item.priority, item.effort,
+        item.completed, item.notes, item.project,
+        item.version, item.recurrenceMode
     );
 }
 
@@ -87,11 +89,12 @@ function modifyLocally(item) {
     }
     itemList[index].todo     = item.todo;
     itemList[index].priority = item.priority;
+    itemList[index].effort   = item.effort;
     itemList[index].due      = item.due;
     itemList[index].notes    = item.notes;
     itemList[index].project  = item.project;
     itemList[index].version  = item.version;
-	itemList[index].recurrenceMode = item.recurrenceMode;
+    itemList[index].recurrenceMode = item.recurrenceMode;
     itemList.sort(ItemSort);
     renderTable();
 }
@@ -227,6 +230,7 @@ function modifyItem(id) {
     $('#modify_todo').val(html_entity_decode(item.todo));
     $('#modify_due').val(formatDate(parseDate(item.due)));
     $('#modify_priority').val(item.priority);
+    $('#modify_effort').val(item.effort);
     $('#modify_notes').val(html_entity_decode(item.notes));
     $('#modify_project').val(html_entity_decode(item.project));
     $('#modify_recurrenceMode option[value="'+item.recurrenceMode+'"]').attr('selected',true);
@@ -298,11 +302,10 @@ function setListener(id) {
 
 
 function renderItem(idx) {
-//, id, todo, due, priority, completed, hasNote) {
     var it = itemList[idx];
     var hasNote = it.notes != null && it.notes != '';
     var hasProj = it.project != null && it.project != '';
-	var isRecurring = it.recurrenceMode != 0;
+    var isRecurring = it.recurrenceMode != 0;
     var today   = new Date();
     var dueDate = parseDate(it.due);
     var dueString = formatDate(dueDate);
@@ -315,13 +318,14 @@ function renderItem(idx) {
             (hasProj ? '<span class="todo_project">'+it.project+': </span>':'')+
             it.todo+
             (hasNote ? '<img src="images/note.png" />':'')+
-		    (isRecurring ? '<img src="images/recurring.png" />':'')+	
+            (isRecurring ? '<img src="images/recurring.png" />':'')+    
         '</span>'+
         '<span class="due">'+ dueString+
                 ((it.completed==0 && dueDate != null && (today - dueDate) > 0) ?
                 ' <img src="images/exclamation.png" height="16px" />':'')+
                 '</span>'+
         '<span class="priority">'+it.priority+'</span>'+
+        '<span class="effort">'+it.effort+'</span>'+
         '<span class="completed"><input type="checkbox" id="completed'+it.id+'" '+
             ((it.completed==1)?'checked="true" ':'')+'/></span>'+
         '<span class="modify"><input type="image" value="Bearbeiten" id="modify'+it.id+'" src="images/pencil.png" /></span>'+
@@ -376,9 +380,10 @@ function reload() {
         // make "proper" Todo items out of the loaded values:
         itemList[i].id        = parseInt(itemList[i].id);
         itemList[i].priority  = parseInt(itemList[i].priority);
+        itemList[i].effort    = parseInt(itemList[i].effort);
         itemList[i].completed = parseInt(itemList[i].completed);
         itemList[i].version   = parseInt(itemList[i].version);
-		itemList[i].recurrenceMode = parseInt(itemList[i].recurrenceMode);
+        itemList[i].recurrenceMode = parseInt(itemList[i].recurrenceMode);
     }
     itemList.sort(ItemSort);
     renderTable();
@@ -406,7 +411,8 @@ function enter() {
         todo = todo.substr(colon+1);
     }
     var stuff = new Todo(-1, todo, $('#enter_due').val(),
-            $('#enter_priority').val(), 0, '', project, 1, 0);
+            $('#enter_priority').val(), $('#enter_effort').val(),
+            0, '', project, 1, 0);
     addLocally(stuff);
     $.ajax( {
         type: 'POST',
@@ -424,6 +430,7 @@ function enter() {
                 $('#enter_todo').val('');
                 $('#enter_due').val('');
                 $('#enter_priority').val('');
+                $('#enter_effort').val('1');
                 var index = findItem(-1);
                 var id = parseInt(returnValue);
                 itemList[index].id = id;
@@ -498,11 +505,12 @@ $(document).ready(function() {
             $('#modify_todo').val(),
             $('#modify_due').val(),
             $('#modify_priority').val(),
+            $('#modify_effort').val(),
             0,  // currently not taken into account on server, and not modifiable at server
             $('#modify_notes').val().trim(),
             $('#modify_project').val(),
             itemList[idx].version,
-			$('#modify_recurrenceMode').val());
+            $('#modify_recurrenceMode').val());
         currentlyModified = stuff;
         log('Speichere Veränderungen...');
         $.ajax({

@@ -2,7 +2,7 @@
     require("db.php");
 	require("reactivate.php");
 
-    $sql = "SELECT id, description as todo, dueDate as due, priority, ".
+    $sql = "SELECT id, description as todo, dueDate as due, priority, effort, ".
             "completed, notes, project, version, recurrenceMode ".
            "FROM todo WHERE completed=0 ".
            "OR completionDate > (NOW() - INTERVAL 31 DAY)";
