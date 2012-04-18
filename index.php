@@ -63,6 +63,10 @@
             <option value="121"><?php echo(TodoLang::_("REPEAT_THIRDOFYEARLY"));?></option>
             <option value="182"><?php echo(TodoLang::_("REPEAT_HALFYEARLY"));?></option>
             <option value="365"><?php echo(TodoLang::_("REPEAT_YEARLY"));?></option>
+			<option value="730"><?php echo(TodoLang::_("REPEAT_BIYEARLY"));?></option>
+			<option value="1095"><?php echo(TodoLang::_("REPEAT_THREEYEARLY"));?></option>
+			<option value="1460"><?php echo(TodoLang::_("REPEAT_FOURYEARLY"));?></option>
+			<option value="1805"><?php echo(TodoLang::_("REPEAT_FIVEYEARLY"));?></option>
           </select>
         </div><div class="modify_line">
           <span class="modify_desc"><?php echo(TodoLang::_("NOTES"));?>:</span>
