@@ -151,6 +151,12 @@ span.modify_desc {
 .stat_row_bar {
     vertical-align:bottom;
 }
+.stat_row_header {
+    width: 100px;
+}
+.stat_row_characteristics {
+    padding-left: 10px;
+}
 .statbar {
     background-color: blue;
 	color: white;
