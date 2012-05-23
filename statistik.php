@@ -1,7 +1,7 @@
 <?php
 
     include "todo-core.php";
-    include("db.php");
+    include("queries/db.php");
 
     function printPeriodicStat($periodName, $maxHeight, $valCount,
         $checkedDate='completionDate', $groupName=null)
@@ -72,7 +72,8 @@
 <html>
   <head>
     <meta charset="UTF-8">
-    <title><?php echo TodoConstants::AppName; ?> - Statistics</title>
+    <title><?php echo TodoConstants::AppName; ?> - <?php echo TodoLang::_("STATISTICS"); ?></title>
+
     <!-- JQuery & JQuery UI -->
 <!--
     <script src="jquery/jquery-1.6.2.min.js"></script>

@@ -17,7 +17,7 @@ function Todo(id, todo, due, priority, effort,
     this.project   = project;
     this.version   = parseInt(version);
     this.recurrenceMode = parseInt(recurrenceMode);
-	this.completionDate = completionDate;
+    this.completionDate = completionDate;
 }
 
 
@@ -33,26 +33,29 @@ function copyTodo(item)
 
 function ItemSort(item1, item2) {
     var less =
-	    (item1.completed < item2.completed) ||
+        (item1.completed < item2.completed) ||
         (
-		    item1.completed == item2.completed &&
-		    (
-		        item1.completed == 0 &&
-				(
+            item1.completed == item2.completed &&
+            (
+                item1.completed == 0 &&
+                (
                     item1.priority > item2.priority ||
                     (
-						item1.priority == item2.priority &&
+                        item1.priority == item2.priority &&
                         ((item1.project!=null)?item1.project+item1.todo:item1.todo) <
                         ((item2.project!=null)?item2.project+item2.todo:item2.todo)
-					)
-				)
-		    ) || (
-		        item1.completionDate > item2.completionDate ||
-				(
-				    item1.completionDate == item2.completionDate &&
-					item1.priority > item2.priority
-				)
-		    ) 
+                    )
+                )
+            ) || (
+                item1.completed == 1 &&
+                (
+                    item1.completionDate > item2.completionDate ||
+                    (
+                        item1.completionDate == item2.completionDate &&
+                        item1.priority > item2.priority
+                    )
+                )
+            ) 
         );
     // log('item1: c='+item1.completed+', p='+item1.priority+'; item2: c='+item2.completed+', p='+item2.priority+'; less: '+less);
     if (less) {
@@ -61,7 +64,7 @@ function ItemSort(item1, item2) {
                item1.priority == item2.priority &&
                item1.todo == item2.todo &&
                item1.project == item2.project &&
-			   (item1.completed == 0 || item1.completionDate == item2.completionDate) ) {
+               (item1.completed == 0 || item1.completionDate == item2.completionDate) ) {
         return 0;
     } else {
         return 1;
@@ -121,7 +124,7 @@ function modifyLocally(item) {
 function addLocally(newItem) {
     var insertIdx = 0;
     while(insertIdx < itemList.length && 
-	    ItemSort(newItem, itemList[insertIdx]) > 0) {
+        ItemSort(newItem, itemList[insertIdx]) > 0) {
         ++insertIdx;
     }
     itemList.splice(insertIdx, 0, newItem);
@@ -138,7 +141,7 @@ function toggleLocally(item) {
     }
     itemList[index].completed = item.completed;
     itemList[index].version = item.version;
-	itemList[index].completionDate = item.completionDate;
+    itemList[index].completionDate = item.completionDate;
     itemList.sort(ItemSort);
     renderTable();
     updateProgress();
@@ -158,7 +161,7 @@ function sendDelete(id) {
     deleteLocally(idx);
     $.ajax( {
         type: 'POST',
-        url: 'delete.php',
+        url: 'queries/delete.php',
         data: stuff,
         success: function(returnValue) {
             if (returnValue != 1) {
@@ -195,11 +198,11 @@ function toggleCompleted(id) {
     stuff.id = id;
     stuff.completed = itemList[index].completed == 0 ? 1 : 0;
     stuff.version   = itemList[index].version;
-	stuff.completionDate = stuff.completed == 1 ? formatDate(new Date()) : null;
+    stuff.completionDate = stuff.completed == 1 ? formatDate(new Date()) : null;
     currentlyModified = copyTodo(itemList[index]);
     $.ajax({
         type: 'POST',
-        url: 'complete.php',
+        url: 'queries/complete.php',
         data: stuff,
         success: function(returnValue) {
             if (returnValue != 1) {
@@ -214,7 +217,7 @@ function toggleCompleted(id) {
                 }
             } else {
                 currentlyModified.completed = stuff.completed;
-				currentlyModified.completionDate = stuff.completionDate;
+                currentlyModified.completionDate = stuff.completionDate;
                 currentlyModified.version   = stuff.version + 1;
                 toggleLocally(currentlyModified);
                 log('Erfolgreich geändert!');
@@ -328,7 +331,7 @@ function renderItem(idx) {
     var isRecurring = it.recurrenceMode != 0;
     var today   = new Date();
     var dueDate = parseDate(it.due);
-	var complDate = parseDate(it.completionDate);
+    var complDate = parseDate(it.completionDate);
     var dueString = (it.completed == 0) ? formatDate(dueDate): formatDate(complDate);
     $('#todoTable').append('<div class="line'+
             ((idx%2!=0)?' line_odd':'')+
@@ -389,7 +392,7 @@ function toggleWorking(show) {
 function reload() {
     log("Lade ToDo-Liste neu...");
     var jsontext = $.ajax({
-        url: 'query.php',
+        url: 'queries/query-list.php',
         async: false
     }).responseText;
     try {
@@ -437,7 +440,7 @@ function enter() {
     addLocally(stuff);
     $.ajax( {
         type: 'POST',
-        url: 'enter.php',
+        url: 'queries/enter.php',
         data: stuff,
         success: function(returnValue) {
             if (isNaN(returnValue)) {
@@ -510,12 +513,12 @@ $(document).ready(function() {
                 initStatus: 'Wähle ein Datum', isRTL: false};
         $.datepicker.setDefaults($.datepicker.regional['de']);
     });
-    
+
     createDatePicker("#enter_due");
     createDatePicker("#modify_due");
 
     $('#modify_save').click(function() {
-        // store... 
+        // store...
         var id = parseInt($('#modify_id').val());
         var idx = findItem(id);
         if (idx == -1) {
@@ -536,7 +539,7 @@ $(document).ready(function() {
         log('Speichere Veränderungen...');
         $.ajax({
             type: 'POST',
-            url: 'update.php',
+            url: 'queries/update.php',
             data: stuff,
             success: function(returnValue) {
                 if (isNaN(returnValue)) {
