@@ -5,7 +5,7 @@ var currentlyModified = null;
 
 function Todo(id, todo, due, priority, effort,
         completed, notes, project,
-        version, recurrenceMode, completionDate) {
+        version, recurrenceMode, completionDate, creationDate) {
     this.id        = parseInt(id);
     this.todo      = todo;
     this.due       = due;
@@ -18,6 +18,7 @@ function Todo(id, todo, due, priority, effort,
     this.version   = parseInt(version);
     this.recurrenceMode = parseInt(recurrenceMode);
     this.completionDate = completionDate;
+    this.creationDate = creationDate;
 }
 
 
@@ -26,7 +27,8 @@ function copyTodo(item)
     return new Todo(
         item.id, item.todo, item.due, item.priority, item.effort,
         item.completed, item.notes, item.project,
-        item.version, item.recurrenceMode, item.completionDate
+        item.version, item.recurrenceMode, item.completionDate,
+        item.creationDate
     );
 }
 
@@ -324,6 +326,12 @@ function setListener(id) {
 }
 
 
+function getRecurrenceString(recurrenceMode)
+{
+    return $('#modify_recurrenceMode option[value="'+recurrenceMode+'"]').text();
+}
+
+
 function renderItem(idx) {
     var it = itemList[idx];
     var hasNote = it.notes != null && it.notes != '';
@@ -332,12 +340,15 @@ function renderItem(idx) {
     var today   = new Date();
     var dueDate = parseDate(it.due);
     var complDate = parseDate(it.completionDate);
+    var createDate = parseDate(it.creationDate);
     var dueString = (it.completed == 0) ? formatDate(dueDate): formatDate(complDate);
+    var repetition = getRecurrenceString(it.recurrenceMode);
     $('#todoTable').append('<div class="line'+
             ((idx%2!=0)?' line_odd':'')+
             ((it.completed==1)?' todo_completed':'')+
             '" id="todo'+it.id+'">'+
-        '<span class="todo">'+
+        '<span class="todo" title="Angelegt: '+formatDate(createDate)+
+            '; Wiederholung: '+repetition+'">'+
             '<span class="todo_lineNr">'+(idx+1)+'</span>. '+
             (hasProj ? '<span class="todo_project">'+it.project+': </span>':'')+
             it.todo+
@@ -436,7 +447,7 @@ function enter() {
     }
     var stuff = new Todo(-1, todo, $('#enter_due').val(),
             $('#enter_priority').val(), $('#enter_effort').val(),
-            0, '', project, 1, 0, null);
+            0, '', project, 1, 0, null, formatDate(new Date()));
     addLocally(stuff);
     $.ajax( {
         type: 'POST',
@@ -534,7 +545,9 @@ $(document).ready(function() {
             $('#modify_notes').val().trim(),
             $('#modify_project').val(),
             itemList[idx].version,
-            $('#modify_recurrenceMode').val());
+            $('#modify_recurrenceMode').val(),
+            itemList[idx].completionDate,
+            itemList[idx].creationDate);
         currentlyModified = stuff;
         log('Speichere Veränderungen...');
         $.ajax({
