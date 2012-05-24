@@ -33,31 +33,39 @@ function copyTodo(item)
 }
 
 
+function printItem(item)
+{
+    alert(JSON.stringify(item).replace(/,/g,"\n").replace(/[{}\"]/g, ""));
+}
+
+
 function ItemSort(item1, item2) {
     var less =
         (item1.completed < item2.completed) ||
         (
             item1.completed == item2.completed &&
             (
-                item1.completed == 0 &&
                 (
-                    item1.priority > item2.priority ||
+                    item1.completed == 0 &&
                     (
-                        item1.priority == item2.priority &&
-                        ((item1.project!=null)?item1.project+item1.todo:item1.todo) <
-                        ((item2.project!=null)?item2.project+item2.todo:item2.todo)
+                        item1.priority > item2.priority ||
+                        (
+                            item1.priority == item2.priority &&
+                            ((item1.project!=null)?item1.project+item1.todo:item1.todo) <
+                            ((item2.project!=null)?item2.project+item2.todo:item2.todo)
+                        )
                     )
-                )
-            ) || (
-                item1.completed == 1 &&
-                (
-                    item1.completionDate > item2.completionDate ||
+                ) || (
+                    item1.completed == 1 &&
                     (
-                        item1.completionDate == item2.completionDate &&
-                        item1.priority > item2.priority
+                        item1.completionDate > item2.completionDate ||
+                        (
+                            item1.completionDate == item2.completionDate &&
+                            item1.priority > item2.priority
+                        )
                     )
-                )
-            ) 
+                ) 
+            )
         );
     // log('item1: c='+item1.completed+', p='+item1.priority+'; item2: c='+item2.completed+', p='+item2.priority+'; less: '+less);
     if (less) {
@@ -141,10 +149,20 @@ function toggleLocally(item) {
         alert('Fehler: Eintrag nicht gefunden!');
         return;
     }
-    itemList[index].completed = item.completed;
-    itemList[index].version = item.version;
-    itemList[index].completionDate = item.completionDate;
-    itemList.sort(ItemSort);
+    toggledItem = itemList[index];
+    toggledItem.completed = item.completed;
+    toggledItem.version = item.version;
+    toggledItem.completionDate = item.completionDate;
+    //itemList.sort(ItemSort);
+    // restore order for the one item only:
+    itemList.splice(index, 1);
+    var insertIdx = 0;
+    while(insertIdx < itemList.length && 
+        ItemSort(toggledItem, itemList[insertIdx]) > 0) {
+        insertIdx++;
+    }
+    itemList.splice(insertIdx, 0, toggledItem);
+
     renderTable();
     updateProgress();
 }
@@ -200,7 +218,7 @@ function toggleCompleted(id) {
     stuff.id = id;
     stuff.completed = itemList[index].completed == 0 ? 1 : 0;
     stuff.version   = itemList[index].version;
-    stuff.completionDate = stuff.completed == 1 ? formatDate(new Date()) : null;
+    stuff.completionDate = stuff.completed == 1 ? formatDate(new Date(), true) : null;
     currentlyModified = copyTodo(itemList[index]);
     $.ajax({
         type: 'POST',
@@ -299,17 +317,24 @@ function parseDate(dateStr) {
 }
  
 
-function formatDate(date) {
+function formatDate(date, includeTime) {
     if (date == null){
         return '';
     }
     if (isNaN(date.getFullYear())) {
         return 'invalid';
     }
-    return ''+
+    result = ''+
         date.getFullYear()               +'-'+
         fillStr(date.getMonth()+1, '0', 2) +'-'+
         fillStr(date.getDate() , '0', 2);
+    if (includeTime != null && includeTime == true)
+    {
+        result += ' ' + fillStr(date.getHours(), '0', 2) + ':' +
+                  fillStr(date.getMinutes(), '0', 2) + ':' +
+                  fillStr(date.getSeconds(), '0', 2);
+    }
+    return result;
 }
 
 
@@ -366,6 +391,9 @@ function renderItem(idx) {
         '<span class="modify"><input type="image" value="Bearbeiten" id="modify'+it.id+'" src="images/pencil.png" /></span>'+
         '<span class="delete"><input type="image" value="Löschen" id="delete'+it.id+'" src="images/Delete.png" /></span>'+
     '</div>');
+    $('#todo'+it.id).dblclick(function() {
+        printItem(it);
+    });
     if (it.id != -1) {
         setListener(it.id);
     }
