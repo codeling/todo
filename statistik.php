@@ -82,8 +82,10 @@
     <script type="text/javascript" src="todo.js"></script>
 -->
     <link rel="stylesheet" type="text/css" href="todo.css" />
- </head>
+  </head>
   <body>
+    <? require("../common/navigation.php"); ?>
+    <div id="todo_content">
       <div class="linkblock"><a href="index.php"><?php echo(TodoLang::_("TO_TODO"));?></a></div>
       <h1><?php echo(TodoLang::_("STATISTICS")); ?></h1>
       <div id="main_content">
@@ -92,25 +94,26 @@
     foreach ($dates as $dateName)
     {
 ?>
-      <h2><?php echo(TodoLang::_("STATS_PERIODIC_".strtoupper($dateName))); ?></h2>
-
-      <h3><?php echo(TodoLang::_("STATS_DAILY")); ?></h3>
-      <?php printPeriodicStat('DAY', 100, 30, $dateName.'Date', 'DATE'); ?>
-
-      <h3><?php echo(TodoLang::_("STATS_WEEKLY")); ?></h3>
-      <?php printPeriodicStat('WEEK', 100, 26, $dateName.'Date'); ?>
-
-      <h3><?php echo(TodoLang::_("STATS_MONTHLY")); ?></h3>
-      <?php printPeriodicStat('MONTH', 100, 24, $dateName.'Date'); ?>
-
-      <h3><?php echo(TodoLang::_("STATS_YEARLY")); ?></h3>
-      <?php printPeriodicStat('YEAR', 100, 5, $dateName.'Date'); ?>
+        <h2><?php echo(TodoLang::_("STATS_PERIODIC_".strtoupper($dateName))); ?></h2>
+  
+        <h3><?php echo(TodoLang::_("STATS_DAILY")); ?></h3>
+        <?php printPeriodicStat('DAY', 100, 30, $dateName.'Date', 'DATE'); ?>
+  
+        <h3><?php echo(TodoLang::_("STATS_WEEKLY")); ?></h3>
+        <?php printPeriodicStat('WEEK', 100, 26, $dateName.'Date'); ?>
+  
+        <h3><?php echo(TodoLang::_("STATS_MONTHLY")); ?></h3>
+        <?php printPeriodicStat('MONTH', 100, 24, $dateName.'Date'); ?>
+  
+        <h3><?php echo(TodoLang::_("STATS_YEARLY")); ?></h3>
+        <?php printPeriodicStat('YEAR', 100, 5, $dateName.'Date'); ?>
 <?php
     }
 ?>
 <!-- to implement...  <h2><?php echo(TodoLang::_("STATS_DUE")); ?></h2> -->
+      </div>
     </div>
-</body>
+  </body>
 </html>
 <?php
      $db->close();
