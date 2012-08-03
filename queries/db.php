@@ -1,5 +1,5 @@
 <?php
-    $db = new mysqli("localhost", "root", "g9NgU4CVsd30pLW2", "todo");
+    $db = new mysqli("localhost", "todo", "UwxhNGPBjB3u9KbV", "todo");
 
 	function dbQueryOrDie($db, $sql) {
 	    $qResult = $db->query($sql);
