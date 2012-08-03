@@ -3,7 +3,7 @@
 
 body {
     font-family:Tahoma,sans-serif;
-    background-color: #FFD;
+    background-color: #F8F8F8;
     font-size: 9pt;
 }
 h1 {
@@ -28,7 +28,7 @@ div.line {
     min-width: 600px;
 }
 div.line_odd {
-    background-color: #FE9;
+    background-color: #EEEEEE;
 }
 #todoTable {
     border: 1px solid black;
@@ -52,7 +52,7 @@ div.line_odd {
     vertical-align: middle;
 }
 .line_header {
-    background-color: #FE9;
+    background-color: #EEEEEE;
 }
 input[type="text"]
 {
@@ -101,13 +101,13 @@ input[type="image"]
 #working {
     padding: 3px;
     margin: 2px;
-    background-color:#FE9;
+    background-color:#EEEEEE;
     float: right;
 }
 #smallLog {
     font-size: 6pt;
     float: right;
-    background-color:#FE9;
+    background-color:#EEEEEE;
     margin-top: -12px;
     margin-left: 2px;
     margin-right: 2px;
@@ -125,13 +125,13 @@ span.modify_desc {
     border: 1px solid black;
 }
 #progress_todo {
-    background-color: #F00;
+    background-color: #F88;
     width: 40%;
     display: inline-block;
     border-right: 1px solid black;
 }
 #progress_done {
-    background-color: #0F0;
+    background-color: #8F8;
     width: 40%;
     display: inline-block;
 }

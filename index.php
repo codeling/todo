@@ -13,7 +13,6 @@
     <link rel="stylesheet" type="text/css" href="todo.css" />
   </head>
   <body>
-    <? require("../common/navigation.php"); ?>
     <div id="todo_content">
       <div id="smallLog"><?php echo(TodoLang::_("STARTING_LOG"));?></div>
       <div id="logLink"><a href="javascript:toggleLog()"><?php echo(TodoLang::_("SHOW_LOG"));?></a></div>
