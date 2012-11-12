@@ -372,8 +372,10 @@ function renderItem(idx) {
             ((idx%2!=0)?' line_odd':'')+
             ((it.completed==1)?' todo_completed':'')+
             '" id="todo'+it.id+'">'+
-        '<span class="todo" title="Angelegt: '+formatDate(createDate)+
-            '; Wiederholung: '+repetition+'">'+
+        '<span class="todo" title="Angelegt: '+formatDate(createDate, true)+
+            '; Wiederholung: '+repetition+
+			((it.completed != 0)? '; Erledigt: '+formatDate(complDate, true):'')+
+			'">'+
             '<span class="todo_lineNr">'+(idx+1)+'</span>. '+
             (hasProj ? '<span class="todo_project">'+it.project+': </span>':'')+
             it.todo+
