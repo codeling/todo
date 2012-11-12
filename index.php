@@ -19,7 +19,7 @@
       <div id="working"><?php echo(TodoLang::_("WORKING"));?></div>
       <div id="statistiklink"><a href="statistik.php"><?php echo(TodoLang::_("SHOW_STATISTICS"));?></a></div>
       <h1><?php echo(TodoConstants::AppTitle); ?></h1>
-      <div id="progress"><span id="progress_done">&nbsp;</span><span id="progress_todo">&nbsp;</span><span id="progress_status"><?php echo(TodoLang::_("DONE"));?>: 0% <?php echo(TodoLang::_("OPEN"));?>: 0</span></div>
+      <div id="progress"><span id="progress_done">&nbsp;</span><span id="progress_todo">&nbsp;</span></div>
       <form method="POST" onsubmit="return false;" id="inputform">
         <div class="line line_header">
           <span class="todo"><?php echo(TodoLang::_("TODO"));?> <input type="image" src="images/refresh.png" name="refresh" value="refresh" onclick="refresh()" /></span>

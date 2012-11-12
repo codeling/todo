@@ -125,22 +125,16 @@ span.modify_desc {
     border: 1px solid black;
 }
 #progress_todo {
-    background-color: #F88;
+    background-color: #D66;
     width: 40%;
     display: inline-block;
     border-right: 1px solid black;
 }
 #progress_done {
-    background-color: #8F8;
+    background-color: #6D6;
     width: 40%;
     display: inline-block;
 }
-#progress_status {
-    padding-left: 5px;
-    padding-right: 5px;
-    float: right;
-}
-
 /*******************/
 /* Statistics page */
 

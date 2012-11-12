@@ -417,9 +417,11 @@ function updateProgress() {
         }
     }
     var count = done+open;
-    $('#progress_todo').css('width', (75*open/count)+'%');
-    $('#progress_done').css('width', (75*done/count)+'%');
-    $('#progress_status').html('Erledigt: '+Math.round(100*done/count)+'% Offen: '+open);
+	var progressWidth = 99.5; // in percent
+    $('#progress_todo').css('width', ((progressWidth*open/count))+'%');
+    $('#progress_done').css('width', ((progressWidth*done/count))+'%');
+    $('#progress_todo').attr('title', 'Offen: '+open);
+	$('#progress_done').attr('title', 'Erledigt: '+Math.round(100*done/count) + ' % ('+done+') seit letztem Monat' );
 }
 
 
