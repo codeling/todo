@@ -11,11 +11,15 @@
             $groupName = $periodName;
         }
         $ChartWidth = 800;
-        $sql = "SELECT YEAR($checkedDate), $groupName($checkedDate), COUNT(*) ".
+		$groupNameExpr = "$groupName($checkedDate".
+			((strcmp($groupName, "WEEK") == 0) ? ", 3" : "")
+			.")";
+
+        $sql = "SELECT YEAR($checkedDate), $groupNameExpr, COUNT(*) ".
             "FROM `todo` ".
             "WHERE $checkedDate > (NOW() - INTERVAL $valCount $periodName) ".
-            "GROUP BY YEAR($checkedDate), $groupName($checkedDate) ".
-            "ORDER BY YEAR($checkedDate), $groupName($checkedDate)";
+            "GROUP BY YEAR($checkedDate), $groupNameExpr ".
+            "ORDER BY YEAR($checkedDate), $groupNameExpr";
         $qResult = dbQueryOrDie($db, $sql);
         $item = array();
         $bar_row = '';
