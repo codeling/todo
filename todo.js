@@ -208,6 +208,37 @@ function deleteItem(id) {
 }
 
 
+function sendReactivate(id) {
+	log('Reaktiviere...');
+	var idobj = new Object();
+	idobj.id = id;
+	$.ajax( {
+		type: 'POST',
+		url: 'queries/reactivate-one.php',
+		data: idobj,
+		success: function(returnValue) {
+			log('Resultat: '+returnValue);
+			refresh();
+		},
+		error: function(jqXHR, textStatus, errorThrown) {
+			alert('Fehler!');
+		}
+	});
+}
+
+
+function reactivate(id) {
+    var index = findItem(id);
+    if (itemList[index].completed == 0) {
+		return;
+	}
+	if (!confirm('Eintrag wirklich wiederbeleben?')) {
+		return;
+	}
+	sendReactivate(id);
+}
+
+
 function toggleCompleted(id) {
     var index = findItem(id);
     if (index == -1) {
@@ -348,6 +379,9 @@ function setListener(id) {
     $('#delete'+id).click(function() {
         deleteItem(id);
     });
+	$('#reactivate'+id).click(function() {
+		reactivate(id);
+	});
 }
 
 
@@ -380,7 +414,7 @@ function renderItem(idx) {
             (hasProj ? '<span class="todo_project">'+it.project+': </span>':'')+
             it.todo+
             (hasNote ? '<img src="images/note.png" />':'')+
-            (isRecurring ? '<img src="images/recurring.png" />':'')+    
+            (isRecurring ? '<img src="images/recurring.png" id="reactivate'+it.id+'" />':'')+    
         '</span>'+
         '<span class="due">'+ dueString+
                 ((it.completed==0 && dueDate != null && (today - dueDate) > 0) ?
