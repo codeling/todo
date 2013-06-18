@@ -5,8 +5,13 @@
 	$sql = "CREATE TEMPORARY TABLE reviving AS ".
 	        "SELECT * FROM todo t WHERE completed=1 and ".
 	        "recurrenceMode != 0 AND ".
-			"completionDate < (NOW() - INTERVAL 3*recurrenceMode/4 DAY) ".
+			"DATEDIFF(".
+				"DATE_ADD(".
+					"completionDate, ".
+					"INTERVAL recurrenceMode DAY".
+				"),".
+				"UTC_DATE()".
+			") < LEAST(GREATEST(recurrenceMode/4, 2), 30) ".
 			"AND NOT EXISTS (SELECT 1 FROM recurringCopied r WHERE r.todo_id=t.id);";
-    $qResult = dbQueryOrDie($db, $sql);
+	$qResult = dbQueryOrDie($db, $sql);
 	require("reactivate-temp.php");
-
