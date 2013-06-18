@@ -1,0 +1,9 @@
+CREATE TABLE `list` (
+	id int(11) NOT NULL AUTO_INCREMENT,
+	name VARCHAR(255),
+	PRIMARY KEY (`id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 ;
+
+ALTER TABLE `todo`
+	ADD `list_id` int(11) NOT NULL DEFAULT 0 AFTER `project`;
+

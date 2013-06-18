@@ -9,6 +9,7 @@ CREATE TABLE `todo` (
   `dueDate` datetime DEFAULT NULL,
   `notes` varchar(10000) DEFAULT '',
   `project` varchar(255) DEFAULT NULL,
+  `list_id` int(11) NOT NULL DEFAULT 0,
   `version` int(11) NOT NULL DEFAULT '1',
   `recurrenceMode` int(11) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`)
@@ -20,3 +21,8 @@ CREATE TABLE `recurringCopied` (
   PRIMARY KEY (`todo_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ;
 
+CREATE TABLE `list` (
+	id int(11) NOT NULL AUTO_INCREMENT,
+	name VARCHAR(255),
+	PRIMARY KEY (`id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 ;
