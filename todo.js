@@ -22,9 +22,13 @@ function Todo(id, todo, due, priority, effort,
     this.creationDate = creationDate;
 }
 
-function List(id, name)
+function ListID(id)
 {
     this.id = id;
+}
+
+function ListName(name)
+{
     this.name = name;
 }
 
@@ -336,6 +340,22 @@ function changeList(id) {
 	updateProgress();
 }
 
+function setListTitle(id){
+    var postData = new ListID(id);
+    $.ajax( {
+        url: 'queries/getlisttitle.php',
+	type: 'POST',
+	data: postData,
+	success: function(returnValue) {
+		$('#list-name').empty();
+		$('#list-name').append(returnValue);
+	},
+        error: function(jqXHR, textStatus, errorThrown) {
+            alert('Fehler beim Titel holen');
+        }
+    } );
+}
+
 function updateLists(id) {
     $(id).empty();
     var jsontext = $.ajax({
@@ -529,7 +549,9 @@ function toggleWorking(show) {
 
 function reload() {
     log("Lade ToDo-Liste neu...");
-    var postData = new List($('#list_id').val());
+    var list_id = $('#list_id').val();
+    var postData = new ListID(list_id);
+    setListTitle(list_id);
     var jsontext = $.ajax({
         url: 'queries/query-list.php',
 	type: 'POST',
@@ -563,7 +585,7 @@ function newlist() {
         alert('Name darf nicht leer sein!');
         return;
     }
-    var postData = new List(-1, name);
+    var postData = new ListName(name);
     $.ajax( {
         type: 'POST',
         url: 'queries/newlist.php',
@@ -575,14 +597,13 @@ function newlist() {
             } else {
                 log('Liste erfolgreich angelegt!');
                 $('#newlist_name').val('');
-	//	updateLists('#listTable');
+		updateLists('#listTable');
             }
         },
         error: function(jqXHR, textStatus, errorThrown) {
             alert('Übertragungsfehler beim Einfügen!');
         }
     });
-    return false;
 }
 
 function enter() {

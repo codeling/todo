@@ -19,7 +19,7 @@
       <div id="working"><?php echo(TodoLang::_("WORKING"));?></div>
       <div id="listlink"><a href="javascript:chooseList()"><?php echo(TodoLang::_("CHOOSE_LIST"));?></a></div>
       <div id="statistiklink"><a href="statistik.php"><?php echo(TodoLang::_("SHOW_STATISTICS"));?></a></div>
-      <h1><?php echo(TodoConstants::AppTitle); ?></h1>
+      <h1><?php echo(TodoConstants::AppTitle); ?>: <span id="list-name"></span></h1>
       <div id="progress"><span id="progress_done">&nbsp;</span><span id="progress_todo">&nbsp;</span></div>
       <form method="POST" onsubmit="return false;" id="inputform">
         <input type="hidden" name="list_id" id="list_id" value="<?php echo $curListID; ?>" />
