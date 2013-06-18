@@ -78,7 +78,7 @@
             <span class="modify_desc"><?php echo(TodoLang::_("PROJECT"));?>:</span>
             <input type="text" id="modify_project" name="modify_project" size="50" maxlength="255" />
           </div><div class="modify_line">
-            <span class="modify_desc"><?php echo(TodoLang::_("LIST_NAME"));?></span>
+            <span class="modify_desc"><?php echo(TodoLang::_("LIST"));?></span>
             <input type="text" id="modify_list_id" name="modify_list_id" size="10" maxlength="10" />
           </div><div class="modify_line">
 	  </div>

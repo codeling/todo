@@ -221,33 +221,33 @@ function deleteItem(id) {
 
 
 function sendReactivate(id) {
-	log('Reaktiviere...');
-	var idobj = new Object();
-	idobj.id = id;
-	$.ajax( {
-		type: 'POST',
-		url: 'queries/reactivate-one.php',
-		data: idobj,
-		success: function(returnValue) {
-			log('Resultat: '+returnValue);
-			refresh();
-		},
-		error: function(jqXHR, textStatus, errorThrown) {
-			alert('Fehler!');
-		}
-	});
+    log('Reaktiviere...');
+    var idobj = new Object();
+    idobj.id = id;
+    $.ajax( {
+        type: 'POST',
+        url: 'queries/reactivate-one.php',
+        data: idobj,
+        success: function(returnValue) {
+            log('Resultat: '+returnValue);
+            refresh();
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            alert('Fehler!');
+        }
+    });
 }
 
 
 function reactivate(id) {
     var index = findItem(id);
     if (itemList[index].completed == 0) {
-		return;
-	}
-	if (!confirm('Eintrag wirklich wiederbeleben?')) {
-		return;
-	}
-	sendReactivate(id);
+        return;
+    }
+    if (!confirm('Eintrag wirklich wiederbeleben?')) {
+        return;
+    }
+    sendReactivate(id);
 }
 
 
@@ -335,21 +335,21 @@ function modifyItem(id) {
 }
 
 function changeList(id) {
-	$('#list_id').val(id);
-	refresh();
-	updateProgress();
+    $('#list_id').val(id);
+    refresh();
+    updateProgress();
 }
 
 function setListTitle(id){
     var postData = new ListID(id);
     $.ajax( {
         url: 'queries/getlisttitle.php',
-	type: 'POST',
-	data: postData,
-	success: function(returnValue) {
-		$('#list-name').empty();
-		$('#list-name').append(returnValue);
-	},
+        type: 'POST',
+        data: postData,
+        success: function(returnValue) {
+            $('#list-name').empty();
+            $('#list-name').append(returnValue);
+        },
         error: function(jqXHR, textStatus, errorThrown) {
             alert('Fehler beim Titel holen');
         }
@@ -360,7 +360,7 @@ function updateLists(id) {
     $(id).empty();
     var jsontext = $.ajax({
         url: 'queries/getlists.php',
-	type: 'POST',
+        type: 'POST',
         async: false
     }).responseText;
     try {
@@ -370,30 +370,30 @@ function updateLists(id) {
     }
     if (itemList.length == 0)
     {
-    	$(id).append('Keine Listen definiert');
-	return;
+        $(id).append('Keine Listen definiert');
+        return;
     }
     for (var i=0; i<itemList.length; ++i) {
         // make "proper" Todo items out of the loaded values:
         itemList[i].id   = parseInt(itemList[i].id);
         itemList[i].name = itemList[i].name;
-	it = itemList[i];
-	$(id).append('<div class="line'+
+        it = itemList[i];
+        $(id).append('<div class="line'+
             ((i%2!=0)?' line_odd':'')+
             '" id="list'+it.id+'">'+
-	        '<span class="list-id">'+it.id+'</span>'+
+            '<span class="list-id">'+it.id+'</span>'+
                 '<span class="list-name"><a href="javascript:changeList('+it.id+')">'+it.name+'</span>'+
-		'<span class="delete"><input type="image" value="Löschen" id="delete'+it.id+'" src="images/Delete.png" /></span>'+
-	    '</div>');
+            '<span class="delete"><input type="image" value="Löschen" id="delete'+it.id+'" src="images/Delete.png" /></span>'+
+            '</div>');
     }
 }
 
 
 function chooseList() {
     updateLists('#listTable');
-    $('#choose_list_dialog').dialog( {
-    	modal: true,
-	minHeight: 180,
+    $('#choose_list_dialog').dialog(
+        modal: false,
+        minHeight: 180,
         minWidth: 600,
         title: 'ToDo-Liste wählen',
         close: function(ev,ui) {
@@ -460,9 +460,9 @@ function setListener(id) {
     $('#delete'+id).click(function() {
         deleteItem(id);
     });
-	$('#reactivate'+id).click(function() {
-		reactivate(id);
-	});
+    $('#reactivate'+id).click(function() {
+        reactivate(id);
+    });
 }
 
 
@@ -489,8 +489,8 @@ function renderItem(idx) {
             '" id="todo'+it.id+'">'+
         '<span class="todo" title="Angelegt: '+formatDate(createDate, true)+
             '; Wiederholung: '+repetition+
-			((it.completed != 0)? '; Erledigt: '+formatDate(complDate, true):'')+
-			'">'+
+        ((it.completed != 0)? '; Erledigt: '+formatDate(complDate, true):'')+
+            '">'+
             '<span class="todo_lineNr">'+(idx+1)+'</span>. '+
             (hasProj ? '<span class="todo_project">'+it.project+': </span>':'')+
             it.todo+
@@ -534,11 +534,11 @@ function updateProgress() {
         }
     }
     var count = done+open;
-	var progressWidth = 99.5; // in percent
+    var progressWidth = 99.5; // in percent
     $('#progress_todo').css('width', ((progressWidth*open/count))+'%');
     $('#progress_done').css('width', ((progressWidth*done/count))+'%');
     $('#progress_todo').attr('title', 'Offen: '+open);
-	$('#progress_done').attr('title', 'Erledigt: '+Math.round(100*done/count) + ' % ('+done+') seit letztem Monat' );
+    $('#progress_done').attr('title', 'Erledigt: '+Math.round(100*done/count) + ' % ('+done+') seit letztem Monat' );
 }
 
 
@@ -554,8 +554,8 @@ function reload() {
     setListTitle(list_id);
     var jsontext = $.ajax({
         url: 'queries/query-list.php',
-	type: 'POST',
-	data: postData,
+        type: 'POST',
+        data: postData,
         async: false
     }).responseText;
     try {
@@ -597,7 +597,7 @@ function newlist() {
             } else {
                 log('Liste erfolgreich angelegt!');
                 $('#newlist_name').val('');
-		updateLists('#listTable');
+                updateLists('#listTable');
             }
         },
         error: function(jqXHR, textStatus, errorThrown) {
@@ -715,7 +715,7 @@ $(document).ready(function() {
             alert('Eintrag nicht gefunden!');
             return;
         }
-	var list_id = $('#modify_list_id').val();
+        var list_id = $('#modify_list_id').val();
         var stuff = new Todo(id,
             $('#modify_todo').val(),
             $('#modify_due').val(),
@@ -746,11 +746,11 @@ $(document).ready(function() {
                     $('#modify_dialog').dialog('close');
                     // only set locally now, else it could be confusing
                     currentlyModified.version = currentlyModified.version+1;
-		    if (list_id != $('#list_id').val()) {
-		    	refresh();
-		    }else {
-	                modifyLocally(currentlyModified);
-		    }
+                    if (list_id != $('#list_id').val()) {
+                        refresh();
+                    } else {
+                        modifyLocally(currentlyModified);
+                    }
                     currentlyModified = null;
                 }
             },
