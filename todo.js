@@ -4,7 +4,7 @@ var itemList;
 var currentlyModified = null;
 
 function Todo(id, todo, due, priority, effort,
-        completed, notes, project,
+        completed, notes, project, list_id,
         version, recurrenceMode, completionDate, creationDate) {
     this.id        = parseInt(id);
     this.todo      = todo;
@@ -15,10 +15,17 @@ function Todo(id, todo, due, priority, effort,
     this.completed = parseInt(completed);
     this.notes     = notes;
     this.project   = project;
+    this.list_id   = list_id;
     this.version   = parseInt(version);
     this.recurrenceMode = parseInt(recurrenceMode);
     this.completionDate = completionDate;
     this.creationDate = creationDate;
+}
+
+function List(id, name)
+{
+    this.id = id;
+    this.name = name;
 }
 
 
@@ -26,7 +33,7 @@ function copyTodo(item)
 {
     return new Todo(
         item.id, item.todo, item.due, item.priority, item.effort,
-        item.completed, item.notes, item.project,
+        item.completed, item.notes, item.project, item.list_id,
         item.version, item.recurrenceMode, item.completionDate,
         item.creationDate
     );
@@ -124,6 +131,7 @@ function modifyLocally(item) {
     itemList[index].due      = item.due;
     itemList[index].notes    = item.notes;
     itemList[index].project  = item.project;
+    itemList[index].list_id  = item.list_id;
     itemList[index].version  = item.version;
     itemList[index].recurrenceMode = item.recurrenceMode;
     itemList.sort(ItemSort);
@@ -307,6 +315,7 @@ function modifyItem(id) {
     $('#modify_effort').val(item.effort);
     $('#modify_notes').val(html_entity_decode(item.notes));
     $('#modify_project').val(html_entity_decode(item.project));
+    $('#modify_list_id').val(item.list_id);
     $('#modify_recurrenceMode option[value="'+item.recurrenceMode+'"]').attr('selected',true);
     // set up store function:
     // show dialog:
@@ -316,7 +325,59 @@ function modifyItem(id) {
         minWidth: 600,
         title: 'ToDo Eintrag verändern',
         close: function(ev,ui) {
-            log('Dialog geschlossen');
+            log('Bearbeiten-Dialog geschlossen');
+        }
+    });
+}
+
+function changeList(id) {
+	$('#list_id').val(id);
+	refresh();
+	updateProgress();
+}
+
+function updateLists(id) {
+    $(id).empty();
+    var jsontext = $.ajax({
+        url: 'queries/getlists.php',
+	type: 'POST',
+        async: false
+    }).responseText;
+    try {
+        itemList = JSON.parse(jsontext);
+    } catch (e) {
+        alert('Server lieferte ungültige Daten "'+jsontext+'"; Fehlermeldung des JSON-Parsers: '+e);
+    }
+    if (itemList.length == 0)
+    {
+    	$(id).append('Keine Listen definiert');
+	return;
+    }
+    for (var i=0; i<itemList.length; ++i) {
+        // make "proper" Todo items out of the loaded values:
+        itemList[i].id   = parseInt(itemList[i].id);
+        itemList[i].name = itemList[i].name;
+	it = itemList[i];
+	$(id).append('<div class="line'+
+            ((i%2!=0)?' line_odd':'')+
+            '" id="list'+it.id+'">'+
+	        '<span class="list-id">'+it.id+'</span>'+
+                '<span class="list-name"><a href="javascript:changeList('+it.id+')">'+it.name+'</span>'+
+		'<span class="delete"><input type="image" value="Löschen" id="delete'+it.id+'" src="images/Delete.png" /></span>'+
+	    '</div>');
+    }
+}
+
+
+function chooseList() {
+    updateLists('#listTable');
+    $('#choose_list_dialog').dialog( {
+    	modal: true,
+	minHeight: 180,
+        minWidth: 600,
+        title: 'ToDo-Liste wählen',
+        close: function(ev,ui) {
+            log('Listenwahl-Dialog geschlossen');
         }
     });
 }
@@ -468,8 +529,11 @@ function toggleWorking(show) {
 
 function reload() {
     log("Lade ToDo-Liste neu...");
+    var postData = new List($('#list_id').val());
     var jsontext = $.ajax({
         url: 'queries/query-list.php',
+	type: 'POST',
+	data: postData,
         async: false
     }).responseText;
     try {
@@ -484,6 +548,7 @@ function reload() {
         itemList[i].effort    = parseInt(itemList[i].effort);
         itemList[i].completed = parseInt(itemList[i].completed);
         itemList[i].version   = parseInt(itemList[i].version);
+        itemList[i].list_id   = parseInt(itemList[i].list_id);
         itemList[i].recurrenceMode = parseInt(itemList[i].recurrenceMode);
     }
     itemList.sort(ItemSort);
@@ -492,6 +557,33 @@ function reload() {
     log("Laden beendet!");
 }
 
+function newlist() {
+    var name = $('#newlist_name').val();
+    if ($('#newlist_name').val().length == 0) {
+        alert('Name darf nicht leer sein!');
+        return;
+    }
+    var postData = new List(-1, name);
+    $.ajax( {
+        type: 'POST',
+        url: 'queries/newlist.php',
+        data: postData,
+        success: function(returnValue) {
+            if (isNaN(returnValue)) {
+                log('Fehler beim Einfügen: '+returnValue);
+                alert('Fehler beim Einfügen: '+returnValue);
+            } else {
+                log('Liste erfolgreich angelegt!');
+                $('#newlist_name').val('');
+	//	updateLists('#listTable');
+            }
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            alert('Übertragungsfehler beim Einfügen!');
+        }
+    });
+    return false;
+}
 
 function enter() {
     log('Lege neuen Eintrag an...');
@@ -513,7 +605,7 @@ function enter() {
     }
     var stuff = new Todo(-1, todo, $('#enter_due').val(),
             $('#enter_priority').val(), $('#enter_effort').val(),
-            0, '', project, 1, 0, null, formatDate(new Date()));
+            0, '', project, $('#list_id').val(), 1, 0, null, formatDate(new Date()));
     addLocally(stuff);
     $.ajax( {
         type: 'POST',
@@ -602,6 +694,7 @@ $(document).ready(function() {
             alert('Eintrag nicht gefunden!');
             return;
         }
+	var list_id = $('#modify_list_id').val();
         var stuff = new Todo(id,
             $('#modify_todo').val(),
             $('#modify_due').val(),
@@ -610,6 +703,7 @@ $(document).ready(function() {
             0,  // currently not taken into account on server, and not modifiable at server
             $('#modify_notes').val().trim(),
             $('#modify_project').val(),
+            list_id,
             itemList[idx].version,
             $('#modify_recurrenceMode').val(),
             itemList[idx].completionDate,
@@ -631,7 +725,11 @@ $(document).ready(function() {
                     $('#modify_dialog').dialog('close');
                     // only set locally now, else it could be confusing
                     currentlyModified.version = currentlyModified.version+1;
-                    modifyLocally(currentlyModified);
+		    if (list_id != $('#list_id').val()) {
+		    	refresh();
+		    }else {
+	                modifyLocally(currentlyModified);
+		    }
                     currentlyModified = null;
                 }
             },

@@ -30,8 +30,18 @@ div.line {
 div.line_odd {
     background-color: #EEEEEE;
 }
-#todoTable {
+#todoTable,
+#listTable{
     border: 1px solid black;
+}
+#listTable div.line
+{
+    min-width: 100px;
+}
+span.list-id
+{
+    display:inline-block;
+    width: 50px;
 }
 .line_header {
     border-bottom: 1px solid black;
@@ -138,8 +148,9 @@ span.modify_desc {
 /*******************/
 /* Statistics page */
 
-#statistiklink {
-    float: right;
+#statistiklink,
+#listlink {
+	float: right;
 	margin-right: 10px;
 }
 .stat_row_bar {

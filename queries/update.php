@@ -8,6 +8,7 @@
     $effort   = (int)$_REQUEST['effort'];
     $notes    = $db->real_escape_string(htmlentities($_REQUEST['notes'], ENT_QUOTES, "UTF-8"));
     $project  = $db->real_escape_string(htmlentities($_REQUEST['project'], ENT_QUOTES, "UTF-8"));
+    $list_id  = (int)$_REQUEST['list_id'];
     $version  = (int)$_REQUEST['version'];
     $recurrenceMode = (int)$_REQUEST['recurrenceMode'];
     if (strcmp($todo, '') == 0) {
@@ -28,6 +29,7 @@
                 "effort=$effort, ".
                 "notes=$notes, ".
                 "project=$project, ".
+                "list_id=$list_id, ".
                 "version=".($version+1).", ".
                 "recurrenceMode=".$recurrenceMode." ".
             "WHERE id=$id AND version=$version";
