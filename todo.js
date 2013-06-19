@@ -391,7 +391,7 @@ function updateLists(id) {
 
 function chooseList() {
     updateLists('#listTable');
-    $('#choose_list_dialog').dialog(
+    $('#choose_list_dialog').dialog( {
         modal: false,
         minHeight: 180,
         minWidth: 600,
