@@ -26,3 +26,15 @@ CREATE TABLE `list` (
 	name VARCHAR(255),
 	PRIMARY KEY (`id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 ;
+
+CREATE TABLE tags (
+        id int(11) AUTO_INCREMENT NOT NULL,
+        name varchar(255) NOT NULL,
+        PRIMARY KEY (id)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 ;
+
+CREATE TABLE todo_tags (
+        todo_id int(11),
+        tag_id int(11),
+        PRIMARY KEY (todo_id, tag_id)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 ;
