@@ -261,7 +261,7 @@ function toggleCompleted(id) {
     stuff.id = id;
     stuff.completed = itemList[index].completed == 0 ? 1 : 0;
     stuff.version   = itemList[index].version;
-    stuff.completionDate = stuff.completed == 1 ? formatDate(new Date(), true) : null;
+    stuff.completionDate = stuff.completed == 1 ? formatDate(getUTCDate(), true) : null;
     currentlyModified = copyTodo(itemList[index]);
     $.ajax({
         type: 'POST',
@@ -425,7 +425,7 @@ function parseDate(dateStr) {
     if (parts.length > 1) {
          timePart = parts[1].split(":");
     }
-    return new Date(datePart[0], datePart[1]-1, datePart[2], timePart[0], timePart[1], timePart[2], 0);
+    return new Date(Date.UTC(datePart[0], datePart[1]-1, datePart[2], timePart[0], timePart[1], timePart[2], 0));
 }
  
 
@@ -606,6 +606,19 @@ function newlist() {
     });
 }
 
+function getUTCDate() {
+	var now = new Date(); 
+	var now_utc = new Date(
+		now.getUTCFullYear(),
+		now.getUTCMonth(),
+		now.getUTCDate(),
+		now.getUTCHours(),
+		now.getUTCMinutes(),
+    		now.getUTCSeconds()
+	);
+	return now_utc;
+}
+
 function enter() {
     log('Lege neuen Eintrag an...');
     if ($('#enter_todo').val().length == 0) {
@@ -626,7 +639,7 @@ function enter() {
     }
     var stuff = new Todo(-1, todo, $('#enter_due').val(),
             $('#enter_priority').val(), $('#enter_effort').val(),
-            0, '', project, $('#list_id').val(), 1, 0, null, formatDate(new Date()));
+            0, '', project, $('#list_id').val(), 1, 0, null, formatDate(getUTCDate(), true));
     addLocally(stuff);
     $.ajax( {
         type: 'POST',

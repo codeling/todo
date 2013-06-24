@@ -10,7 +10,7 @@
 		"WHERE ".
 			"list_id = ".$list_id." AND (".
 			"completed=0 ".
-			"OR completionDate > (NOW() - INTERVAL 31 DAY))";
+			"OR completionDate > (UTC_TIMESTAMP() - INTERVAL 31 DAY))";
 	$result = jsonQueryResults($db, $sql);
 	$db->close();
 	echo $result;

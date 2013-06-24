@@ -3,7 +3,7 @@
     $id = (int)$_REQUEST['id'];
     $completed = (int)$_REQUEST['completed'];
     $version   = (int)$_REQUEST['version'];
-    dbQueryOrDie($db, "UPDATE todo SET completed=$completed, completionDate=NOW(), version=$version+1 WHERE id=$id AND version=$version");
+    dbQueryOrDie($db, "UPDATE todo SET completed=$completed, completionDate=UTC_TIMESTAMP(), version=$version+1 WHERE id=$id AND version=$version");
     $affectedRows = $db->affected_rows;
     if ($affectedRows < 1) {
         echo "In der Datenbank ist eine andere Version gespeichert als du gesendet hast. Es scheint so als wäre der Eintrag in der Zwischenzeit verändert worden! Bitte lade die Einträge neu!";

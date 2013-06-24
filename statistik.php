@@ -17,7 +17,7 @@
 
         $sql = "SELECT YEAR($checkedDate), $groupNameExpr, COUNT(*) ".
             "FROM `todo` ".
-            "WHERE $checkedDate > (NOW() - INTERVAL $valCount $periodName) ".
+            "WHERE $checkedDate > (UTC_TIMESTAMP() - INTERVAL $valCount $periodName) ".
             "GROUP BY YEAR($checkedDate), $groupNameExpr ".
             "ORDER BY YEAR($checkedDate), $groupNameExpr";
         $qResult = dbQueryOrDie($db, $sql);
