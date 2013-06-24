@@ -1,5 +1,6 @@
 <?php
-	$db = new mysqli("localhost", "todo", "UwxhNGPBjB3u9KbV", "todo");
+require_once("../config.php");
+	$db = new mysqli($db_host, $db_user, $db_password, $db_database);
 
 	function quoteString($db, $str) {
 		return "'".$db->real_escape_string(htmlentities($str, ENT_QUOTES, "UTF-8"))."'";
