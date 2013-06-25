@@ -1,7 +1,8 @@
 <?php
 
-    include "todo-core.php";
-    include("queries/db.php");
+    require_once("todo-core.php");
+    $prefix = "";
+    require_once("queries/db.php");
 
     function printPeriodicStat($periodName, $maxHeight, $valCount,
         $checkedDate='completionDate', $groupName=null)

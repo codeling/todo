@@ -1,5 +1,6 @@
 <?php
-require_once("../config.php");
+$prefix = (isset($prefix)? $prefix : "../");
+require_once($prefix."config.php");
 	$db = new mysqli($db_host, $db_user, $db_password, $db_database);
 
 	function quoteString($db, $str) {
