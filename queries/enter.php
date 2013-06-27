@@ -7,7 +7,7 @@
     $priority = (int)$_REQUEST['priority'];
     $effort   = (int)$_REQUEST['effort'];
     $list_id  = (int)$_REQUEST['list_id'];
-    $tags = explode(":", $_REQUEST['project']);
+    $tags = explode(",", $_REQUEST['project']);
     // checks:
     if (!checkDateStr($due)) {
         $due = '';

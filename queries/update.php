@@ -8,7 +8,7 @@
     $priority = (int)$_REQUEST['priority'];
     $effort   = (int)$_REQUEST['effort'];
     $notes    = $db->real_escape_string(htmlentities($_REQUEST['notes'], ENT_QUOTES, "UTF-8"));
-    $tags     = explode(":", $_REQUEST['project']);
+    $tags     = explode(",", $_REQUEST['project']);
     $list_id  = (int)$_REQUEST['list_id'];
     $version  = (int)$_REQUEST['version'];
     $recurrenceMode = (int)$_REQUEST['recurrenceMode'];
