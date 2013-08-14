@@ -9,7 +9,7 @@ CREATE TABLE `todo` (
   `dueDate` datetime DEFAULT NULL,
   `notes` varchar(10000) DEFAULT '',
   `project` varchar(255) DEFAULT NULL,
-  `list_id` int(11) NOT NULL DEFAULT 0,
+  `user_id` int(11) NOT NULL,
   `version` int(11) NOT NULL DEFAULT '1',
   `recurrenceMode` int(11) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`)

@@ -6,7 +6,6 @@
     $due      = $db->real_escape_string(htmlentities($_REQUEST['due'], ENT_QUOTES, "UTF-8"));
     $priority = (int)$_REQUEST['priority'];
     $effort   = (int)$_REQUEST['effort'];
-    $list_id  = (int)$_REQUEST['list_id'];
     $tags = explode(",", $_REQUEST['project']);
     // checks:
     if (!checkDateStr($due)) {
@@ -18,10 +17,12 @@
     }
     $todo = "'".$todo."'";
     $due  = (strcmp($due, '') == 0) ? "NULL" : "'$due'";
+    // TODO: get ID of logged in user here!
+    $user_id = 0;
     $sql = "INSERT INTO todo ".
-            "(creationDate, description, dueDate, priority, effort, notes, list_id) ".
+            "(creationDate, description, dueDate, priority, effort, notes, user_id) ".
         "VALUES ".
-            "(UTC_TIMESTAMP(), $todo, $due, $priority, $effort, NULL, $list_id)";
+            "(UTC_TIMESTAMP(), $todo, $due, $priority, $effort, NULL, $user_id)";
     dbQueryOrDie($db, $sql);
     $todo_id = $db->insert_id;
     updateTags($db, $todo_id, $tags);

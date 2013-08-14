@@ -21,12 +21,11 @@
       <div id="smallLog"><?php echo(TodoLang::_("STARTING_LOG"));?></div>
       <div id="logLink"><a href="javascript:toggleLog()"><?php echo(TodoLang::_("SHOW_LOG"));?></a></div>
       <div id="working"><?php echo(TodoLang::_("WORKING"));?></div>
-      <div id="listlink"><a href="javascript:chooseList()"><?php echo(TodoLang::_("CHOOSE_LIST"));?></a></div>
       <div id="statistiklink"><a href="statistik.php"><?php echo(TodoLang::_("SHOW_STATISTICS"));?></a></div>
-      <h1><?php echo(TodoConstants::AppTitle); ?>: <span id="list-name"></span></h1>
+      <h1><?php echo(TodoConstants::AppTitle); ?></h1>
       <div id="progress"><span id="progress_done">&nbsp;</span><span id="progress_todo">&nbsp;</span></div>
       <form method="POST" onsubmit="return false;" id="inputform">
-        <input type="hidden" name="list_id" id="list_id" value="<?php echo $curListID; ?>" />
+        <input type="hidden" name="user_id" id="user_id" value="<?php echo $curUserID; ?>" />
         <div class="line line_header">
           <span class="todo"><?php echo(TodoLang::_("TODO"));?> <input type="image" src="images/refresh.png" name="refresh" value="refresh" onclick="refresh()" /></span>
           <span class="due"><?php echo(TodoLang::_("DUE"));?></span>
@@ -82,23 +81,11 @@
             <span class="modify_desc"><?php echo(TodoLang::_("PROJECT"));?>:</span>
             <input type="hidden" id="modify_project" name="modify_project" />
             <ul id="modify_tags" class="tagit ui-widget ui-widget-content ui-corner-all tagit-choice-editable"></ul>
-          </div><div class="modify_line">
-            <span class="modify_desc"><?php echo(TodoLang::_("LIST"));?></span>
-            <input type="text" id="modify_list_id" name="modify_list_id" size="10" maxlength="10" />
-          </div><div class="modify_line">
           </div>
           <input type="image" src="images/pencil.png" name="modify_save" id="modify_save" value="<?php echo(TodoLang::_("SAVE"));?>" />
         </form>
       </div>
       <div id="log_dialog" style="display:none"></div>
-      <div id="choose_list_dialog" style="display:none">
-        <div id="listTable"></div>
-        <form name="newList" onsubmit="return false;">
-          <?php echo(TodoLang::_("LIST_NAME")); ?>
-          <input type="text" name="newlist_name" id="newlist_name" />
-          <input type="image" src="images/Add.png" name="newlist" value="<?php echo(TodoLang::_("SAVE"));?>" onclick="newlist()" />
-        </form>
-      </div>
     </div>
   </body>
 </html>

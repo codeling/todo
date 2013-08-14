@@ -2,7 +2,7 @@
 class TodoConstants {
     const AppName = "Simple To Do List";
     const AppTitle = "To Do";
-    const DefaultListID = 1;
+    const DefaultUserID = 0;
 }
 
 class TodoLang {
@@ -14,5 +14,6 @@ class TodoLang {
 }
 
 TodoLang::$langstrings = parse_ini_file(TodoLang::$langfile);
-$curListID = isset($_REQUEST['id']) ? $_REQUEST['id'] : TodoConstants::DefaultListID;
+// TODO: get that from the current user account
+$curUserID = TodoConstants::DefaultUserID;
 

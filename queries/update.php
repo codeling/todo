@@ -9,7 +9,6 @@
     $effort   = (int)$_REQUEST['effort'];
     $notes    = $db->real_escape_string(htmlentities($_REQUEST['notes'], ENT_QUOTES, "UTF-8"));
     $tags     = explode(",", $_REQUEST['project']);
-    $list_id  = (int)$_REQUEST['list_id'];
     $version  = (int)$_REQUEST['version'];
     $recurrenceMode = (int)$_REQUEST['recurrenceMode'];
     if (strcmp($todo, '') == 0) {
@@ -28,7 +27,6 @@
                 "priority=$priority, ".
                 "effort=$effort, ".
                 "notes=$notes, ".
-                "list_id=$list_id, ".
                 "version=".($version+1).", ".
                 "recurrenceMode=".$recurrenceMode." ".
             "WHERE id=$id AND version=$version";

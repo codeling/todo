@@ -42,7 +42,6 @@ $(document).ready(function() {
             alert('Eintrag nicht gefunden!');
             return;
         }
-        var list_id = $('#modify_list_id').val();
         var stuff = new Todo(id,
             $('#modify_todo').val(),
             $('#modify_due').val(),
@@ -51,7 +50,6 @@ $(document).ready(function() {
             0,  // currently not taken into account on server, and not modifiable at server
             $('#modify_notes').val().trim(),
             $('#modify_project').val(),
-            list_id,
             itemList[idx].version,
             $('#modify_recurrenceMode').val(),
             itemList[idx].completionDate,
@@ -73,11 +71,7 @@ $(document).ready(function() {
                     $('#modify_dialog').dialog('close');
                     // only set locally now, else it could be confusing
                     currentlyModified.version = currentlyModified.version+1;
-                    if (list_id != $('#list_id').val()) {
-                        refresh();
-                    } else {
-                        modifyLocally(currentlyModified);
-                    }
+                    modifyLocally(currentlyModified);
                     currentlyModified = null;
                 }
             },

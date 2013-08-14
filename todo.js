@@ -4,7 +4,7 @@ var itemList;
 var currentlyModified = null;
 
 function Todo(id, todo, due, priority, effort,
-        completed, notes, project, list_id,
+        completed, notes, project,
         version, recurrenceMode, completionDate, creationDate) {
     this.id        = parseInt(id);
     this.todo      = todo;
@@ -15,29 +15,17 @@ function Todo(id, todo, due, priority, effort,
     this.completed = parseInt(completed);
     this.notes     = notes;
     this.project   = project;
-    this.list_id   = list_id;
     this.version   = parseInt(version);
     this.recurrenceMode = parseInt(recurrenceMode);
     this.completionDate = completionDate;
     this.creationDate = creationDate;
 }
 
-function ListID(id)
-{
-    this.id = id;
-}
-
-function ListName(name)
-{
-    this.name = name;
-}
-
-
 function copyTodo(item)
 {
     return new Todo(
         item.id, item.todo, item.due, item.priority, item.effort,
-        item.completed, item.notes, item.project, item.list_id,
+        item.completed, item.notes, item.project,
         item.version, item.recurrenceMode, item.completionDate,
         item.creationDate
     );
@@ -135,7 +123,6 @@ function modifyLocally(item) {
     itemList[index].due      = item.due;
     itemList[index].notes    = item.notes;
     itemList[index].project  = item.project;
-    itemList[index].list_id  = item.list_id;
     itemList[index].version  = item.version;
     itemList[index].recurrenceMode = item.recurrenceMode;
     itemList.sort(ItemSort);
@@ -326,7 +313,6 @@ function modifyItem(id) {
         $("#modify_tags").tagit("createTag", tags[i]);
     }
 
-    $('#modify_list_id').val(item.list_id);
     $('#modify_recurrenceMode option[value="'+item.recurrenceMode+'"]').attr('selected',true);
     // set up store function:
     // show dialog:
@@ -340,75 +326,6 @@ function modifyItem(id) {
         }
     });
 }
-
-function changeList(id) {
-    $('#list_id').val(id);
-    refresh();
-    updateProgress();
-}
-
-function setListTitle(id){
-    var postData = new ListID(id);
-    $.ajax( {
-        url: 'queries/getlisttitle.php',
-        type: 'POST',
-        data: postData,
-        success: function(returnValue) {
-            $('#list-name').empty();
-            $('#list-name').append(returnValue);
-        },
-        error: function(jqXHR, textStatus, errorThrown) {
-            alert('Fehler beim Titel holen');
-        }
-    } );
-}
-
-function updateLists(id) {
-    $(id).empty();
-    var jsontext = $.ajax({
-        url: 'queries/getlists.php',
-        type: 'POST',
-        async: false
-    }).responseText;
-    try {
-        itemList = JSON.parse(jsontext);
-    } catch (e) {
-        alert('Server lieferte ungültige Daten "'+jsontext+'"; Fehlermeldung des JSON-Parsers: '+e);
-    }
-    if (itemList.length == 0)
-    {
-        $(id).append('Keine Listen definiert');
-        return;
-    }
-    for (var i=0; i<itemList.length; ++i) {
-        // make "proper" Todo items out of the loaded values:
-        itemList[i].id   = parseInt(itemList[i].id);
-        itemList[i].name = itemList[i].name;
-        it = itemList[i];
-        $(id).append('<div class="line'+
-            ((i%2!=0)?' line_odd':'')+
-            '" id="list'+it.id+'">'+
-            '<span class="list-id">'+it.id+'</span>'+
-                '<span class="list-name"><a href="javascript:changeList('+it.id+')">'+it.name+'</span>'+
-            '<span class="delete"><input type="image" value="Löschen" id="delete'+it.id+'" src="images/Delete.png" /></span>'+
-            '</div>');
-    }
-}
-
-
-function chooseList() {
-    updateLists('#listTable');
-    $('#choose_list_dialog').dialog( {
-        modal: false,
-        minHeight: 180,
-        minWidth: 600,
-        title: 'ToDo-Liste wählen',
-        close: function(ev,ui) {
-            log('Listenwahl-Dialog geschlossen');
-        }
-    });
-}
-
 
 function fillStr(str, fillchar, count) {
     var fillStr = '';
@@ -556,13 +473,9 @@ function toggleWorking(show) {
 
 function reload() {
     log("Lade ToDo-Liste neu...");
-    var list_id = $('#list_id').val();
-    var postData = new ListID(list_id);
-    setListTitle(list_id);
     var jsontext = $.ajax({
         url: 'queries/query-list.php',
-        type: 'POST',
-        data: postData,
+        type: 'GET',
         async: false
     }).responseText;
     try {
@@ -577,40 +490,12 @@ function reload() {
         itemList[i].effort    = parseInt(itemList[i].effort);
         itemList[i].completed = parseInt(itemList[i].completed);
         itemList[i].version   = parseInt(itemList[i].version);
-        itemList[i].list_id   = parseInt(itemList[i].list_id);
         itemList[i].recurrenceMode = parseInt(itemList[i].recurrenceMode);
     }
     itemList.sort(ItemSort);
     renderTable();
     updateProgress();
     log("Laden beendet!");
-}
-
-function newlist() {
-    var name = $('#newlist_name').val();
-    if ($('#newlist_name').val().length == 0) {
-        alert('Name darf nicht leer sein!');
-        return;
-    }
-    var postData = new ListName(name);
-    $.ajax( {
-        type: 'POST',
-        url: 'queries/newlist.php',
-        data: postData,
-        success: function(returnValue) {
-            if (isNaN(returnValue)) {
-                log('Fehler beim Einfügen: '+returnValue);
-                alert('Fehler beim Einfügen: '+returnValue);
-            } else {
-                log('Liste erfolgreich angelegt!');
-                $('#newlist_name').val('');
-                updateLists('#listTable');
-            }
-        },
-        error: function(jqXHR, textStatus, errorThrown) {
-            alert('Übertragungsfehler beim Einfügen!');
-        }
-    });
 }
 
 function getUTCDate() {
@@ -646,7 +531,7 @@ function enter() {
     }
     var stuff = new Todo(-1, todo, $('#enter_due').val(),
             $('#enter_priority').val(), $('#enter_effort').val(),
-            0, '', project, $('#list_id').val(), 1, 0, null, formatDate(getUTCDate(), true));
+            0, '', project, 1, 0, null, formatDate(getUTCDate(), true));
     addLocally(stuff);
     $.ajax( {
         type: 'POST',
@@ -690,5 +575,3 @@ function refresh() {
 // refresh every 5-10 minues (or check with server if anything to refresh!!!
 //    setTimeout('refresh()', 30000);
 }
-
-
