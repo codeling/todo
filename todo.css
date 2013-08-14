@@ -144,9 +144,13 @@ ul#modify_tags {
 /* Statistics page */
 
 #statistiklink,
-#listlink {
-	float: right;
-	margin-right: 10px;
+#filter {
+    float: right;
+    margin-right: 10px;
+}
+#filter ul {
+    margin: 0;
+    padding: 0;
 }
 .stat_row_bar {
     vertical-align:bottom;

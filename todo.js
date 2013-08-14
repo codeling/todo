@@ -396,8 +396,7 @@ function getRecurrenceString(recurrenceMode)
 }
 
 
-function renderItem(idx) {
-    var it = itemList[idx];
+function renderItem(it, line) {
     var hasNote = it.notes != null && it.notes != '';
     var hasProj = it.tags != null && it.tags != '';
     var isRecurring = it.recurrenceMode != 0;
@@ -408,14 +407,14 @@ function renderItem(idx) {
     var dueString = (it.completed == 0) ? formatDate(dueDate): formatDate(complDate);
     var repetition = getRecurrenceString(it.recurrenceMode);
     $('#todoTable').append('<div class="line'+
-            ((idx%2!=0)?' line_odd':'')+
+            ((line%2!=0)?' line_odd':'')+
             ((it.completed==1)?' todo_completed':'')+
             '" id="todo'+it.id+'">'+
         '<span class="todo" title="Angelegt: '+formatDate(createDate, true)+
             '; Wiederholung: '+repetition+
         ((it.completed != 0)? '; Erledigt: '+formatDate(complDate, true):'')+
             '">'+
-            '<span class="todo_lineNr">'+(idx+1)+'</span>. '+
+            '<span class="todo_lineNr">'+(line+1)+'</span>. '+
             (hasProj ? '<span class="todo_tags">'+it.tags+': </span>':'')+
             it.todo+
             (hasNote ? '<img src="images/note.png" />':'')+
@@ -442,9 +441,41 @@ function renderItem(idx) {
 
 function renderTable() {
     $('#todoTable').empty();
-    for (var i=0; i<itemList.length; i++) {
-        renderItem(i);
+    var filtered = filterList();
+    for (var i=0; i<filtered.length; i++) {
+        renderItem(filtered[i], i);
     }
+}
+
+function arrayContainsAny(needle, haystack) {
+    for (var i=0; i<needle.length; i++) {
+        if (haystack.indexOf(needle[i]) != -1) {
+	    return true;
+	}
+    }
+    return false;
+}
+
+function filterList() {
+    if ($('#filter_tags').val() == '') {
+//        console.log("No tag filter, showing whole list");
+        return itemList;
+    }
+    filterTags = $('#filter_tags').val().split(",");
+    var result = new Array();
+    for (var i=0; i<itemList.length; i++) {
+        if (itemList[i].tags == null) {
+//	    console.log("Item "+i+": null tags");
+	    continue;
+	}
+        var itemTags = itemList[i].tags.split(",");
+//	console.log("Item tags: "+JSON.stringify(itemTags)+"; filter tags: "+JSON.stringify(filterTags));
+        if (arrayContainsAny(filterTags, itemTags)) {
+//	    console.log("Match!");
+	    result.push(itemList[i]);
+	}
+    }
+    return result;
 }
 
 function updateProgress() {

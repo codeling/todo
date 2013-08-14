@@ -21,6 +21,10 @@
       <div id="smallLog"><?php echo(TodoLang::_("STARTING_LOG"));?></div>
       <div id="logLink"><a href="javascript:toggleLog()"><?php echo(TodoLang::_("SHOW_LOG"));?></a></div>
       <div id="working"><?php echo(TodoLang::_("WORKING"));?></div>
+      <div id="filter">
+          <input type="hidden" id="filter_tags" name="filter_tags" />
+          <ul id="filter_tag_edit" class="tagit ui-widget ui-widget-content ui-corner-all tagit-choice-editable"></ul>
+      </div>
       <div id="statistiklink"><a href="statistik.php"><?php echo(TodoLang::_("SHOW_STATISTICS"));?></a></div>
       <h1><?php echo(TodoConstants::AppTitle); ?></h1>
       <div id="progress"><span id="progress_done">&nbsp;</span><span id="progress_todo">&nbsp;</span></div>
