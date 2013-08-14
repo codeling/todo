@@ -318,7 +318,14 @@ function modifyItem(id) {
     $('#modify_priority').val(item.priority);
     $('#modify_effort').val(item.effort);
     $('#modify_notes').val(html_entity_decode(item.notes));
-    $('#modify_project').val(html_entity_decode(item.project));
+
+    $("#modify_tags").tagit("removeAll");
+    var tags = (item.project == null) ? new Array() : item.project.split(",");
+    for (var i=0; i< tags.length; i++)
+    {
+        $("#modify_tags").tagit("createTag", tags[i]);
+    }
+
     $('#modify_list_id').val(item.list_id);
     $('#modify_recurrenceMode option[value="'+item.recurrenceMode+'"]').attr('selected',true);
     // set up store function:

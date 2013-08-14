@@ -99,5 +99,22 @@ $(document).ready(function() {
         });
     });
 
+    $('#modify_tags').tagit({
+        autocomplete: { source: function( search, showChoices) {
+        var that = this;
+            console.log("TagSource called for term="+search.term);
+            $.ajax({
+                url: "queries/query-tags.php",
+                data: {q: search.term},
+                dataType: "json",
+                success: function (choices) {
+                    showChoices(that._subtractArray(choices, that.assignedTags()));
+                }
+            });
+        }, delay: 2, minLength: 2},
+        singleField: true,
+        singleFieldNode: $('#modify_project')
+    });
+
     refresh();
 });

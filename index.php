@@ -6,11 +6,15 @@
     <title><?php echo(TodoConstants::AppName); ?></title>
     <!-- JQuery & JQuery UI -->
     <script src="jquery/jquery-1.6.2.min.js"></script>
-    <link  href="jquery/jquery-ui-1.8.16.custom.css" rel="stylesheet" type="text/css"/>
     <script src="jquery/jquery-ui-1.8.16.custom.min.js"></script>
     <script type="text/javascript" src="log.js.php"></script>
     <script type="text/javascript" src="todo.js"></script>
+    <script type="text/javascript" src="init.js"></script>
+    <script type="text/javascript" src="js/tag-it.js" type="text/javascript" charset="utf-8"></script>
     <link rel="stylesheet" type="text/css" href="todo.css" />
+    <link rel="stylesheet" type="text/css" href="jquery/jquery-ui-1.8.16.custom.css"/>
+    <link rel="stylesheet" type="text/css" href="css/jquery.tagit.css">
+    <link rel="stylesheet" type="text/css" href="css/tagit.ui-zendesk.css">
   </head>
   <body>
     <div id="todo_content">
@@ -76,23 +80,24 @@
             <textarea type="text" id="modify_notes" name="modify_notes" rows="10" cols="50"></textarea>
           </div><div class="modify_line">
             <span class="modify_desc"><?php echo(TodoLang::_("PROJECT"));?>:</span>
-            <input type="text" id="modify_project" name="modify_project" size="50" maxlength="255" />
+            <input type="hidden" id="modify_project" name="modify_project" />
+            <ul id="modify_tags" class="tagit ui-widget ui-widget-content ui-corner-all tagit-choice-editable"></ul>
           </div><div class="modify_line">
             <span class="modify_desc"><?php echo(TodoLang::_("LIST"));?></span>
             <input type="text" id="modify_list_id" name="modify_list_id" size="10" maxlength="10" />
           </div><div class="modify_line">
-	  </div>
+          </div>
           <input type="image" src="images/pencil.png" name="modify_save" id="modify_save" value="<?php echo(TodoLang::_("SAVE"));?>" />
         </form>
       </div>
       <div id="log_dialog" style="display:none"></div>
       <div id="choose_list_dialog" style="display:none">
         <div id="listTable"></div>
-	<form name="newList" onsubmit="return false;">
-	  <?php echo(TodoLang::_("LIST_NAME")); ?>
-	  <input type="text" name="newlist_name" id="newlist_name" />
-	  <input type="image" src="images/Add.png" name="newlist" value="<?php echo(TodoLang::_("SAVE"));?>" onclick="newlist()" />
-	</form>
+        <form name="newList" onsubmit="return false;">
+          <?php echo(TodoLang::_("LIST_NAME")); ?>
+          <input type="text" name="newlist_name" id="newlist_name" />
+          <input type="image" src="images/Add.png" name="newlist" value="<?php echo(TodoLang::_("SAVE"));?>" onclick="newlist()" />
+        </form>
       </div>
     </div>
   </body>
