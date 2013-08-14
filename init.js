@@ -49,7 +49,7 @@ $(document).ready(function() {
             $('#modify_effort').val(),
             0,  // currently not taken into account on server, and not modifiable at server
             $('#modify_notes').val().trim(),
-            $('#modify_project').val(),
+            $('#modify_tags').val(),
             itemList[idx].version,
             $('#modify_recurrenceMode').val(),
             itemList[idx].completionDate,
@@ -93,10 +93,9 @@ $(document).ready(function() {
         });
     });
 
-    $('#modify_tags').tagit({
+    $('#modify_tag_edit').tagit({
         autocomplete: { source: function( search, showChoices) {
         var that = this;
-            console.log("TagSource called for term="+search.term);
             $.ajax({
                 url: "queries/query-tags.php",
                 data: {q: search.term},
@@ -107,7 +106,7 @@ $(document).ready(function() {
             });
         }, delay: 2, minLength: 2},
         singleField: true,
-        singleFieldNode: $('#modify_project')
+        singleFieldNode: $('#modify_tags')
     });
 
     refresh();

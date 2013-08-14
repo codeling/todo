@@ -30,18 +30,8 @@ div.line {
 div.line_odd {
     background-color: #EEEEEE;
 }
-#todoTable,
-#listTable{
+#todoTable{
     border: 1px solid black;
-}
-#listTable div.line
-{
-    min-width: 100px;
-}
-span.list-id
-{
-    display:inline-block;
-    width: 50px;
 }
 .line_header {
     border-bottom: 1px solid black;
@@ -91,7 +81,7 @@ input[type="image"]
     width: 20px;
     text-align:right;
 }
-.todo_project {
+.todo_tags {
     font-style: italic;
 }
 .due {

@@ -4,7 +4,7 @@ var itemList;
 var currentlyModified = null;
 
 function Todo(id, todo, due, priority, effort,
-        completed, notes, project,
+        completed, notes, tags,
         version, recurrenceMode, completionDate, creationDate) {
     this.id        = parseInt(id);
     this.todo      = todo;
@@ -14,7 +14,7 @@ function Todo(id, todo, due, priority, effort,
     this.effort    = parseInt(effort);
     this.completed = parseInt(completed);
     this.notes     = notes;
-    this.project   = project;
+    this.tags      = tags;
     this.version   = parseInt(version);
     this.recurrenceMode = parseInt(recurrenceMode);
     this.completionDate = completionDate;
@@ -25,7 +25,7 @@ function copyTodo(item)
 {
     return new Todo(
         item.id, item.todo, item.due, item.priority, item.effort,
-        item.completed, item.notes, item.project,
+        item.completed, item.notes, item.tags,
         item.version, item.recurrenceMode, item.completionDate,
         item.creationDate
     );
@@ -50,8 +50,8 @@ function ItemSort(item1, item2) {
                         item1.priority > item2.priority ||
                         (
                             item1.priority == item2.priority &&
-                            ((item1.project!=null)?item1.project+item1.todo:item1.todo) <
-                            ((item2.project!=null)?item2.project+item2.todo:item2.todo)
+                            ((item1.tags!=null)?item1.tags+item1.todo:item1.todo) <
+                            ((item2.tags!=null)?item2.tags+item2.todo:item2.todo)
                         )
                     )
                 ) || (
@@ -72,7 +72,7 @@ function ItemSort(item1, item2) {
     } else if (item1.completed == item2.completed &&
                item1.priority == item2.priority &&
                item1.todo == item2.todo &&
-               item1.project == item2.project &&
+               item1.tags == item2.tags &&
                (item1.completed == 0 || item1.completionDate == item2.completionDate) ) {
         return 0;
     } else {
@@ -122,7 +122,7 @@ function modifyLocally(item) {
     itemList[index].effort   = item.effort;
     itemList[index].due      = item.due;
     itemList[index].notes    = item.notes;
-    itemList[index].project  = item.project;
+    itemList[index].tags     = item.tags;
     itemList[index].version  = item.version;
     itemList[index].recurrenceMode = item.recurrenceMode;
     itemList.sort(ItemSort);
@@ -307,7 +307,7 @@ function modifyItem(id) {
     $('#modify_notes').val(html_entity_decode(item.notes));
 
     $("#modify_tags").tagit("removeAll");
-    var tags = (item.project == null) ? new Array() : item.project.split(",");
+    var tags = (item.tags == null) ? new Array() : item.tags.split(",");
     for (var i=0; i< tags.length; i++)
     {
         $("#modify_tags").tagit("createTag", tags[i]);
@@ -399,7 +399,7 @@ function getRecurrenceString(recurrenceMode)
 function renderItem(idx) {
     var it = itemList[idx];
     var hasNote = it.notes != null && it.notes != '';
-    var hasProj = it.project != null && it.project != '';
+    var hasProj = it.tags != null && it.tags != '';
     var isRecurring = it.recurrenceMode != 0;
     var today   = new Date();
     var dueDate = parseDate(it.due);
@@ -416,7 +416,7 @@ function renderItem(idx) {
         ((it.completed != 0)? '; Erledigt: '+formatDate(complDate, true):'')+
             '">'+
             '<span class="todo_lineNr">'+(idx+1)+'</span>. '+
-            (hasProj ? '<span class="todo_project">'+it.project+': </span>':'')+
+            (hasProj ? '<span class="todo_tags">'+it.tags+': </span>':'')+
             it.todo+
             (hasNote ? '<img src="images/note.png" />':'')+
             (isRecurring ? '<img src="images/recurring.png" id="reactivate'+it.id+'" />':'')+    
@@ -523,15 +523,15 @@ function enter() {
     }
     var todo = $('#enter_todo').val();
     var colon = todo.lastIndexOf(":");
-    var project = '';
+    var tags = '';
     if (colon != -1) {
-        project = todo.substr(0, colon);
+        tags = todo.substr(0, colon);
         if (todo.charAt(colon+1) == ' ') { colon++; }
         todo = todo.substr(colon+1);
     }
     var stuff = new Todo(-1, todo, $('#enter_due').val(),
             $('#enter_priority').val(), $('#enter_effort').val(),
-            0, '', project, 1, 0, null, formatDate(getUTCDate(), true));
+            0, '', tags, 1, 0, null, formatDate(getUTCDate(), true));
     addLocally(stuff);
     $.ajax( {
         type: 'POST',

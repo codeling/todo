@@ -78,9 +78,9 @@
             <span class="modify_desc"><?php echo(TodoLang::_("NOTES"));?>:</span>
             <textarea type="text" id="modify_notes" name="modify_notes" rows="10" cols="50"></textarea>
           </div><div class="modify_line">
-            <span class="modify_desc"><?php echo(TodoLang::_("PROJECT"));?>:</span>
-            <input type="hidden" id="modify_project" name="modify_project" />
-            <ul id="modify_tags" class="tagit ui-widget ui-widget-content ui-corner-all tagit-choice-editable"></ul>
+            <span class="modify_desc"><?php echo(TodoLang::_("TAGS"));?>:</span>
+            <input type="hidden" id="modify_tags" name="modify_tags" />
+            <ul id="modify_tag_edit" class="tagit ui-widget ui-widget-content ui-corner-all tagit-choice-editable"></ul>
           </div>
           <input type="image" src="images/pencil.png" name="modify_save" id="modify_save" value="<?php echo(TodoLang::_("SAVE"));?>" />
         </form>

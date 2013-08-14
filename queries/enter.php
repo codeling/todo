@@ -6,7 +6,7 @@
     $due      = $db->real_escape_string(htmlentities($_REQUEST['due'], ENT_QUOTES, "UTF-8"));
     $priority = (int)$_REQUEST['priority'];
     $effort   = (int)$_REQUEST['effort'];
-    $tags = explode(",", $_REQUEST['project']);
+    $tags = explode(",", $_REQUEST['tags']);
     // checks:
     if (!checkDateStr($due)) {
         $due = '';
