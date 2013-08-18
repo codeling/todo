@@ -28,4 +28,3 @@
     updateTags($db, $todo_id, $tags);
     echo $todo_id;
     $db->close();
-?>

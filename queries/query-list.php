@@ -19,4 +19,3 @@
     $result = jsonQueryResults($db, $sql);
     $db->close();
     echo $result;
-?>

@@ -13,4 +13,3 @@
         echo $affectedRows;
     }
     $db->close();
-?>

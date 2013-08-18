@@ -26,4 +26,3 @@ require_once($prefix."config.php");
 		}
 		return json_encode($allResults);
 	}
-?>

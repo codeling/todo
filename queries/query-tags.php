@@ -12,4 +12,3 @@
 	}
 	$db->close();
 	echo json_encode($allResults);
-?>
