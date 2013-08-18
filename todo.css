@@ -77,6 +77,12 @@ input[type="image"]
 .todo_completed {
     color: #777;
 }
+.todo_deleted {
+    color: #777;
+}
+.todo_deleted span {
+    text-decoration: line-through;
+}
 ul.todo_item_tags {
     margin: 0 !important;
     padding: 0 !important;
@@ -156,6 +162,7 @@ ul#modify_tags {
 /*******************/
 /* Statistics page */
 
+#emptytrashlink,
 #statistiklink,
 #filter {
     float: right;

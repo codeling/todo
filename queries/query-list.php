@@ -6,7 +6,7 @@
     $user_id = 0;
     $sql = "SELECT todo.id, description as todo, dueDate as due, priority, effort, ".
         "completed, notes, version, recurrenceMode, completionDate, ".
-        "creationDate, ".
+        "creationDate, deleted, ".
         "GROUP_CONCAT( DISTINCT name ORDER BY name SEPARATOR ',') as tags ".
         "FROM todo ".
         "LEFT OUTER JOIN todo_tags ON todo.id = todo_tags.todo_id ".

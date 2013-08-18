@@ -4,7 +4,7 @@ var itemList;
 var currentlyModified = null;
 
 function Todo(id, todo, due, priority, effort,
-        completed, notes, tags,
+        completed, notes, tags, deleted,
         version, recurrenceMode, completionDate, creationDate) {
     this.id        = parseInt(id);
     this.todo      = todo;
@@ -15,6 +15,7 @@ function Todo(id, todo, due, priority, effort,
     this.completed = parseInt(completed);
     this.notes     = notes;
     this.tags      = tags;
+    this.deleted   = deleted;
     this.version   = parseInt(version);
     this.recurrenceMode = parseInt(recurrenceMode);
     this.completionDate = completionDate;
@@ -25,7 +26,7 @@ function copyTodo(item)
 {
     return new Todo(
         item.id, item.todo, item.due, item.priority, item.effort,
-        item.completed, item.notes, item.tags,
+        item.completed, item.notes, item.tags, item.deleted,
         item.version, item.recurrenceMode, item.completionDate,
         item.creationDate
     );
@@ -40,31 +41,34 @@ function printItem(item)
 
 function ItemSort(item1, item2) {
     var less =
-        (item1.completed < item2.completed) ||
-        (
+        (item1.deleted < item2.deleted) ||
+    (
+          (item1.completed < item2.completed) ||
+          (
             item1.completed == item2.completed &&
             (
+              (
+                item1.completed == 0 &&
                 (
-                    item1.completed == 0 &&
-                    (
-                        item1.priority > item2.priority ||
-                        (
-                            item1.priority == item2.priority &&
-                            ((item1.tags!=null)?item1.tags+item1.todo:item1.todo) <
-                            ((item2.tags!=null)?item2.tags+item2.todo:item2.todo)
-                        )
-                    )
-                ) || (
-                    item1.completed == 1 &&
-                    (
-                        item1.completionDate > item2.completionDate ||
-                        (
-                            item1.completionDate == item2.completionDate &&
-                            item1.priority > item2.priority
-                        )
-                    )
-                ) 
+                  item1.priority > item2.priority ||
+                  (
+                    item1.priority == item2.priority &&
+                    ((item1.tags!=null)?item1.tags+item1.todo:item1.todo) <
+                    ((item2.tags!=null)?item2.tags+item2.todo:item2.todo)
+                  )
+                )
+              ) || (
+                item1.completed == 1 &&
+                (
+                  item1.completionDate > item2.completionDate ||
+                  (
+                    item1.completionDate == item2.completionDate &&
+                    item1.priority > item2.priority
+                  )
+                )
+              ) 
             )
+      )
         );
     // log('item1: c='+item1.completed+', p='+item1.priority+'; item2: c='+item2.completed+', p='+item2.priority+'; less: '+less);
     if (less) {
@@ -91,22 +95,24 @@ function findItem(id) {
 }
 
 
-function deleteLocally(idx) {
-    currentlyModified = copyTodo(itemList[idx]);
-    itemList.splice(idx, 1);
+function trashLocally(idx) {
+    itemList[idx].deleted = 1;
     renderTable();
     updateProgress();
-//    TODO: just delete the one element from the list... 
-//    PROBLEM: we also have to update oddrow then!
-//    $('#todo'+id).remove();
 }
 
 
-function undeleteLocally() {
-    if (currentlyModified == null) {
-        alert('Can\'t undelete item!');
-    }
-    addLocally(currentlyModified);
+function deleteLocally(idx) {
+    itemList.splice(idx, 1);
+    renderTable();
+    updateProgress();
+}
+
+
+function restoreLocally(idx) {
+    itemList[idx].deleted = 0;
+    renderTable();
+    updateProgress();
 }
 
 
@@ -125,7 +131,6 @@ function modifyLocally(item) {
     itemList[index].tags     = item.tags;
     itemList[index].version  = item.version;
     itemList[index].recurrenceMode = item.recurrenceMode;
-    itemList.sort(ItemSort);
     renderTable();
 }
 
@@ -167,7 +172,45 @@ function toggleLocally(item) {
 }
 
 
-function sendDelete(id) {
+function emptyTrashLocally() {
+    deleteStart = itemList.length-1;
+    itemsToDelete = 0;
+    while (deleteStart>=0 && itemList[deleteStart].deleted == 1) {
+        ++itemsToDelete;
+        --deleteStart;
+    }
+    if (itemsToDelete > 0) {
+        itemList.splice(deleteStart+1, itemsToDelete);
+        renderTable();
+    }
+}
+
+
+function emptyTrash() {
+    if (!confirm('Den Mülleimer wirklich leeren?')) {
+        return;
+    }
+    $.ajax( {
+        type: 'GET',
+        url: 'queries/empty-trash.php',
+        success: function(returnValue) {
+            if (returnValue != 1) {
+                log('Fehler beim Leeren: '+returnValue);
+                alert('Fehler beim Leeren: '+returnValue);
+            } else {
+                log('Erfolgreich geleert.');
+		emptyTrashLocally();
+            }
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            alert('Übertragungsfehler beim Leeren!');
+        }
+   });
+
+}
+
+
+function trashItem(id) {
     log('Lösche Eintrag...');
     var idx = findItem(id);
     if (idx == -1) {
@@ -177,20 +220,20 @@ function sendDelete(id) {
     var stuff = new Object();
     stuff.id = id;
     stuff.version = itemList[idx].version;
-    deleteLocally(idx);
+    stuff.trash   = 1;
+    trashLocally(idx);
     $.ajax( {
         type: 'POST',
-        url: 'queries/delete.php',
+        url: 'queries/trash.php',
         data: stuff,
         success: function(returnValue) {
             if (returnValue != 1) {
                 log('Fehler beim Löschen: '+returnValue);
                 alert('Fehler beim Löschen: '+returnValue);
-                undeleteLocally();
+                restoreLocally(idx);
             } else {
                 log('Erfolgreich gelöscht.');
             }
-            currentlyModified = null;
         },
         error: function(jqXHR, textStatus, errorThrown) {
             alert('Übertragungsfehler beim Löschen!');
@@ -199,11 +242,35 @@ function sendDelete(id) {
 }
 
 
-function deleteItem(id) {
-    if (!confirm('Eintrag wirklich löschen?')) {
+function restoreItem(id) {
+    log('Stelle Eintrag wieder her...');
+    var idx = findItem(id);
+    if (idx == -1) {
+        alert('Kann den wiederherzustellenden Eintrag nicht finden!');
         return;
     }
-    sendDelete(id);
+    var stuff = new Object();
+    stuff.id = id;
+    stuff.version = itemList[idx].version;
+    stuff.trash   = 0;
+    restoreLocally(idx);
+    $.ajax( {
+        type: 'POST',
+        url: 'queries/trash.php',
+        data: stuff,
+        success: function(returnValue) {
+            if (returnValue != 1) {
+                log('Fehler beim Wiederherstellen: '+returnValue);
+                alert('Fehler beim Widerherstellen: '+returnValue);
+                trashLocally(idx);
+            } else {
+                log('Erfolgreich wiederhergestellt.');
+            }
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            alert('Übertragungsfehler beim Wiederherstellen!');
+        }
+   });
 }
 
 
@@ -381,8 +448,11 @@ function setListener(id) {
     $('#modify'+id).click(function() {
         modifyItem(id);
     });
-    $('#delete'+id).click(function() {
-        deleteItem(id);
+    $('#trash'+id).click(function() {
+        trashItem(id);
+    });
+    $('#restore'+id).click(function() {
+        restoreItem(id);
     });
     $('#reactivate'+id).click(function() {
         reactivate(id);
@@ -409,6 +479,7 @@ function renderItem(it, line) {
     var line = '<div class="line'+
             ((line%2!=0)?' line_odd':'')+
             ((it.completed==1)?' todo_completed':'')+
+        ((it.deleted==1)?' todo_deleted':'')+
             '" id="todo'+it.id+'">'+
         '<span class="todo" title="Angelegt: '+formatDate(createDate, true)+
             '; Wiederholung: '+repetition+
@@ -420,10 +491,10 @@ function renderItem(it, line) {
             (isRecurring ? '<img src="images/recurring.png" id="reactivate'+it.id+'" />':'');
     if (hasTags) {
         line += ' <ul id="todo_tags_'+it.id+'" class="todo_item_tags">';
-	tags = it.tags.split(",");
-	for (var i=0; i<tags.length; i++) {
-	    line += '<li>'+tags[i]+'</li>';
-	}
+    tags = it.tags.split(",");
+    for (var i=0; i<tags.length; i++) {
+        line += '<li>'+tags[i]+'</li>';
+    }
         line += '</ul>';
     }
     line += '</span>'+
@@ -435,9 +506,13 @@ function renderItem(it, line) {
         '<span class="effort">'+it.effort+'</span>'+
         '<span class="completed"><input type="checkbox" id="completed'+it.id+'" '+
             ((it.completed==1)?'checked="true" ':'')+'/></span>'+
-        '<span class="modify"><input type="image" value="Bearbeiten" id="modify'+it.id+'" src="images/pencil.png" /></span>'+
-        '<span class="delete"><input type="image" value="Löschen" id="delete'+it.id+'" src="images/Delete.png" /></span>'+
-    '</div>';
+        '<span class="modify"><input type="image" value="Bearbeiten" id="modify'+it.id+'" src="images/pencil.png" /></span>';
+    if (it.deleted == 0) {
+        line += '<span class="trash"><input type="image" value="Löschen" id="trash'+it.id+'" src="images/trash_red.png" /></span>';
+    } else {
+        line += '<span class="restore"><input type="image" value="Wiederherstellen" id="restore'+it.id+'" src="images/undelete.png" /></span>';
+    }
+    line += '</div>';
     $('#todoTable').append(line);
     $('#todo_tags_'+it.id).tagit({readOnly: true});
     $('#todo'+it.id).dblclick(function() {
@@ -459,27 +534,29 @@ function renderTable() {
 function arrayContainsAny(needle, haystack) {
     for (var i=0; i<needle.length; i++) {
         if (haystack.indexOf(needle[i]) != -1) {
-	    return true;
-	}
+            return true;
+        }
     }
     return false;
 }
 
 function filterList() {
     if ($('#filter_tags').val() == '') {
-        return itemList;
-    }
-    filterTags = $('#filter_tags').val().split(",");
-    var result = new Array();
-    for (var i=0; i<itemList.length; i++) {
-        if (itemList[i].tags == null) {
-	    continue;
-	}
+        result = itemList.slice(0);
+    } else {
+        filterTags = $('#filter_tags').val().split(",");
+        var result = new Array();
+        for (var i=0; i<itemList.length; i++) {
+            if (itemList[i].tags == null) {
+                continue;
+            }
+        }
         var itemTags = itemList[i].tags.split(",");
         if (arrayContainsAny(filterTags, itemTags)) {
-	    result.push(itemList[i]);
-	}
+            result.push(itemList[i]);
+        }
     }
+    result.sort(ItemSort);
     return result;
 }
 
@@ -487,6 +564,9 @@ function updateProgress() {
     var open = 0;
     var done = 0;
     for (var i=0; i<itemList.length; i++) {
+        if (itemList[i].deleted == 1) {
+	    continue;
+	}
         if (itemList[i].completed == 0) {
             open++;
         } else {
@@ -528,23 +608,22 @@ function reload() {
         itemList[i].version   = parseInt(itemList[i].version);
         itemList[i].recurrenceMode = parseInt(itemList[i].recurrenceMode);
     }
-    itemList.sort(ItemSort);
     renderTable();
     updateProgress();
     log("Laden beendet!");
 }
 
 function getUTCDate() {
-	var now = new Date(); 
-	var now_utc = new Date(
-		now.getUTCFullYear(),
-		now.getUTCMonth(),
-		now.getUTCDate(),
-		now.getUTCHours(),
-		now.getUTCMinutes(),
-    		now.getUTCSeconds()
-	);
-	return now_utc;
+    var now = new Date(); 
+    var now_utc = new Date(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate(),
+        now.getUTCHours(),
+        now.getUTCMinutes(),
+        now.getUTCSeconds()
+    );
+    return now_utc;
 }
 
 function enter() {
@@ -567,7 +646,7 @@ function enter() {
     }
     var stuff = new Todo(-1, todo, $('#enter_due').val(),
             $('#enter_priority').val(), $('#enter_effort').val(),
-            0, '', tags, 1, 0, null, formatDate(getUTCDate(), true));
+            0, '', tags, 0, 1, 0, null, formatDate(getUTCDate(), true));
     addLocally(stuff);
     $.ajax( {
         type: 'POST',
