@@ -15,7 +15,7 @@ function Todo(id, todo, due, priority, effort,
     this.completed = parseInt(completed);
     this.notes     = notes;
     this.tags      = tags;
-    this.deleted   = deleted;
+    this.deleted   = parseInt(deleted);
     this.version   = parseInt(version);
     this.recurrenceMode = parseInt(recurrenceMode);
     this.completionDate = completionDate;
@@ -42,33 +42,36 @@ function printItem(item)
 function ItemSort(item1, item2) {
     var less =
         (item1.deleted < item2.deleted) ||
-    (
-          (item1.completed < item2.completed) ||
-          (
-            item1.completed == item2.completed &&
+        (
+	  item1.deleted == item2.deleted &&
+	  (
+            (item1.completed < item2.completed) ||
             (
+              item1.completed == item2.completed &&
               (
-                item1.completed == 0 &&
                 (
-                  item1.priority > item2.priority ||
+                  item1.completed == 0 &&
                   (
-                    item1.priority == item2.priority &&
-                    ((item1.tags!=null)?item1.tags+item1.todo:item1.todo) <
-                    ((item2.tags!=null)?item2.tags+item2.todo:item2.todo)
+                    item1.priority > item2.priority ||
+                    (
+                      item1.priority == item2.priority &&
+                      ((item1.tags!=null)?item1.tags+item1.todo:item1.todo) <
+                      ((item2.tags!=null)?item2.tags+item2.todo:item2.todo)
+                    )
+                  )
+                ) || (
+                  item1.completed == 1 &&
+                  (
+                    item1.completionDate > item2.completionDate ||
+                    (
+                      item1.completionDate == item2.completionDate &&
+                      item1.priority > item2.priority
+                    )
                   )
                 )
-              ) || (
-                item1.completed == 1 &&
-                (
-                  item1.completionDate > item2.completionDate ||
-                  (
-                    item1.completionDate == item2.completionDate &&
-                    item1.priority > item2.priority
-                  )
-                )
-              ) 
+              )
             )
-      )
+	  )
         );
     // log('item1: c='+item1.completed+', p='+item1.priority+'; item2: c='+item2.completed+', p='+item2.priority+'; less: '+less);
     if (less) {
@@ -136,11 +139,14 @@ function modifyLocally(item) {
 
 
 function addLocally(newItem) {
-    var insertIdx = 0;
+    // just enter at the end, the sorting is done separately anyway
+    var insertIdx = itemList.length;
+/*
     while(insertIdx < itemList.length && 
         ItemSort(newItem, itemList[insertIdx]) > 0) {
         ++insertIdx;
     }
+*/
     itemList.splice(insertIdx, 0, newItem);
     renderTable();
     updateProgress();
@@ -157,32 +163,18 @@ function toggleLocally(item) {
     toggledItem.completed = item.completed;
     toggledItem.version = item.version;
     toggledItem.completionDate = item.completionDate;
-    //itemList.sort(ItemSort);
-    // restore order for the one item only:
-    itemList.splice(index, 1);
-    var insertIdx = 0;
-    while(insertIdx < itemList.length && 
-        ItemSort(toggledItem, itemList[insertIdx]) > 0) {
-        insertIdx++;
-    }
-    itemList.splice(insertIdx, 0, toggledItem);
-
     renderTable();
     updateProgress();
 }
 
 
 function emptyTrashLocally() {
-    deleteStart = itemList.length-1;
-    itemsToDelete = 0;
-    while (deleteStart>=0 && itemList[deleteStart].deleted == 1) {
-        ++itemsToDelete;
-        --deleteStart;
+    for (idx = itemList.length-1; idx>=0; --idx) {
+        if (itemList[idx].deleted == 1) {
+	   itemList.splice(idx, 1);
+	}
     }
-    if (itemsToDelete > 0) {
-        itemList.splice(deleteStart+1, itemsToDelete);
-        renderTable();
-    }
+    renderTable();
 }
 
 
@@ -199,7 +191,7 @@ function emptyTrash() {
                 alert('Fehler beim Leeren: '+returnValue);
             } else {
                 log('Erfolgreich geleert.');
-		emptyTrashLocally();
+        emptyTrashLocally();
             }
         },
         error: function(jqXHR, textStatus, errorThrown) {
@@ -505,10 +497,10 @@ function renderItem(it, line) {
         '<span class="priority">'+it.priority+'</span>'+
         '<span class="effort">'+it.effort+'</span>'+
         '<span class="completed"><input type="checkbox" id="completed'+it.id+'" '+
-            ((it.completed==1)?'checked="true" ':'')+'/></span>'+
-        '<span class="modify"><input type="image" value="Bearbeiten" id="modify'+it.id+'" src="images/pencil.png" /></span>';
+            ((it.completed==1)?'checked="true" ':'')+'/></span>';
     if (it.deleted == 0) {
-        line += '<span class="trash"><input type="image" value="Löschen" id="trash'+it.id+'" src="images/trash_red.png" /></span>';
+        line += '<span class="modify"><input type="image" value="Bearbeiten" id="modify'+it.id+'" src="images/pencil.png" /></span>'+
+	    '<span class="trash"><input type="image" value="Löschen" id="trash'+it.id+'" src="images/trash_red.png" /></span>';
     } else {
         line += '<span class="restore"><input type="image" value="Wiederherstellen" id="restore'+it.id+'" src="images/undelete.png" /></span>';
     }
@@ -565,8 +557,8 @@ function updateProgress() {
     var done = 0;
     for (var i=0; i<itemList.length; i++) {
         if (itemList[i].deleted == 1) {
-	    continue;
-	}
+            continue;
+        }
         if (itemList[i].completed == 0) {
             open++;
         } else {
@@ -578,7 +570,7 @@ function updateProgress() {
     $('#progress_todo').css('width', ((progressWidth*open/count))+'%');
     $('#progress_done').css('width', ((progressWidth*done/count))+'%');
     $('#progress_todo').attr('title', 'Offen: '+open);
-    $('#progress_done').attr('title', 'Erledigt: '+Math.round(100*done/count) + ' % ('+done+') seit letztem Monat' );
+    $('#progress_done').attr('title', 'Erledigt: '+Math.round(100*done/count) + ' % ('+done+') seit letztem Monat');
 }
 
 
@@ -671,7 +663,7 @@ function enter() {
                 $('#todo-1').attr('id', 'todo'+id);
                 $('#completed-1').attr('id', 'completed'+id);
                 $('#modify-1').attr('id', 'modify'+id);
-                $('#delete-1').attr('id', 'delete'+id);
+                $('#trash-1').attr('id', 'trash'+id);
                 setListener(id);
             }
         },

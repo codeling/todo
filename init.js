@@ -50,6 +50,7 @@ $(document).ready(function() {
             0,  // currently not taken into account on server, and not modifiable at server
             $('#modify_notes').val().trim(),
             $('#modify_tags').val(),
+	    0,  // deleted items cannot be modified
             itemList[idx].version,
             $('#modify_recurrenceMode').val(),
             itemList[idx].completionDate,
