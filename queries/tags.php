@@ -6,7 +6,11 @@ function updateTags($db, $todo_id, $tags)
     dbQueryOrDie($db, $sql);
     foreach ( $tags as $tag)
     {
-        $quotedTag = quoteString($db, $tag);
+        $quotedTag = trim(quoteString($db, $tag));
+        if (strcmp($quotedTag, '') == 0) {
+            // don't want to have empty tags in the database!
+            continue;
+        }
         $sql = "SELECT id FROM tags WHERE name=$quotedTag";
         $qResult = dbQueryOrDie($db, $sql);
         $obj = $qResult->fetch_object();
