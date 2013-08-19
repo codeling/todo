@@ -542,11 +542,11 @@ function filterList() {
             if (itemList[i].tags == null) {
                 continue;
             }
-        }
-        var itemTags = itemList[i].tags.split(",");
-        if (arrayContainsAny(filterTags, itemTags)) {
-            result.push(itemList[i]);
-        }
+            var itemTags = itemList[i].tags.split(",");
+            if (arrayContainsAny(filterTags, itemTags)) {
+                result.push(itemList[i]);
+            }
+	}
     }
     result.sort(ItemSort);
     return result;
