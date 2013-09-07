@@ -11,6 +11,7 @@
     <script type="text/javascript" src="todo.js"></script>
     <script type="text/javascript" src="init.js"></script>
     <script type="text/javascript" src="js/tag-it.min.js" type="text/javascript" charset="utf-8"></script>
+    <script type="text/javascript" src="lang-js.php"></script>
     <link rel="stylesheet" type="text/css" href="todo.css" />
     <link rel="stylesheet" type="text/css" href="jquery/jquery-ui-1.8.16.custom.css"/>
     <link rel="stylesheet" type="text/css" href="css/jquery.tagit.css">

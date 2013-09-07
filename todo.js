@@ -123,7 +123,7 @@ function modifyLocally(item) {
     var index = findItem(item.id);
     if (index == -1)
     {
-        alert('Fehler: Eintrag nicht gefunden!');
+        alert($T('ENTRY_NOT_FOUND'));
         return;
     }
     itemList[index].todo     = item.todo;
@@ -156,7 +156,7 @@ function addLocally(newItem) {
 function toggleLocally(item) {
     var index = findItem(item.id);
     if (index == -1) {
-        alert('Fehler: Eintrag nicht gefunden!');
+        alert($T('ENTRY_NOT_FOUND'));
         return;
     }
     toggledItem = itemList[index];
@@ -179,7 +179,7 @@ function emptyTrashLocally() {
 
 
 function emptyTrash() {
-    if (!confirm('Den Mülleimer wirklich leeren?')) {
+    if (!confirm($T('CONFIRM_EMPTY_TRASH'))) {
         return;
     }
     $.ajax( {
@@ -187,15 +187,15 @@ function emptyTrash() {
         url: 'queries/empty-trash.php',
         success: function(returnValue) {
             if (returnValue != 1) {
-                log('Fehler beim Leeren: '+returnValue);
-                alert('Fehler beim Leeren: '+returnValue);
+                log($T('ERROR_WHILE_EMPTYING_TRASH')+returnValue);
+                alert($T('ERROR_WHILE_EMPTYING_TRASH')+returnValue);
             } else {
-                log('Erfolgreich geleert.');
+                log($T('EMPTYING_TRASH_SUCCESSFUL'));
         emptyTrashLocally();
             }
         },
         error: function(jqXHR, textStatus, errorThrown) {
-            alert('Übertragungsfehler beim Leeren!');
+            alert($T('TRANSMISSION_ERROR_WHILE_EMPTYING_TRASH'));
         }
    });
 
@@ -203,10 +203,10 @@ function emptyTrash() {
 
 
 function trashItem(id) {
-    log('Lösche Eintrag...');
+    log($T('DELETING_ENTRY'));
     var idx = findItem(id);
     if (idx == -1) {
-        alert('Kann den zu löschenden Eintrag nicht finden!');
+        alert($T('ENTRY_NOT_FOUND'));
         return;
     }
     var stuff = new Object();
@@ -220,25 +220,25 @@ function trashItem(id) {
         data: stuff,
         success: function(returnValue) {
             if (returnValue != 1) {
-                log('Fehler beim Löschen: '+returnValue);
-                alert('Fehler beim Löschen: '+returnValue);
+                log($T('ERROR_WHILE_DELETING')+returnValue);
+                alert($T('ERROR_WHILE_DELETING')+returnValue);
                 restoreLocally(idx);
             } else {
-                log('Erfolgreich gelöscht.');
+                log($T('DELETING_SUCCESSFUL'));
             }
         },
         error: function(jqXHR, textStatus, errorThrown) {
-            alert('Übertragungsfehler beim Löschen!');
+            alert($T('TRANSMISSION_ERROR_WHILE_DELETING'));
         }
    });
 }
 
 
 function restoreItem(id) {
-    log('Stelle Eintrag wieder her...');
+    log($T('RESTORING_ENTRY'));
     var idx = findItem(id);
     if (idx == -1) {
-        alert('Kann den wiederherzustellenden Eintrag nicht finden!');
+        alert($T('ENTRY_NOT_FOUND'));
         return;
     }
     var stuff = new Object();
@@ -252,22 +252,22 @@ function restoreItem(id) {
         data: stuff,
         success: function(returnValue) {
             if (returnValue != 1) {
-                log('Fehler beim Wiederherstellen: '+returnValue);
-                alert('Fehler beim Widerherstellen: '+returnValue);
+                log($T('ERROR_WHILE_RESTORING')+returnValue);
+                alert($T('ERROR_WHILE_RESTORING')+returnValue);
                 trashLocally(idx);
             } else {
-                log('Erfolgreich wiederhergestellt.');
+                log($T('RESTORING_SUCCESSFUL'));
             }
         },
         error: function(jqXHR, textStatus, errorThrown) {
-            alert('Übertragungsfehler beim Wiederherstellen!');
+            alert($T('TRANSMISSION_ERROR_WHILE_RESTORING'));
         }
    });
 }
 
 
 function sendReactivate(id) {
-    log('Reaktiviere...');
+    log($T('REACTIVATING'));
     var idobj = new Object();
     idobj.id = id;
     $.ajax( {
@@ -275,11 +275,11 @@ function sendReactivate(id) {
         url: 'queries/reactivate-one.php',
         data: idobj,
         success: function(returnValue) {
-            log('Resultat: '+returnValue);
+            log($T('RESULT')+': '+returnValue);
             refresh();
         },
         error: function(jqXHR, textStatus, errorThrown) {
-            alert('Fehler!');
+            alert($T('TRANSMISSION_ERROR_WHILE_REACTIVATING'));
         }
     });
 }
@@ -290,7 +290,7 @@ function reactivate(id) {
     if (itemList[index].completed == 0) {
         return;
     }
-    if (!confirm('Eintrag wirklich wiederbeleben?')) {
+    if (!confirm($T('CONFIRM_REACTIVATION'))) {
         return;
     }
     sendReactivate(id);
@@ -300,7 +300,7 @@ function reactivate(id) {
 function toggleCompleted(id) {
     var index = findItem(id);
     if (index == -1) {
-        alert('Eintrag nicht gefunden!');
+        alert($T('ENTRY_NOT_FOUND'));
         return;
     }
     var stuff = new Object();
@@ -315,8 +315,8 @@ function toggleCompleted(id) {
         data: stuff,
         success: function(returnValue) {
             if (returnValue != 1) {
-                log('Fehler beim Updaten: '+returnValue);
-                alert('Fehler beim Updaten: '+returnValue);
+                log($T('ERROR_WHILE_UPDATING')+': '+returnValue);
+                alert($T('ERROR_WHILE_UPDATING')+': '+returnValue);
                 // reset checkbox:
                 var checked = $('#completed'+currentlyModified.id).attr('checked');
                 if (checked=='checked') {
@@ -329,12 +329,12 @@ function toggleCompleted(id) {
                 currentlyModified.completionDate = stuff.completionDate;
                 currentlyModified.version   = stuff.version + 1;
                 toggleLocally(currentlyModified);
-                log('Erfolgreich geändert!');
+                log($T('UPDATE_SUCCESSFUL'));
             }
             currentlyModified = null;
         },
         error: function(jqXHR, textStatus, errorThrown) {
-            alert('Übertragungsfehler beim ändern!');
+            alert($T('TRANSMISSION_ERROR_WHILE_UPDATING'));
         }
     });
 }
@@ -350,10 +350,10 @@ function html_entity_decode(str) {
     
 
 function modifyItem(id) {
-    log('Öffne Dialog zum Verändern des Eintrags...');
+    log($T('OPENING_UPDATE_DIALOG'));
     var index = findItem(id);
     if (index == -1) {
-        alert('Konnte ToDo mit ID='+id+' nicht finden!');
+        alert($T('ENTRY_NOT_FOUND'));
         return;
     }
     var item = itemList[index];
@@ -379,9 +379,9 @@ function modifyItem(id) {
         modal: true,
         minHeight: 180,
         minWidth: 600,
-        title: 'ToDo Eintrag verändern',
+        title: $T('MODIFY_ENTRY'),
         close: function(ev,ui) {
-            log('Bearbeiten-Dialog geschlossen');
+            log($T('MODIFY_DIALOG_CLOSED'));
         }
     });
 }
@@ -473,9 +473,9 @@ function renderItem(it, line) {
             ((it.completed==1)?' todo_completed':'')+
         ((it.deleted==1)?' todo_deleted':'')+
             '" id="todo'+it.id+'">'+
-        '<span class="todo" title="Angelegt: '+formatDate(createDate, true)+
-            '; Wiederholung: '+repetition+
-        ((it.completed != 0)? '; Erledigt: '+formatDate(complDate, true):'')+
+        '<span class="todo" title="'+$T('CREATED')+': '+formatDate(createDate, true)+
+            '; '+$T('RECURRENCE')+': '+repetition+
+        ((it.completed != 0)? '; '+$T('DONE')+': '+formatDate(complDate, true):'')+
             '">'+
             '<span class="todo_lineNr">'+(line+1)+'</span>. '+
             it.todo+
@@ -499,10 +499,16 @@ function renderItem(it, line) {
         '<span class="completed"><input type="checkbox" id="completed'+it.id+'" '+
             ((it.completed==1)?'checked="true" ':'')+'/></span>';
     if (it.deleted == 0) {
-        line += '<span class="modify"><input type="image" value="Bearbeiten" id="modify'+it.id+'" src="images/pencil.png" /></span>'+
-	    '<span class="trash"><input type="image" value="Löschen" id="trash'+it.id+'" src="images/trash_red.png" /></span>';
+        line += '<span class="modify"><input type="image" value="'+
+		$T('EDIT')+'" id="modify'+it.id+
+		'" src="images/pencil.png" /></span>'+
+	    '<span class="trash"><input type="image" value="'+
+	    	$T('DELETE')+'" id="trash'+it.id+
+		'" src="images/trash_red.png" /></span>';
     } else {
-        line += '<span class="restore"><input type="image" value="Wiederherstellen" id="restore'+it.id+'" src="images/undelete.png" /></span>';
+        line += '<span class="restore"><input type="image" value="'+
+		$T('RESTORE')+'" id="restore'+it.id+
+		'" src="images/undelete.png" /></span>';
     }
     line += '</div>';
     $('#todoTable').append(line);
@@ -569,8 +575,8 @@ function updateProgress() {
     var progressWidth = 99.5; // in percent
     $('#progress_todo').css('width', ((progressWidth*open/count))+'%');
     $('#progress_done').css('width', ((progressWidth*done/count))+'%');
-    $('#progress_todo').attr('title', 'Offen: '+open);
-    $('#progress_done').attr('title', 'Erledigt: '+Math.round(100*done/count) + ' % ('+done+') seit letztem Monat');
+    $('#progress_todo').attr('title', $T('OPEN')+': '+open);
+    $('#progress_done').attr('title', $T('DONE')+': '+Math.round(100*done/count) + ' % ('+done+') '+$T('SINCE_LAST_MONTH'));
 }
 
 
@@ -580,7 +586,7 @@ function toggleWorking(show) {
 
 
 function reload() {
-    log("Lade ToDo-Liste neu...");
+    log($T('LOADING_TODO_LIST'));
     var jsontext = $.ajax({
         url: 'queries/query-list.php',
         type: 'GET',
@@ -589,7 +595,8 @@ function reload() {
     try {
         itemList = JSON.parse(jsontext);
     } catch (e) {
-        alert('Server lieferte ungültige Daten "'+jsontext+'"; Fehlermeldung des JSON-Parsers: '+e);
+        alert($T('SERVER_DELIVERED_INVALID_DATA')+': "'+jsontext+
+		'";'+$T('JSON_PARSER_MESSAGE')+' : '+e);
     }
     for (var i=0; i<itemList.length; ++i) {
         // make "proper" Todo items out of the loaded values:
@@ -602,7 +609,7 @@ function reload() {
     }
     renderTable();
     updateProgress();
-    log("Laden beendet!");
+    log($T('LOADING_FINISHED'));
 }
 
 function getUTCDate() {
@@ -619,13 +626,13 @@ function getUTCDate() {
 }
 
 function enter() {
-    log('Lege neuen Eintrag an...');
+    log($T('CREATING_NEW_ENTRY'));
     if ($('#enter_todo').val().length == 0) {
-        alert('Todo darf nicht leer sein!');
+        alert($T('TODO_MAY_NOT_BE_EMPTY'));
         return;
     }
     if (findItem(-1) != -1) {
-        alert('Anderer Einfüge-Vorgang ist noch am Laufen; bitte warte dessen Beendigung ab, bevor du einen weiteren Eintrag hinzufügst!');
+        alert($T('ANOTHER_CREATE_STILL_RUNNING'));
         return;
     }
     var todo = $('#enter_todo').val();
@@ -646,13 +653,13 @@ function enter() {
         data: stuff,
         success: function(returnValue) {
             if (isNaN(returnValue)) {
-                log('Fehler beim Einfügen: '+returnValue);
-                alert('Fehler beim Einfügen: '+returnValue);
+                log($T('ERROR_WHILE_CREATING')+': '+returnValue);
+                alert($T('ERROR_WHILE_CREATING')+': '+returnValue);
                 // remove the item from local list; the  data of it
                 // will still remain in the edit fields anyway!
                 deleteLocally(findItem(-1));
             } else {
-                log('Einfügen erfolgreich!');
+                log($T('CREATING_SUCCESSFUL'));
                 $('#enter_todo').val('');
                 $('#enter_due').val('');
                 $('#enter_priority').val('');
@@ -668,7 +675,7 @@ function enter() {
             }
         },
         error: function(jqXHR, textStatus, errorThrown) {
-            alert('Übertragungsfehler beim Einfügen!');
+            alert($T('TRANSMISSION_ERROR_WHILE_CREATING'));
         }
     });
 }

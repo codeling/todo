@@ -11,23 +11,29 @@ function createDatePicker(tagid) {
 $(document).ready(function() {
 
     jQuery(function($){
-        $.datepicker.regional['de'] = {clearText: 'löschen', clearStatus: 'aktuelles Datum löschen',
-                closeText: 'schließen', closeStatus: 'ohne Änderungen schließen',
-                prevText: '<zurück', prevStatus: 'letzten Monat zeigen',
-                nextText: 'Vor>', nextStatus: 'nächsten Monat zeigen',
-                currentText: 'heute', currentStatus: '',
-                monthNames: ['Januar','Februar','März','April','Mai','Juni',
-                'Juli','August','September','Oktober','November','Dezember'],
-                monthNamesShort: ['Jan','Feb','Mär','Apr','Mai','Jun',
-                'Jul','Aug','Sep','Okt','Nov','Dez'],
-                monthStatus: 'anderen Monat anzeigen', yearStatus: 'anderes Jahr anzeigen',
-                weekHeader: 'Wo', weekStatus: 'Woche des Monats',
-                dayNames: ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'],
-                dayNamesShort: ['So','Mo','Di','Mi','Do','Fr','Sa'],
-                dayNamesMin: ['So','Mo','Di','Mi','Do','Fr','Sa'],
-                dayStatus: 'Setze DD als ersten Wochentag', dateStatus: 'Wähle D, M d',
+        $.datepicker.regional['de'] = {clearText: $T('DELETE'), clearStatus: $T('DELETE_CUR_DATE'),
+                closeText: $T('CLOSE'), closeStatus: $T('CLOSE_WITHOUT_CHANGE'),
+                prevText: $T('BACK'), prevStatus: $T('SHOW_LAST_MONTH'),
+                nextText: $T('FORWARD'), nextStatus: $T('SHOW_NEXT_MONTH'),
+                currentText: $T('TODAY'), currentStatus: '',
+                monthNames: [$T('JANUARY'), $T('FEBRUARY'), $T('MARCH'), $T('APRIL'),
+			$T('MAY'), $T('JUNE'), $T('JULY'), $T('AUGUST'),
+			$T('SEPTEMBER'), $T('OCTOBER'), $T('NOVEMBER'),
+			$T('DECEMBER')],
+                monthNamesShort: [$T('JAN'), $T('FEB'), $T('MAR'), $T('APR'),
+			$T('MAY'), $T('JUN'), $T('JUL'), $T('AUG'), $T('SEP'),
+			$T('OCT'), $T('NOV'), $T('DEC')],
+                monthStatus: $T('SHOW_OTHER_MONTH'), yearStatus: $T('SHOW_OTHER_YEAR'),
+                weekHeader: $T('WEEK_SHORT'), weekStatus: $T('WEEK_OF_MONTH'),
+                dayNames: [$T('SUNDAY'), $T('MONDAY'), $T('TUESDAY'), $T('WEDNESDAY'),
+			$T('THURSDAY'), $T('FRIDAY'), $T('SATURDAY')],
+                dayNamesShort: [$T('SU'), $T('MO'), $T('TU'), $T('WE'), $T('TH'),
+			$T('FR'), $T('SA')],
+                dayNamesMin: [$T('SU'), $T('MO'), $T('TU'), $T('WE'), $T('TH'),
+			$T('FR'), $T('SA')],
+                dayStatus: $T('CHOOSE_AS_FIRST_WEEKDAY'), dateStatus: $T('CHOOSE_D_M_d'),
                 dateFormat: 'dd.mm.yy', firstDay: 1,
-                initStatus: 'Wähle ein Datum', isRTL: false};
+                initStatus: $T('CHOOSE_A_DATE'), isRTL: false};
         $.datepicker.setDefaults($.datepicker.regional['de']);
     });
 
@@ -39,7 +45,7 @@ $(document).ready(function() {
         var id = parseInt($('#modify_id').val());
         var idx = findItem(id);
         if (idx == -1) {
-            alert('Eintrag nicht gefunden!');
+            alert($T('ENTRY_NOT_FOUND'));
             return;
         }
         var stuff = new Todo(id,
@@ -56,19 +62,19 @@ $(document).ready(function() {
             itemList[idx].completionDate,
             itemList[idx].creationDate);
         currentlyModified = stuff;
-        log('Speichere Veränderungen...');
+        log($T('SAVING_MODIFICATIONS'));
         $.ajax({
             type: 'POST',
             url: 'queries/update.php',
             data: stuff,
             success: function(returnValue) {
                 if (isNaN(returnValue)) {
-                    log('Fehler beim Updaten: '+returnValue);
-                    alert('Fehler beim Updaten: '+returnValue);
+                    log($T('ERROR_WHILE_MODIFYING')+returnValue);
+                    alert($T('ERROR_WHILE_MODIFYING')+returnValue);
                 // just keep dialog open...then changed values aren't lost
                 } else {
                     // if everything went fine, close dialog:
-                    log('Speichern erfolgreichen, schließe Dialog');
+                    log($T('SAVING_SUCCESSFUL'));
                     $('#modify_dialog').dialog('close');
                     // only set locally now, else it could be confusing
                     currentlyModified.version = currentlyModified.version+1;
@@ -77,7 +83,7 @@ $(document).ready(function() {
                 }
             },
             error: function(jqXHR, textStatus, errorThrown) {
-                alert('Übertragungsfehler beim Bearbeiten!');
+                alert($T('TRANSMISSION_ERROR_WHILE_MODIFYING'));
             }
         });
     });
@@ -85,7 +91,7 @@ $(document).ready(function() {
     $("#smallLog").click(function() {
         updateLog('#log_dialog', logItems.length);
         $('#log_dialog').html($('#log_dialog').html()+
-                '<br /><a href="javascript:toggleLog()">Loganzeige ein/ausblenden</a>');
+                '<br /><a href="javascript:toggleLog()">'+$T('LOG_ONOFF')+'</a>');
         $('#log_dialog').dialog({
             modal: true,
             minHeight: 150,
