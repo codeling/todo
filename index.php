@@ -5,15 +5,15 @@
     <meta charset="UTF-8">
     <title><?php echo(TodoConstants::AppName); ?></title>
     <!-- JQuery & JQuery UI -->
-    <script src="jquery/jquery-1.6.2.min.js"></script>
-    <script src="jquery/jquery-ui-1.8.16.custom.min.js"></script>
+    <script src="jquery/jquery-1.10.2.min.js"></script>
+    <script src="jquery/jquery-ui-1.10.3.custom.min.js"></script>
     <script type="text/javascript" src="log.js.php"></script>
     <script type="text/javascript" src="todo.js"></script>
     <script type="text/javascript" src="init.js"></script>
     <script type="text/javascript" src="js/tag-it.min.js" type="text/javascript" charset="utf-8"></script>
     <script type="text/javascript" src="lang-js.php"></script>
     <link rel="stylesheet" type="text/css" href="todo.css" />
-    <link rel="stylesheet" type="text/css" href="jquery/jquery-ui-1.8.16.custom.css"/>
+    <link rel="stylesheet" type="text/css" href="jquery/jquery-ui-1.10.3.custom.min.css"/>
     <link rel="stylesheet" type="text/css" href="css/jquery.tagit.css">
     <link rel="stylesheet" type="text/css" href="css/tagit.ui-zendesk.css">
   </head>
