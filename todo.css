@@ -143,10 +143,13 @@ span.modify_desc {
     width: 80px;
     vertical-align: top;
 }
-ul#modify_tags {
+ul#modify_tag_edit {
     display: inline-block;
     margin: 0;
     padding: 0;
+}
+ul.ui-autocomplete {
+    z-index: 101;
 }
 #progress {
     border: 1px solid black;
@@ -167,6 +170,7 @@ ul#modify_tags {
 
 #emptytrashlink,
 #statistiklink,
+#mobilelink,
 #filter {
     float: right;
     margin-right: 10px;
