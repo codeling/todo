@@ -5,10 +5,11 @@
     <meta charset="UTF-8">
     <title><?php echo(TodoConstants::AppName); ?></title>
     <!-- JQuery & JQuery UI -->
-    <script src="jquery/jquery-1.10.2.min.js"></script>
-    <script src="jquery/jquery-ui-1.10.3.custom.min.js"></script>
+    <script type="text/javascript" src="jquery/jquery-1.10.2.min.js"></script>
+    <script type="text/javascript" src="jquery/jquery-ui-1.10.3.custom.min.js"></script>
     <script type="text/javascript" src="log.js.php"></script>
-    <script type="text/javascript" src="todo.js"></script>
+    <script type="text/javascript" src="todo-common.js"></script>
+    <script type="text/javascript" src="todo-desktop.js"></script>
     <script type="text/javascript" src="init.js"></script>
     <script type="text/javascript" src="js/tag-it.min.js" type="text/javascript" charset="utf-8"></script>
     <script type="text/javascript" src="lang-js.php"></script>
@@ -28,6 +29,7 @@
       </div>
       <div id="emptytrashlink"><a href="javascript:emptyTrash()"><?php echo(TodoLang::_("EMPTY_TRASH"));?></a></div>
       <div id="statistiklink"><a href="statistik.php"><?php echo(TodoLang::_("SHOW_STATISTICS"));?></a></div>
+      <div id="mobilelink"><a href="m.index.php"><?php echo(TodoLang::_("GOTO_MOBILE_VERSION"));?></a></div>
       <h1><?php echo(TodoConstants::AppTitle); ?></h1>
       <div id="progress"><span id="progress_done">&nbsp;</span><span id="progress_todo">&nbsp;</span></div>
       <form method="POST" onsubmit="return false;" id="inputform">

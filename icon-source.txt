@@ -1,0 +1,5 @@
+trash.png - http://findicons.com/icon/237852/edit_trash?width=16
+recycle.png - http://findicons.com/icon/237750/application_x_trash?width=16
+recycle_bin_empty.png - http://findicons.com/icon/89659/recycle_bin_empty?width=16
+undelete.png - http://findicons.com/icon/188854/stock_undelete?width=16
+trash_red.png - http://findicons.com/icon/177400/trash_red?width=16

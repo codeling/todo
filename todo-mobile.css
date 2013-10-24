@@ -1,0 +1,127 @@
+/**************/
+/* Common CSS */
+
+body {
+    font-family:Tahoma,sans-serif;
+    background-color: #F8F8F8;
+    font-size: 9pt;
+}
+h1 {
+    font-size: 16pt;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+h2 {
+    font-size: 14pt;
+    font-weight: bold;
+}
+.linkblock {
+    float:right;
+} 
+
+/*************/
+/* ToDo List */
+
+#progress,
+#todoTable,
+div.line {
+    padding: 1px 0px;
+}
+div.line_odd {
+    background-color: #EEEEEE;
+}
+.line_header {
+    border-bottom: 1px solid black;
+}
+.line_header,
+.line_input {
+    border-left: 1px solid black;
+    border-right: 1px solid black;
+}
+.line_input span,
+.line_header span {
+    padding-top: 3px !important;
+    padding-bottom: 2px !important;
+}
+.line_input input[type="image"]
+{
+    padding-left: 20px;
+    vertical-align: middle;
+}
+.line_header {
+    background-color: #EEEEEE;
+}
+input[type="text"]
+{
+    font-family:Tahoma,sans-serif;
+    font-size: 9pt;
+}
+input[type="image"]
+{
+    vertical-align: bottom;
+    height: 16px;
+}
+.todo {
+    display:inline-block;
+    text-align: left;
+    padding-left: 4px !important;
+}
+div.actions {
+    float: right;
+}
+.todo_completed {
+    color: #777;
+}
+.todo_deleted {
+    color: #777;
+}
+.todo_deleted span {
+    text-decoration: line-through;
+}
+ul.todo_item_tags {
+    margin: 0 !important;
+    padding: 0 !important;
+    display: inline-block;
+    border-width: 0 !important;
+    font-size: 1em;
+    vertical-align: bottom;
+}
+ul.todo_item_tags li {
+    padding: 1px 2px !important;
+    margin: 1px 2px !important;
+}
+input[disabled="disabled"] {
+    display: none;
+}
+.todo_tags {
+    font-style: italic;
+}
+#working {
+    padding: 3px;
+    margin: 2px;
+    background-color:#EEEEEE;
+    float: right;
+}
+#smallLog {
+    font-size: 6pt;
+    float: right;
+    background-color:#EEEEEE;
+    margin-top: -12px;
+    margin-left: 2px;
+    margin-right: 2px;
+}
+#logLink {
+    float: right;
+    display: none;
+}
+span.modify_desc {
+    display: inline-block;
+    width: 80px;
+    vertical-align: top;
+}
+ul#modify_tags {
+    display: inline-block;
+    margin: 0;
+    padding: 0;
+}
+
