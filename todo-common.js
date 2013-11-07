@@ -318,11 +318,11 @@ function toggleCompleted(id) {
                 log($T('ERROR_WHILE_UPDATING')+': '+returnValue);
                 alert($T('ERROR_WHILE_UPDATING')+': '+returnValue);
                 // reset checkbox:
-                var checked = $('#completed'+currentlyModified.id).attr('checked');
+                var checked = $('#completed'+currentlyModified.id).prop('checked');
                 if (checked=='checked') {
-                    $('#completed'+currentlyModified.id).removeAttr('checked');
+                    $('#completed'+currentlyModified.id).prop('checked', false);
                 } else {
-                    $('#completed'+currentlyModified.id).attr('checked', 'checked');
+                    $('#completed'+currentlyModified.id).prop('checked', true);
                 }
             } else {
                 currentlyModified.completed = stuff.completed;
@@ -372,7 +372,8 @@ function modifyItem(id) {
         $("#modify_tag_edit").tagit("createTag", tags[i]);
     }
 
-    $('#modify_recurrenceMode option[value="'+item.recurrenceMode+'"]').attr('selected',true);
+    $('#modify_recurrenceMode option:selected').prop('selected', false);
+    $('#modify_recurrenceMode option[value="'+item.recurrenceMode+'"]').prop('selected', true);
     // set up store function:
     // show dialog:
     $('#modify_dialog').dialog( {
