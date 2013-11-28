@@ -190,12 +190,14 @@ ul.ui-autocomplete {
 }
 .statbar {
     background-color: blue;
-	color: white;
+    color: white;
 }
 .statvalue {
     word-wrap: break-word;
 }
-.statbar, .statvalue {
-	text-align: center;
+.statbar, .statvalue, .emptystatbar {
+    text-align: center;
 }
-
+.emptystatbar {
+    color: black;
+}
