@@ -11,7 +11,7 @@ function updateTags($db, $todo_id, $tags)
             // don't want to have empty tags in the database!
             continue;
         }
-	$quotedTag = quoteString($db, $trimmedString);
+	$quotedTag = quoteString($db, $trimmedTag);
         $sql = "SELECT id FROM tags WHERE name=$quotedTag";
         $qResult = dbQueryOrDie($db, $sql);
         $obj = $qResult->fetch_object();
