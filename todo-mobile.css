@@ -26,6 +26,7 @@ h2 {
 #todoTable,
 div.line {
     padding: 1px 0px;
+    clear: both;
 }
 div.line_odd {
     background-color: #EEEEEE;
@@ -83,12 +84,12 @@ ul.todo_item_tags {
     padding: 0 !important;
     display: inline-block;
     border-width: 0 !important;
-    font-size: 1em;
+    font-size: 0.8em;
     vertical-align: bottom;
 }
 ul.todo_item_tags li {
-    padding: 1px 2px !important;
-    margin: 1px 2px !important;
+    padding: 0px 1px !important;
+    margin: 0px 2px !important;
 }
 input[disabled="disabled"] {
     display: none;
