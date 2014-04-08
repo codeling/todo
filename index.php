@@ -69,6 +69,7 @@
             <span class="modify_desc"><?php echo(TodoLang::_("RECURRENCE"));?>:</span>
             <select name="modify_recurrenceMode" id="modify_recurrenceMode">
               <option value="0"><?php echo(TodoLang::_("DONT_REPEAT"));?></option>
+              <option value="3"><?php echo(TodoLang::_("REPEAT_EVERY_THREE_DAYS"));?></option>
               <option value="7"><?php echo(TodoLang::_("REPEAT_WEEKLY"));?></option>
               <option value="14"><?php echo(TodoLang::_("REPEAT_BIWEEKLY"));?></option>
               <option value="30"><?php echo(TodoLang::_("REPEAT_MONTHLY"));?></option>
