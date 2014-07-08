@@ -118,7 +118,6 @@ function restoreLocally(idx) {
     updateProgress();
 }
 
-
 function modifyLocally(item) {
     var index = findItem(item.id);
     if (index == -1)
@@ -341,11 +340,9 @@ function toggleCompleted(id) {
 
 
 function html_entity_decode(str) {
-    var conversionElement = document.createElement('textarea');
-    conversionElement.innerHTML = str;
-    var returnValue = conversionElement.value;
-    // destroy created element?
-    return returnValue;
+    var txtEl = document.createElement('textarea');
+    txtEl.innerHTML = str;
+    return txtEl.value;
 }
     
 
@@ -369,7 +366,7 @@ function modifyItem(id) {
     var tags = (item.tags == null) ? new Array() : item.tags.split(",");
     for (var i=0; i<tags.length; i++)
     {
-        $("#modify_tag_edit").tagit("createTag", tags[i]);
+        $("#modify_tag_edit").tagit("createTag", html_entity_decode(tags[i]));
     }
 
     $('#modify_recurrenceMode option:selected').prop('selected', false);
