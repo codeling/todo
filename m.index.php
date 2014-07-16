@@ -22,7 +22,7 @@
   </head>
   <body>
     
-    <div data-role="page">
+    <div data-role="page" id="listPage">
       <div data-role="header" data-position="fixed" data-theme="b">
         <h1><?php echo(TodoConstants::AppTitle); ?></h1>
       </div>

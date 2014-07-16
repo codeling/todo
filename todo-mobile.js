@@ -9,8 +9,8 @@ String.prototype.trunc =
 
 /*
 $(document).on("pagebeforeshow", '#modifyPage', function(e, data) {
-	alert(JSON.stringify(data).replace(/,/g,"\n").replace(/[{}\"]/g, ""));
-	return true;
+    alert(JSON.stringify(data).replace(/,/g,"\n").replace(/[{}\"]/g, ""));
+    return true;
 });
 */
 
@@ -46,7 +46,7 @@ function renderItem(it, line) {
             '<input type="image" value="'+
                 $T('DELETE')+'" id="trash'+it.id+
                 '" src="images/trash_red.png" />'+
-	'</div>';
+        '</div>';
     } else {
         line += '<div class="actions"><input type="image" value="'+
                $T('RESTORE')+'" id="restore'+it.id+
@@ -60,7 +60,7 @@ function renderItem(it, line) {
             it.todo.trunc(30, false)+
             (hasNote ? '<img src="images/note.png" />':'')+
             (isRecurring ? '<img src="images/recurring.png" id="reactivate'+it.id+'" />':'')+
-	((it.completed==0 && dueDate != null && (today - dueDate) > 0) ?
+        ((it.completed==0 && dueDate != null && (today - dueDate) > 0) ?
                 ' <img src="images/exclamation.png" height="16px" />':'');
 
     if (hasTags) {
@@ -90,9 +90,12 @@ $(document).ready(function() {
         $.mobile.changePage('#newPage', { transition: "slide" });
     });
     $('#refreshBtn').click(function() {
-    	refresh();
+        refresh();
     });
-    /*
+    $('#emptyTrashBtn').click(function() {
+        emptyTrash();
+    });
+   /*
 emptyTrashBtn
 statistikBtn
 newBtn
