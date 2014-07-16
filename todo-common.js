@@ -43,28 +43,28 @@ function ItemSort(item1, item2) {
     var less =
         (item1.deleted < item2.deleted) ||
         (
-	  item1.deleted == item2.deleted &&
+	  (item1.deleted == item2.deleted) &&
 	  (
             (item1.completed < item2.completed) ||
             (
-              item1.completed == item2.completed &&
+              (item1.completed == item2.completed) &&
               (
                 (
-                  item1.completed == 0 &&
+                  (item1.completed == 0) &&
                   (
-                    item1.priority > item2.priority ||
+                    (item1.priority > item2.priority) ||
                     (
-                      item1.priority == item2.priority &&
+                      (item1.priority == item2.priority) &&
                       ((item1.tags!=null)?item1.tags+item1.todo:item1.todo) <
                       ((item2.tags!=null)?item2.tags+item2.todo:item2.todo)
                     )
                   )
                 ) || (
-                  item1.completed == 1 &&
+                  (item1.completed == 1) &&
                   (
-                    item1.completionDate > item2.completionDate ||
+                    (item1.completionDate > item2.completionDate) ||
                     (
-                      item1.completionDate == item2.completionDate &&
+                      (item1.completionDate == item2.completionDate) &&
                       item1.priority > item2.priority
                     )
                   )
@@ -76,7 +76,8 @@ function ItemSort(item1, item2) {
     // log('item1: c='+item1.completed+', p='+item1.priority+'; item2: c='+item2.completed+', p='+item2.priority+'; less: '+less);
     if (less) {
         return -1;
-    } else if (item1.completed == item2.completed &&
+    } else if (item1.deleted == item2.deleted &&
+               item1.completed == item2.completed &&
                item1.priority == item2.priority &&
                item1.todo == item2.todo &&
                item1.tags == item2.tags &&
@@ -338,15 +339,13 @@ function toggleCompleted(id) {
     });
 }
 
-
 function html_entity_decode(str) {
     var txtEl = document.createElement('textarea');
     txtEl.innerHTML = str;
     return txtEl.value;
 }
-    
 
-function modifyItem(id) {
+function fillModifyForm(id) {
     log($T('OPENING_UPDATE_DIALOG'));
     var index = findItem(id);
     if (index == -1) {
@@ -371,17 +370,6 @@ function modifyItem(id) {
 
     $('#modify_recurrenceMode option:selected').prop('selected', false);
     $('#modify_recurrenceMode option[value="'+item.recurrenceMode+'"]').prop('selected', true);
-    // set up store function:
-    // show dialog:
-    $('#modify_dialog').dialog( {
-        modal: true,
-        minHeight: 180,
-        minWidth: 600,
-        title: $T('MODIFY_ENTRY'),
-        close: function(ev,ui) {
-            log($T('MODIFY_DIALOG_CLOSED'));
-        }
-    });
 }
 
 function fillStr(str, fillchar, count) {

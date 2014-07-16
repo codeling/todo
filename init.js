@@ -10,6 +10,8 @@ function createDatePicker(tagid) {
 
 $(document).ready(function() {
 
+    $.ajaxSetup({cache: false });
+
     jQuery(function($){
         $.datepicker.regional['de'] = {clearText: $T('DELETE'), clearStatus: $T('DELETE_CUR_DATE'),
                 closeText: $T('CLOSE'), closeStatus: $T('CLOSE_WITHOUT_CHANGE'),

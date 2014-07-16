@@ -62,3 +62,18 @@ function renderItem(it, line) {
     }
 }
 
+function modifyItem(id) {
+    fillModifyForm(id);
+    // set up store function:
+    // show dialog:
+    $('#modify_dialog').dialog( {
+        modal: true,
+        minHeight: 180,
+        minWidth: 600,
+        title: $T('MODIFY_ENTRY'),
+        close: function(ev,ui) {
+            log($T('MODIFY_DIALOG_CLOSED'));
+        }
+    });
+}
+

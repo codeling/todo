@@ -36,9 +36,10 @@
               <input type="hidden" id="filter_tags" name="filter_tags" />
               <ul id="filter_tag_edit" class="tagit ui-widget ui-widget-content ui-corner-all tagit-choice-editable"></ul>
             </div>
-            <input type="button" id="emptytrashlink" value ="<?php echo(TodoLang::_("EMPTY_TRASH"));?>" />
-            <input type="button" id="statistiklink" value="<?php echo(TodoLang::_("SHOW_STATISTICS"));?>" />
-            <input type="button" id="newtodolink" value="<?php echo(TodoLang::_("NEW_TODO"));?>" />
+            <input type="button" id="emptyTrashBtn" value ="<?php echo(TodoLang::_("EMPTY_TRASH"));?>" />
+            <input type="button" id="statistikBtn" value="<?php echo(TodoLang::_("SHOW_STATISTICS"));?>" />
+            <input type="button" id="newBtn" value="<?php echo(TodoLang::_("NEW_TODO"));?>" />
+            <input type="button" id="refreshBtn" value="<?php echo(TodoLang::_("REFRESH"));?>" />
       </div>
 
     </div>
@@ -46,7 +47,7 @@
    <!-- move to separate "page:" -->
 
       <!-- new todo form -->
-   <div data-role="page" id="new_dialog">
+   <div data-role="page" id="newPage">
      <form method="POST" onsubmit="return false;" id="inputform">
        <input type="hidden" name="user_id" id="user_id" value="<?php echo $curUserID; ?>" />
        <div class="line line_header">
@@ -66,7 +67,7 @@
    </div>
 
      <!-- modify dialog -->
-   <div data-role="page" id="modify_dialog">
+   <div data-role="page" id="modifyPage">
      <form method="POST" onsubmit="return false;" id="inputform">
        <input type="hidden" id="modify_id" name="modify_id" />
        <div class="modify_line">

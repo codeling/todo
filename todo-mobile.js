@@ -7,6 +7,19 @@ String.prototype.trunc =
          return  toLong ? s_ + '&hellip;' : s_;
       };
 
+/*
+$(document).on("pagebeforeshow", '#modifyPage', function(e, data) {
+	alert(JSON.stringify(data).replace(/,/g,"\n").replace(/[{}\"]/g, ""));
+	return true;
+});
+*/
+
+function showDetails(itemid)
+{
+    fillModifyForm(itemid);
+    $.mobile.changePage('#modifyPage', { transition: "slide" });
+}
+
 function renderItem(it, line) {
     var hasNote = it.notes != null && it.notes != '';
     var hasTags = it.tags != null && it.tags != '';
@@ -65,10 +78,23 @@ function renderItem(it, line) {
         printItem(it);
     });
     $('#todo'+it.id).click(function() {
-        showDetails(it);
+        showDetails(it.id);
     });
     if (it.id != -1) {
         setListener(it.id);
     }
 }
 
+$(document).ready(function() {
+    $('#newBtn').click(function() {
+        $.mobile.changePage('#newPage', { transition: "slide" });
+    });
+    $('#refreshBtn').click(function() {
+    	refresh();
+    });
+    /*
+emptyTrashBtn
+statistikBtn
+newBtn
+*/
+});
