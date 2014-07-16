@@ -423,9 +423,11 @@ function setListener(id) {
     $('#completed'+id).click(function() {
         toggleCompleted(id);
     });
-    $('#modify'+id).click(function() {
-        modifyItem(id);
-    });
+    if ($('#modify'+id).length !== 0) {
+        $('#modify'+id).click(function() {
+            modifyItem(id);
+        });
+    }
     $('#trash'+id).click(function() {
         trashItem(id);
     });

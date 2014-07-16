@@ -16,8 +16,9 @@ $(document).on("pagebeforeshow", '#modifyPage', function(e, data) {
 
 function showDetails(itemid)
 {
-    fillModifyForm(itemid);
     $.mobile.changePage('#modifyPage', { transition: "slide" });
+    fillModifyForm(itemid);
+    $('#modify_recurrenceMode').selectmenu("refresh", true);
 }
 
 function renderItem(it, line) {
@@ -40,9 +41,6 @@ function renderItem(it, line) {
         line += '<div class="actions">'+
             '<input type="checkbox" class="completed" id="completed'+it.id+'" '+
                 ((it.completed==1)?'checked="true" ':'')+'/>'+
-            '<input type="image" value="'+
-                $T('EDIT')+'" id="modify'+it.id+
-                '" src="images/pencil.png" />'+
             '<input type="image" value="'+
                 $T('DELETE')+'" id="trash'+it.id+
                 '" src="images/trash_red.png" />'+
@@ -77,7 +75,7 @@ function renderItem(it, line) {
     $('#todo'+it.id).dblclick(function() {
         printItem(it);
     });
-    $('#todo'+it.id).click(function() {
+    $('#todo'+it.id).on("taphold", function() {
         showDetails(it.id);
     });
     if (it.id != -1) {
