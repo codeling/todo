@@ -6,7 +6,7 @@
     <title><?php echo(TodoConstants::AppName); ?></title>
     <!-- JQuery & JQuery UI -->
     <script type="text/javascript" src="jquery/jquery-1.10.2.min.js"></script>
-    <script type="text/javascript" src="jquery/jquery-ui-1.10.3.custom.min.js"></script>
+    <script type="text/javascript" src="jquery/jquery-ui-1.11.0.custom.min.js"></script>
     <script type="text/javascript" src="jquery/jquery.mobile-1.3.2.min.js"></script>
     <script type="text/javascript" src="log.js.php"></script>
     <script type="text/javascript" src="todo-common.js"></script>
@@ -15,7 +15,7 @@
     <script type="text/javascript" src="js/tag-it.min.js" type="text/javascript" charset="utf-8"></script>
     <script type="text/javascript" src="lang-js.php"></script>
     <link rel="stylesheet" type="text/css" href="todo-mobile.css" />
-    <link rel="stylesheet" type="text/css" href="jquery/jquery-ui-1.10.3.custom.min.css"/>
+    <link rel="stylesheet" type="text/css" href="jquery/jquery-ui-1.11.0.custom.min.css"/>
     <link rel="stylesheet" href="jquery/jquery.mobile-1.3.2.min.css" />
     <link rel="stylesheet" type="text/css" href="css/jquery.tagit.css">
     <link rel="stylesheet" type="text/css" href="css/tagit.ui-zendesk.css">
