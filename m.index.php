@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title><?php echo(TodoConstants::AppName); ?></title>
     <!-- JQuery & JQuery UI -->
-    <script type="text/javascript" src="jquery/jquery-1.10.2.min.js"></script>
+    <script type="text/javascript" src="jquery/jquery-1.11.1.min.js"></script>
     <script type="text/javascript" src="jquery/jquery-ui-1.11.0.custom.min.js"></script>
     <script type="text/javascript" src="jquery/jquery.mobile-1.4.3.min.js"></script>
     <script type="text/javascript" src="log.js.php"></script>
