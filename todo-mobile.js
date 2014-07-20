@@ -37,20 +37,6 @@ function renderItem(it, line) {
         ((it.deleted==1)?' todo_deleted':'')+
             '" id="todo'+it.id+'">';
 
-    if (it.deleted == 0) {
-        line += '<div class="actions">'+
-            '<input type="checkbox" class="completed" id="completed'+it.id+'" '+
-                ((it.completed==1)?'checked="true" ':'')+'/>'+
-            '<input type="image" value="'+
-                $T('DELETE')+'" id="trash'+it.id+
-                '" src="images/trash_red.png" />'+
-        '</div>';
-    } else {
-        line += '<div class="actions"><input type="image" value="'+
-               $T('RESTORE')+'" id="restore'+it.id+
-               '" src="images/undelete.png" /></div>';
-    }
-
     line += '<span class="todo" title="'+$T('CREATED')+': '+formatDate(createDate, true)+
             '; '+$T('RECURRENCE')+': '+repetition+
         ((it.completed != 0)? '; '+$T('DONE')+': '+formatDate(complDate, true):'')+
@@ -75,7 +61,7 @@ function renderItem(it, line) {
     $('#todo'+it.id).dblclick(function() {
         printItem(it);
     });
-    $('#todo'+it.id).on("taphold", function() {
+    $('#todo'+it.id).click(function() {
         showDetails(it.id);
     });
     if (it.id != -1) {
@@ -85,7 +71,8 @@ function renderItem(it, line) {
 
 $(document).ready(function() {
     $('#newBtn').click(function() {
-        $.mobile.changePage('#newPage', { transition: "slide" });
+        emptyModifyForm();
+        $.mobile.changePage('#modifyPage', { transition: "slide" });
     });
     $('#refreshBtn').click(function() {
         refresh();
@@ -93,9 +80,9 @@ $(document).ready(function() {
     $('#emptyTrashBtn').click(function() {
         emptyTrash();
     });
-   /*
-emptyTrashBtn
-statistikBtn
-newBtn
-*/
+    // Fix bug resulting from combination of tag-it and jquery-mobile:
+    $('#modifyPage').on('pageshow', function(event) {
+        $('ul#modify_tag_edit li li').unwrap();
+	$('ul#modify_tag_edit div input').unwrap().wrap('<li />');
+    });
 });

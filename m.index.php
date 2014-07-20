@@ -87,6 +87,8 @@
           <ul id="modify_tag_edit" class="tagit ui-widget ui-widget-content ui-corner-all tagit-choice-editable"></ul>
         </div>
         <div data-theme="a" data-role="footer" data-position="fixed">
+	  <input type="button" id="undeleteBtn" value="<?php echo(TodoLang::_("RESTORE"));?>" />
+	  <input type="button" id="toggleBtn" value="<?php echo(TodoLang::_("TOGGLE"));?>" />
           <input type="button" id="deleteBtn" value="<?php echo(TodoLang::_("DELETE"));?>" />
           <input type="button" id="modify_save" value="<?php echo(TodoLang::_("SAVE"));?>" />
         </div>

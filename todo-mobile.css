@@ -115,14 +115,11 @@ input[disabled="disabled"] {
     float: right;
     display: none;
 }
-span.modify_desc {
-    display: inline-block;
-    width: 80px;
-    vertical-align: top;
-}
 ul#modify_tags {
     display: inline-block;
     margin: 0;
     padding: 0;
 }
-
+img.ui-datepicker-trigger {
+    display:none;
+}
