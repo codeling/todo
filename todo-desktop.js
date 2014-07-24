@@ -83,5 +83,4 @@ $(document).ready(function() {
         // store...
 	storeItem();
     });
-
-}
+});
