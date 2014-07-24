@@ -77,8 +77,10 @@ function renderItem(it, line) {
 }
 
 function toggleButtons(deleted) {
+    $('#toggleBtn').closest('.ui-btn').show();
     if (deleted) {
         $('#restoreBtn').closest('.ui-btn').show();
+        $('#deleteBtn').closest('.ui-btn').hide();
     } else {
         $('#restoreBtn').closest('.ui-btn').hide();
         $('#deleteBtn').closest('.ui-btn').show();
