@@ -146,7 +146,7 @@ $(document).ready(function() {
                 $('#modify_notes').val().trim(),
                 $('#modify_tags').val(),
                 0,  // deleted items cannot be modified
-                0,  // version
+                1,  // version
                 $('#modify_recurrenceMode').val(),
 		null,
                 formatDate(getUTCDate(), true)
