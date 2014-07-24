@@ -61,6 +61,9 @@
           <span class="modify_desc"><?php echo(TodoLang::_("EFFORT").TodoLang::_("EFFORT_REMARK"));?>:</span>
           <input type="text" id="modify_effort" name="modify_effort" size="3" maxlength="4" />
         </div><div class="modify_line">
+          <span class="modify_desc"><?php echo(TodoLang::_("NOTES"));?>:</span>
+          <textarea type="text" id="modify_notes" name="modify_notes" rows="10" cols="50"></textarea>
+        </div><div class="modify_line">
           <span class="modify_desc"><?php echo(TodoLang::_("RECURRENCE"));?>:</span>
           <select name="modify_recurrenceMode" id="modify_recurrenceMode">
             <option value="0"><?php echo(TodoLang::_("DONT_REPEAT"));?></option>
@@ -79,18 +82,16 @@
             <option value="1805"><?php echo(TodoLang::_("REPEAT_FIVEYEARLY"));?></option>
           </select>
         </div><div class="modify_line">
-          <span class="modify_desc"><?php echo(TodoLang::_("NOTES"));?>:</span>
-          <textarea type="text" id="modify_notes" name="modify_notes" rows="10" cols="50"></textarea>
-        </div><div class="modify_line">
           <span class="modify_desc"><?php echo(TodoLang::_("TAGS"));?>:</span>
           <input type="hidden" id="modify_tags" name="modify_tags" />
           <ul id="modify_tag_edit" class="tagit ui-widget ui-widget-content ui-corner-all tagit-choice-editable"></ul>
         </div>
         <div data-theme="a" data-role="footer" data-position="fixed">
-	  <input type="button" id="undeleteBtn" value="<?php echo(TodoLang::_("RESTORE"));?>" />
+	  <input type="button" id="restoreBtn" value="<?php echo(TodoLang::_("RESTORE"));?>" />
 	  <input type="button" id="toggleBtn" value="<?php echo(TodoLang::_("TOGGLE"));?>" />
           <input type="button" id="deleteBtn" value="<?php echo(TodoLang::_("DELETE"));?>" />
-          <input type="button" id="modify_save" value="<?php echo(TodoLang::_("SAVE"));?>" />
+          <input type="button" id="saveBtn" value="<?php echo(TodoLang::_("SAVE"));?>" />
+	  <input type="button" id="cancelBtn" value="<?php echo(TodoLang::_("CANCEL"));?>" />
         </div>
       </form>
     </div>

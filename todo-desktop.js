@@ -77,3 +77,11 @@ function modifyItem(id) {
     });
 }
 
+$(document).ready(function() {
+
+    $('#modify_save').click(function() {
+        // store...
+	storeItem();
+    });
+
+}

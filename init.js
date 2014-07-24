@@ -42,54 +42,6 @@ $(document).ready(function() {
     createDatePicker("#enter_due");
     createDatePicker("#modify_due");
 
-    $('#modify_save').click(function() {
-        // store...
-        var id = parseInt($('#modify_id').val());
-        var idx = findItem(id);
-        if (idx == -1) {
-            alert($T('ENTRY_NOT_FOUND'));
-            return;
-        }
-        var stuff = new Todo(id,
-            $('#modify_todo').val(),
-            $('#modify_due').val(),
-            $('#modify_priority').val(),
-            $('#modify_effort').val(),
-            0,  // currently not taken into account on server, and not modifiable at server
-            $('#modify_notes').val().trim(),
-            $('#modify_tags').val(),
-	    0,  // deleted items cannot be modified
-            itemList[idx].version,
-            $('#modify_recurrenceMode').val(),
-            itemList[idx].completionDate,
-            itemList[idx].creationDate);
-        currentlyModified = stuff;
-        log($T('SAVING_MODIFICATIONS'));
-        $.ajax({
-            type: 'POST',
-            url: 'queries/update.php',
-            data: stuff,
-            success: function(returnValue) {
-                if (isNaN(returnValue)) {
-                    log($T('ERROR_WHILE_MODIFYING')+returnValue);
-                    alert($T('ERROR_WHILE_MODIFYING')+returnValue);
-                // just keep dialog open...then changed values aren't lost
-                } else {
-                    // if everything went fine, close dialog:
-                    log($T('SAVING_SUCCESSFUL'));
-                    $('#modify_dialog').dialog('close');
-                    // only set locally now, else it could be confusing
-                    currentlyModified.version = currentlyModified.version+1;
-                    modifyLocally(currentlyModified);
-                    currentlyModified = null;
-                }
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                alert($T('TRANSMISSION_ERROR_WHILE_MODIFYING'));
-            }
-        });
-    });
-
     $("#smallLog").click(function() {
         updateLog('#log_dialog', logItems.length);
         $('#log_dialog').html($('#log_dialog').html()+

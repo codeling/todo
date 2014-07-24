@@ -372,6 +372,18 @@ function fillModifyForm(id) {
     $('#modify_recurrenceMode option[value="'+item.recurrenceMode+'"]').prop('selected', true);
 }
 
+function emptyModifyForm()
+{
+    $('#modify_id').val(-1);
+    $('#modify_todo').val("");
+    $('#modify_due').val("");
+    $('#modify_priority').val("");
+    $('#modify_effort').val(1);
+    $('#modify_notes').val("");
+    $("#modify_tag_edit").tagit("removeAll");
+    $('#modify_recurrenceMode option:selected').prop('selected', false);
+}
+
 function fillStr(str, fillchar, count) {
     var fillStr = '';
     for (var i=0; i < (count - str.toString().length); ++i) {
@@ -550,27 +562,7 @@ function getUTCDate() {
     return now_utc;
 }
 
-function enter() {
-    log($T('CREATING_NEW_ENTRY'));
-    if ($('#enter_todo').val().length == 0) {
-        alert($T('TODO_MAY_NOT_BE_EMPTY'));
-        return;
-    }
-    if (findItem(-1) != -1) {
-        alert($T('ANOTHER_CREATE_STILL_RUNNING'));
-        return;
-    }
-    var todo = $('#enter_todo').val();
-    var colon = todo.lastIndexOf(":");
-    var tags = '';
-    if (colon != -1) {
-        tags = todo.substr(0, colon);
-        if (todo.charAt(colon+1) == ' ') { colon++; }
-        todo = todo.substr(colon+1);
-    }
-    var stuff = new Todo(-1, todo, $('#enter_due').val(),
-            $('#enter_priority').val(), $('#enter_effort').val(),
-            0, '', tags, 0, 1, 0, null, formatDate(getUTCDate(), true));
+function addItem(stuff) {
     addLocally(stuff);
     $.ajax( {
         type: 'POST',
@@ -603,6 +595,77 @@ function enter() {
             alert($T('TRANSMISSION_ERROR_WHILE_CREATING'));
         }
     });
+}
+
+function storeItem() {
+    var id = parseInt($('#modify_id').val());
+    var idx = findItem(id);
+    if (idx == -1) {
+        alert($T('ENTRY_NOT_FOUND'));
+        return;
+    }
+    var stuff = new Todo(id,
+        $('#modify_todo').val(),
+        $('#modify_due').val(),
+        $('#modify_priority').val(),
+        $('#modify_effort').val(),
+        0,  // currently not taken into account on server, and not modifiable at server
+        $('#modify_notes').val().trim(),
+        $('#modify_tags').val(),
+        0,  // deleted items cannot be modified
+        itemList[idx].version,
+        $('#modify_recurrenceMode').val(),
+        itemList[idx].completionDate,
+        itemList[idx].creationDate);
+    currentlyModified = stuff;
+    log($T('SAVING_MODIFICATIONS'));
+    $.ajax({
+        type: 'POST',
+        url: 'queries/update.php',
+        data: stuff,
+        success: function(returnValue) {
+            if (isNaN(returnValue)) {
+                log($T('ERROR_WHILE_MODIFYING')+returnValue);
+                alert($T('ERROR_WHILE_MODIFYING')+returnValue);
+            // just keep dialog open...then changed values aren't lost
+            } else {
+                // if everything went fine, close dialog:
+                log($T('SAVING_SUCCESSFUL'));
+                $('#modify_dialog').dialog('close');
+                // only set locally now, else it could be confusing
+                currentlyModified.version = currentlyModified.version+1;
+                modifyLocally(currentlyModified);
+                currentlyModified = null;
+            }
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            alert($T('TRANSMISSION_ERROR_WHILE_MODIFYING'));
+        }
+    });
+}
+
+function enter() {
+    log($T('CREATING_NEW_ENTRY'));
+    if ($('#enter_todo').val().length == 0) {
+        alert($T('TODO_MAY_NOT_BE_EMPTY'));
+        return;
+    }
+    if (findItem(-1) != -1) {
+        alert($T('ANOTHER_CREATE_STILL_RUNNING'));
+        return;
+    }
+    var todo = $('#enter_todo').val();
+    var colon = todo.lastIndexOf(":");
+    var tags = '';
+    if (colon != -1) {
+        tags = todo.substr(0, colon);
+        if (todo.charAt(colon+1) == ' ') { colon++; }
+        todo = todo.substr(colon+1);
+    }
+    var stuff = new Todo(-1, todo, $('#enter_due').val(),
+            $('#enter_priority').val(), $('#enter_effort').val(),
+            0, '', tags, 0, 1, 0, null, formatDate(getUTCDate(), true));
+    addItem(stuff);
 }
 
 

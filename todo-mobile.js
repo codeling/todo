@@ -21,6 +21,13 @@ function showDetails(itemid)
     $('#modify_recurrenceMode').selectmenu("refresh", true);
 }
 
+function newTodo()
+{
+    $.mobile.changePage('#modifyPage', { transition: "slide" });
+    fillModifyForm(-1);
+    $('#modify_recurrenceMode').selectmenu("refresh", true);
+}
+
 function renderItem(it, line) {
     var hasNote = it.notes != null && it.notes != '';
     var hasTags = it.tags != null && it.tags != '';
@@ -69,6 +76,15 @@ function renderItem(it, line) {
     }
 }
 
+function toggleButtons(deleted) {
+    if (deleted) {
+        $('#restoreBtn').closest('.ui-btn').show();
+    } else {
+        $('#restoreBtn').closest('.ui-btn').hide();
+        $('#deleteBtn').closest('.ui-btn').show();
+    }
+}
+
 $(document).ready(function() {
     $('#newBtn').click(function() {
         emptyModifyForm();
@@ -84,5 +100,60 @@ $(document).ready(function() {
     $('#modifyPage').on('pageshow', function(event) {
         $('ul#modify_tag_edit li li').unwrap();
 	$('ul#modify_tag_edit div input').unwrap().wrap('<li />');
+        var id = parseInt($('#modify_id').val());
+        var index = findItem(id);
+        if (id == -1 || index == -1) {
+	    $('#restoreBtn').closest('.ui-btn').hide();
+            $('#deleteBtn').closest('.ui-btn').hide();
+            $('#toggleBtn').closest('.ui-btn').hide();
+        } else {
+	    toggleButtons(itemList[index].deleted == 1);
+	}
     });
+    $('#restoreBtn').click(function() {
+        var id = parseInt($('#modify_id').val());
+        restoreItem(id);
+        $.mobile.changePage('#listPage', { transition: "slide" });
+    });
+    $('#toggleBtn').click(function() {
+        var id = parseInt($('#modify_id').val());
+        var index = findItem(id);
+        toggleCompleted(id);
+        $.mobile.changePage('#listPage', { transition: "slide" });
+    });
+    $('#deleteBtn').click(function() {
+        var id = parseInt($('#modify_id').val());
+        trashItem(id);
+        $.mobile.changePage('#listPage', { transition: "slide" });
+    });
+    $('#cancelBtn').click(function() {
+        var id = parseInt($('#modify_id').val());
+        var index = findItem(id);
+        $.mobile.changePage('#listPage', { transition: "slide" });
+    });
+    $('#saveBtn').click(function() {
+        var id = parseInt($('#modify_id').val());
+        if (id == -1)
+	{
+            var stuff = new Todo(-1,
+                $('#modify_todo').val(),
+                $('#modify_due').val(),
+                $('#modify_priority').val(),
+                $('#modify_effort').val(),
+                0,  // currently not taken into account on server, and not modifiable at server
+                $('#modify_notes').val().trim(),
+                $('#modify_tags').val(),
+                0,  // deleted items cannot be modified
+                0,  // version
+                $('#modify_recurrenceMode').val(),
+		null,
+                formatDate(getUTCDate(), true)
+            );
+            addItem(stuff);
+	} else {
+	    storeItem();
+	}
+        $.mobile.changePage('#listPage', { transition: "slide" });
+    });
+
 });
