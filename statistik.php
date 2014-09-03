@@ -12,29 +12,39 @@
             $groupName = $periodName;
         }
         $ChartWidth = 800;
-        $groupNameExpr = "$groupName(a.Date".
-            ((strcmp($groupName, "WEEK") == 0) ? ", 3" : "")
-            .")";
-
-        // sql script to generate all dates in range taken from
-        // http://stackoverflow.com/questions/2157282/generate-days-from-date-range
-        $sql = "SELECT YEAR(a.Date), $groupNameExpr, COUNT(t.id) ".
-            "FROM (SELECT curdate() - INTERVAL (a.a + (10 * b.a) + (100 * c.a)) DAY as Date ".
-                "FROM (select 0 as a union all select 1 union all select 2 union all select 3 union all ".
-                    "select 4 union all select 5 union all select 6 union all select 7 union all ".
-                    "select 8 union all select 9) as a ".
-                "CROSS JOIN (SELECT 0 as a union all select 1 union all select 2 union all select 3 union all ".
-                      "select 4 union all select 5 union all select 6 union all select 7 union all ".
-                      "select 8 union all select 9) as b ".
-                "CROSS JOIN (SELECT 0 as a union all select 1 union all select 2 union all select 3 union all ".
-                      "select 4 union all select 5 union all select 6 union all select 7 union all ".
-                      "select 8 union all select 9) as c ".
-            ") a".
-            " LEFT JOIN `todo` t ON a.Date = DATE($checkedDate) ".
-            "WHERE a.Date BETWEEN (UTC_TIMESTAMP() - INTERVAL $valCount $periodName) ".
-                " AND (UTC_TIMESTAMP() + INTERVAL 1 DAY) ".
-            "GROUP BY YEAR(a.Date), $groupNameExpr ".
-            "ORDER BY YEAR(a.Date), $groupNameExpr";
+        if ($groupName === 'YEAR')
+        {
+            $sql = "SELECT COALESCE(YEAR(t.completionDate), 'not finished'), ".
+                "COALESCE(YEAR(t.completionDate), 'not finished'), ".
+                "COUNT(t.id) FROM `todo` t ".
+                "GROUP BY YEAR(t.completionDate) ".
+                "ORDER BY YEAR(t.completionDate)";
+        }
+        else
+        {
+            $groupNameExpr = "$groupName(a.Date".
+                ((strcmp($groupName, "WEEK") == 0) ? ", 3" : "")
+                .")";
+            // sql script to generate all dates in range taken from
+            // http://stackoverflow.com/questions/2157282/generate-days-from-date-range
+            $sql = "SELECT YEAR(a.Date), $groupNameExpr, COUNT(t.id) ".
+                "FROM (SELECT curdate() - INTERVAL (a.a + (10 * b.a) + (100 * c.a)) DAY as Date ".
+                    "FROM (select 0 as a union all select 1 union all select 2 union all select 3 union all ".
+                        "select 4 union all select 5 union all select 6 union all select 7 union all ".
+                        "select 8 union all select 9) as a ".
+                    "CROSS JOIN (SELECT 0 as a union all select 1 union all select 2 union all select 3 union all ".
+                          "select 4 union all select 5 union all select 6 union all select 7 union all ".
+                          "select 8 union all select 9) as b ".
+                    "CROSS JOIN (SELECT 0 as a union all select 1 union all select 2 union all select 3 union all ".
+                          "select 4 union all select 5 union all select 6 union all select 7 union all ".
+                          "select 8 union all select 9) as c ".
+                ") a".
+                " LEFT JOIN `todo` t ON a.Date = DATE($checkedDate) ".
+                "WHERE a.Date BETWEEN (UTC_TIMESTAMP() - INTERVAL $valCount $periodName) ".
+                    " AND (UTC_TIMESTAMP() + INTERVAL 1 DAY) ".
+                "GROUP BY YEAR(a.Date), $groupNameExpr ".
+                "ORDER BY YEAR(a.Date), $groupNameExpr";
+        }
         $qResult = dbQueryOrDie($db, $sql);
         $item = array();
         $bar_row = '';
