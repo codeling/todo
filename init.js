@@ -70,27 +70,5 @@ $(document).ready(function() {
         singleFieldNode: $('#modify_tags')
     });
 
-    $('#filter_tag_edit').tagit({
-        autocomplete: { source: function( search, showChoices) {
-        var that = this;
-            $.ajax({
-                url: "queries/query-tags.php",
-                data: {q: search.term},
-                dataType: "json",
-                success: function (choices) {
-                    showChoices(that._subtractArray(choices, that.assignedTags()));
-                }
-            });
-        }, delay: 2, minLength: 2},
-        singleField: true,
-        singleFieldNode: $('#filter_tags'),
-	afterTagAdded: function(event, ui) {
-	    renderTable();
-	},
-	afterTagRemoved: function(event, ui) {
-	    renderTable();
-	}
-    });
-
     refresh();
 });

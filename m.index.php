@@ -32,10 +32,6 @@
 
       <!-- menu bar -->
       <div data-theme="a" data-role="footer" data-position="fixed">
-            <div id="filter">
-              <input type="hidden" id="filter_tags" name="filter_tags" />
-              <ul id="filter_tag_edit" class="tagit ui-widget ui-widget-content ui-corner-all tagit-choice-editable"></ul>
-            </div>
             <input type="button" id="emptyTrashBtn" value ="<?php echo(TodoLang::_("EMPTY_TRASH"));?>" />
             <input type="button" id="statistikBtn" value="<?php echo(TodoLang::_("SHOW_STATISTICS"));?>" />
             <input type="button" id="newBtn" value="<?php echo(TodoLang::_("NEW_TODO"));?>" />

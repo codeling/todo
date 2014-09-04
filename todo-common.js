@@ -476,7 +476,7 @@ function arrayContainsAny(needle, haystack) {
 }
 
 function filterList() {
-    if ($('#filter_tags').val() == '') {
+    if (!$('#filter_tags') || $('#filter_tags').val() == '') {
         result = itemList.slice(0);
     } else {
         filterTags = $('#filter_tags').val().split(",");
@@ -667,7 +667,6 @@ function enter() {
             0, '', tags, 0, 1, 0, null, formatDate(getUTCDate(), true));
     addItem(stuff);
 }
-
 
 function refresh() {
     toggleWorking(true);
