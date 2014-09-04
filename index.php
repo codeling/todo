@@ -50,6 +50,9 @@
       </form>
       <div id="todoTable">
       </div>
+      <div id="taglist">
+          <ul></ul>
+      </div>
       <div id="modify_dialog" style="display:none;">
         <form method="POST" onsubmit="return false;" id="inputform">
           <input type="hidden" id="modify_id" name="modify_id" />

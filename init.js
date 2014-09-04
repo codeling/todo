@@ -19,20 +19,20 @@ $(document).ready(function() {
                 nextText: $T('FORWARD'), nextStatus: $T('SHOW_NEXT_MONTH'),
                 currentText: $T('TODAY'), currentStatus: '',
                 monthNames: [$T('JANUARY'), $T('FEBRUARY'), $T('MARCH'), $T('APRIL'),
-			$T('MAY'), $T('JUNE'), $T('JULY'), $T('AUGUST'),
-			$T('SEPTEMBER'), $T('OCTOBER'), $T('NOVEMBER'),
-			$T('DECEMBER')],
+                    $T('MAY'), $T('JUNE'), $T('JULY'), $T('AUGUST'),
+                    $T('SEPTEMBER'), $T('OCTOBER'), $T('NOVEMBER'),
+                    $T('DECEMBER')],
                 monthNamesShort: [$T('JAN'), $T('FEB'), $T('MAR'), $T('APR'),
-			$T('MAY'), $T('JUN'), $T('JUL'), $T('AUG'), $T('SEP'),
-			$T('OCT'), $T('NOV'), $T('DEC')],
+                    $T('MAY'), $T('JUN'), $T('JUL'), $T('AUG'), $T('SEP'),
+                    $T('OCT'), $T('NOV'), $T('DEC')],
                 monthStatus: $T('SHOW_OTHER_MONTH'), yearStatus: $T('SHOW_OTHER_YEAR'),
                 weekHeader: $T('WEEK_SHORT'), weekStatus: $T('WEEK_OF_MONTH'),
                 dayNames: [$T('SUNDAY'), $T('MONDAY'), $T('TUESDAY'), $T('WEDNESDAY'),
-			$T('THURSDAY'), $T('FRIDAY'), $T('SATURDAY')],
+                    $T('THURSDAY'), $T('FRIDAY'), $T('SATURDAY')],
                 dayNamesShort: [$T('SU'), $T('MO'), $T('TU'), $T('WE'), $T('TH'),
-			$T('FR'), $T('SA')],
+                    $T('FR'), $T('SA')],
                 dayNamesMin: [$T('SU'), $T('MO'), $T('TU'), $T('WE'), $T('TH'),
-			$T('FR'), $T('SA')],
+                    $T('FR'), $T('SA')],
                 dayStatus: $T('CHOOSE_AS_FIRST_WEEKDAY'), dateStatus: $T('CHOOSE_D_M_d'),
                 dateFormat: 'dd.mm.yy', firstDay: 1,
                 initStatus: $T('CHOOSE_A_DATE'), isRTL: false};
@@ -56,7 +56,7 @@ $(document).ready(function() {
 
     $('#modify_tag_edit').tagit({
         autocomplete: { source: function( search, showChoices) {
-        var that = this;
+            var that = this;
             $.ajax({
                 url: "queries/query-tags.php",
                 data: {q: search.term},
@@ -69,6 +69,5 @@ $(document).ready(function() {
         singleField: true,
         singleFieldNode: $('#modify_tags')
     });
-
     refresh();
 });

@@ -105,4 +105,15 @@ $(document).ready(function() {
 	    renderTable();
 	}
     });
+    $.ajax({
+        url: "queries/query-tags.php",
+        data: {q: ''},
+        dataType: "json",
+        success: function (choices) {
+            for (var i=0; i<choices.length; i++) {
+                $('#taglist ul').append('<li>'+choices[i]+'</li>');
+            }
+            $('#taglist ul').tagit({readOnly: true});
+        }
+    });
 });
