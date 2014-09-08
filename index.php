@@ -50,6 +50,9 @@
       </form>
       <div id="todoTable">
       </div>
+      <div id="loadMoreBox">
+          <a href="#" id="loadMoreLink" /><?php echo(TodoLang::_("LOAD_MORE"));?></a>
+      </div>
       <div id="taglist">
           <ul></ul>
       </div>

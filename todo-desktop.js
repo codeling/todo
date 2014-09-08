@@ -81,7 +81,11 @@ $(document).ready(function() {
 
     $('#modify_save').click(function() {
         // store...
-	storeItem();
+        storeItem();
+    });
+    $('#loadMoreLink').click(function() {
+        reloadData.age += 30;
+        reload();
     });
 
     $('#filter_tag_edit').tagit({
@@ -98,12 +102,12 @@ $(document).ready(function() {
         }, delay: 2, minLength: 2},
         singleField: true,
         singleFieldNode: $('#filter_tags'),
-	afterTagAdded: function(event, ui) {
-	    renderTable();
-	},
-	afterTagRemoved: function(event, ui) {
-	    renderTable();
-	}
+        afterTagAdded: function(event, ui) {
+            renderTable();
+        },
+        afterTagRemoved: function(event, ui) {
+            renderTable();
+        }
     });
     $.ajax({
         url: "queries/query-tags.php",

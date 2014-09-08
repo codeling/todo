@@ -2,6 +2,7 @@
 var itemList;
 
 var currentlyModified = null;
+var reloadData = {age: 30};
 
 function Todo(id, todo, due, priority, effort,
         completed, notes, tags, deleted,
@@ -43,8 +44,8 @@ function ItemSort(item1, item2) {
     var less =
         (item1.deleted < item2.deleted) ||
         (
-	  (item1.deleted == item2.deleted) &&
-	  (
+          (item1.deleted == item2.deleted) &&
+          (
             (item1.completed < item2.completed) ||
             (
               (item1.completed == item2.completed) &&
@@ -71,7 +72,7 @@ function ItemSort(item1, item2) {
                 )
               )
             )
-	  )
+          )
         );
     // log('item1: c='+item1.completed+', p='+item1.priority+'; item2: c='+item2.completed+', p='+item2.priority+'; less: '+less);
     if (less) {
@@ -171,8 +172,8 @@ function toggleLocally(item) {
 function emptyTrashLocally() {
     for (idx = itemList.length-1; idx>=0; --idx) {
         if (itemList[idx].deleted == 1) {
-	   itemList.splice(idx, 1);
-	}
+            itemList.splice(idx, 1);
+        }
     }
     renderTable();
 }
@@ -489,7 +490,7 @@ function filterList() {
             if (arrayContainsAny(filterTags, itemTags)) {
                 result.push(itemList[i]);
             }
-	}
+        }
     }
     result.sort(ItemSort);
     return result;
@@ -513,7 +514,7 @@ function updateProgress() {
     $('#progress_todo').css('width', ((progressWidth*open/count))+'%');
     $('#progress_done').css('width', ((progressWidth*done/count))+'%');
     $('#progress_todo').attr('title', $T('OPEN')+': '+open);
-    $('#progress_done').attr('title', $T('DONE')+': '+Math.round(100*done/count) + ' % ('+done+') '+$T('SINCE_LAST_MONTH'));
+    $('#progress_done').attr('title', $T('DONE')+': '+Math.round(100*done/count) + ' % ('+done+') '+$T('SINCE_DAYS_PREFIX')+reloadData.age+$T('SINCE_DAYS_POSTFIX'));
 }
 
 
@@ -527,13 +528,14 @@ function reload() {
     var jsontext = $.ajax({
         url: 'queries/query-list.php',
         type: 'GET',
+        data: reloadData,
         async: false
     }).responseText;
     try {
         itemList = JSON.parse(jsontext);
     } catch (e) {
         alert($T('SERVER_DELIVERED_INVALID_DATA')+': "'+jsontext+
-		'";'+$T('JSON_PARSER_MESSAGE')+' : '+e);
+            '";'+$T('JSON_PARSER_MESSAGE')+' : '+e);
     }
     for (var i=0; i<itemList.length; ++i) {
         // make "proper" Todo items out of the loaded values:

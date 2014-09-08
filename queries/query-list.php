@@ -4,6 +4,7 @@
 
     // TODO: get ID of logged in user here!
     $user_id = 0;
+    $age = (int)$_GET["age"];
     $sql = "SELECT todo.id, description as todo, dueDate as due, priority, effort, ".
         "completed, notes, version, recurrenceMode, completionDate, ".
         "creationDate, deleted, ".
@@ -14,7 +15,7 @@
         "WHERE ".
             "user_id = ".$user_id." AND (".
             "completed=0 ".
-            "OR completionDate > (UTC_TIMESTAMP() - INTERVAL 31 DAY))".
+            "OR completionDate > (UTC_TIMESTAMP() - INTERVAL $age DAY))".
         "GROUP BY todo.id";
     $result = jsonQueryResults($db, $sql);
     $db->close();
