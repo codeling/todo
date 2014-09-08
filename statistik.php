@@ -18,13 +18,14 @@
             $sql = "SELECT COALESCE(YEAR(t.".$checkedDate."), 'not finished'), ".
                 "COALESCE(YEAR(t.".$checkedDate."), 'not finished'), ".
                 "COUNT(t.id) FROM `todo` t ".
+                "WHERE deleted = 0 ".
                 "GROUP BY YEAR(t.".$checkedDate.") ".
                 "ORDER BY YEAR(t.".$checkedDate.")";
         }
         else if ($groupName === 'MONTH')
         {
             $sql =  "SELECT YEAR(a.Date), MONTH(a.Date), COUNT(t.id) ".
-                "FROM (select curdate() - INTERVAL (DAY(curdate())-22+30*a) DAY as Date ".
+                "FROM (select curdate() - INTERVAL (DAY(curdate())-15+30*a) DAY as Date ".
                 "FROM (select 0 as a union all select 1 union all select 2 union all select 3 ".
                 "union all select 4 union all select 5 union all select 6 union all select 7 ".
                 "union all select 8 union all select 9 union all select 10 union all select 11 ".
@@ -33,9 +34,8 @@
                 "union all select 20 union all select 21 union all select 22 union all select 23 ".
                 "union all select 24) as x) as a ".
                 "left join `todo` t ON MONTH(a.Date) = MONTH(DATE(".$checkedDate.")) ".
-                "AND YEAR(a.Date) = YEAR(DATE(".$checkedDate.")) ".
-                "WHERE a.Date BETWEEN (UTC_TIMESTAMP() - INTERVAL 24 MONTH) AND ".
-                "(UTC_TIMESTAMP() + INTERVAL 1 MONTH) ".
+                "AND deleted = 0 ".
+                "and YEAR(a.Date) = YEAR(DATE(".$checkedDate.")) ".
                 "GROUP BY YEAR(a.Date), MONTH(a.Date) ".
                 "ORDER BY YEAR(a.Date), MONTH(a.Date)";
         }
@@ -58,9 +58,9 @@
                           "select 4 union all select 5 union all select 6 union all select 7 union all ".
                           "select 8 union all select 9) as c ".
                 ") a".
-                " LEFT JOIN `todo` t ON a.Date = DATE($checkedDate) ".
+                " LEFT JOIN `todo` t ON a.Date = DATE($checkedDate) AND t.deleted=0 ".
                 "WHERE a.Date BETWEEN (UTC_TIMESTAMP() - INTERVAL $valCount $periodName) ".
-                    " AND (UTC_TIMESTAMP() + INTERVAL 1 DAY) ".
+                    "AND (UTC_TIMESTAMP() + INTERVAL 1 DAY) ".
                 "GROUP BY YEAR(a.Date), $groupNameExpr ".
                 "ORDER BY YEAR(a.Date), $groupNameExpr";
         }
