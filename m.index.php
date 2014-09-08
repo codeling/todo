@@ -30,6 +30,10 @@
       <div data-role="content" id="todoTable">
       </div>
 
+      <div id="loadMoreBox">
+          <a href="#" id="loadMoreLink" /><?php echo(TodoLang::_("LOAD_MORE"));?></a>
+      </div>
+
       <!-- menu bar -->
       <div data-theme="a" data-role="footer" data-position="fixed">
             <input type="button" id="emptyTrashBtn" value ="<?php echo(TodoLang::_("EMPTY_TRASH"));?>" />

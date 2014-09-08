@@ -54,6 +54,11 @@ $(document).ready(function() {
         });
     });
 
+    $('#loadMoreLink').click(function() {
+        reloadData.age += 30;
+        reload();
+    });
+
     $('#modify_tag_edit').tagit({
         autocomplete: { source: function( search, showChoices) {
             var that = this;
@@ -69,5 +74,6 @@ $(document).ready(function() {
         singleField: true,
         singleFieldNode: $('#modify_tags')
     });
+
     refresh();
 });

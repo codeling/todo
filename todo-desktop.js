@@ -83,11 +83,6 @@ $(document).ready(function() {
         // store...
         storeItem();
     });
-    $('#loadMoreLink').click(function() {
-        reloadData.age += 30;
-        reload();
-    });
-
     $('#filter_tag_edit').tagit({
         autocomplete: { source: function( search, showChoices) {
         var that = this;

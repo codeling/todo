@@ -477,7 +477,7 @@ function arrayContainsAny(needle, haystack) {
 }
 
 function filterList() {
-    if (!$('#filter_tags') || $('#filter_tags').val() == '') {
+    if ($('#filter_tags').length == 0 || $('#filter_tags').val() == '') {
         result = itemList.slice(0);
     } else {
         filterTags = $('#filter_tags').val().split(",");
