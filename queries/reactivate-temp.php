@@ -13,11 +13,11 @@ while ($toReactivate = $qResult->fetch_object())
             "dueDate, notes, version, recurrenceMode, user_id) ".
             "VALUES (".
             "'".$creationDate."', ".
-            quoteString($db, $toReactivate->description).", ".
+            "'".$toReactivate->description."', ".
             $toReactivate->priority.", ".
             "0, ".   // complated
             "'".$toReactivate->newDueDate."', ".
-            quoteString($db, $toReactivate->notes).", ".
+            "'".$toReactivate->notes."', ".
             "1, ".   // version
                 $toReactivate->recurrenceMode.", ".
                 $toReactivate->user_id.")";
