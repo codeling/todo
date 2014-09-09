@@ -101,16 +101,16 @@ $(document).ready(function() {
     // Fix bug resulting from combination of tag-it and jquery-mobile:
     $('#modifyPage').on('pageshow', function(event) {
         $('ul#modify_tag_edit li li').unwrap();
-	$('ul#modify_tag_edit div input').unwrap().wrap('<li />');
+        $('ul#modify_tag_edit div input').unwrap().wrap('<li />');
         var id = parseInt($('#modify_id').val());
         var index = findItem(id);
         if (id == -1 || index == -1) {
-	    $('#restoreBtn').closest('.ui-btn').hide();
+            $('#restoreBtn').closest('.ui-btn').hide();
             $('#deleteBtn').closest('.ui-btn').hide();
             $('#toggleBtn').closest('.ui-btn').hide();
         } else {
-	    toggleButtons(itemList[index].deleted == 1);
-	}
+            toggleButtons(itemList[index].deleted == 1);
+        }
     });
     $('#restoreBtn').click(function() {
         var id = parseInt($('#modify_id').val());
@@ -136,7 +136,7 @@ $(document).ready(function() {
     $('#saveBtn').click(function() {
         var id = parseInt($('#modify_id').val());
         if (id == -1)
-	{
+        {
             var stuff = new Todo(-1,
                 $('#modify_todo').val(),
                 $('#modify_due').val(),
@@ -148,14 +148,17 @@ $(document).ready(function() {
                 0,  // deleted items cannot be modified
                 1,  // version
                 $('#modify_recurrenceMode').val(),
-		null,
+                null,
                 formatDate(getUTCDate(), true)
             );
             addItem(stuff);
-	} else {
-	    storeItem();
-	}
+        } else {
+            storeItem();
+        }
         $.mobile.changePage('#listPage', { transition: "slide" });
     });
-
 });
+
+function fillTagList(choices)
+{
+}

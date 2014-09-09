@@ -8,6 +8,8 @@ function createDatePicker(tagid) {
     });
 }
 
+var tagList;
+
 $(document).ready(function() {
 
     $.ajaxSetup({cache: false });
@@ -61,18 +63,28 @@ $(document).ready(function() {
 
     $('#modify_tag_edit').tagit({
         autocomplete: { source: function( search, showChoices) {
-            var that = this;
-            $.ajax({
-                url: "queries/query-tags.php",
-                data: {q: search.term},
-                dataType: "json",
-                success: function (choices) {
-                    showChoices(that._subtractArray(choices, that.assignedTags()));
+            onlyTags = new Array();
+            for (var i=0; i<tagList.length; ++i)
+            {
+                if (tagList[i].name.toLowerCase().indexOf(search.term.toLowerCase()) != -1)
+                {
+                    onlyTags.push(tagList[i].name);
                 }
-            });
+            }
+            showChoices(this._subtractArray(onlyTags, this.assignedTags()));
         }, delay: 2, minLength: 2},
         singleField: true,
         singleFieldNode: $('#modify_tags')
+    });
+
+    $.ajax({
+        url: "queries/query-tags.php",
+        data: {q: ''},
+        dataType: "json",
+        success: function (tags) {
+            tagList = tags;
+            fillTagList(tagList);
+        }
     });
 
     refresh();

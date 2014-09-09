@@ -77,42 +77,59 @@ function modifyItem(id) {
     });
 }
 
+function openTagDialog(tagname)
+{
+    $('#tag_name').val(tagname);
+    var result = $.grep(tagList, function(e) { return e.name === tagname; });
+    $('#tag_count').val(result[0].tagCount);
+    $('#tag_dialog').dialog( {
+        modal: true,
+        title: $T('EDIT_TAG')
+    });
+}
+
+function fillTagList(choices)
+{
+    for (var i=0; i<choices.length; i++) {
+        $('#taglist ul').append('<li>'+choices[i].name+' ('+choices[i].tagCount+')</li>');
+    }
+    $('#taglist ul').tagit({readOnly: true});
+}
+
 $(document).ready(function() {
 
     $('#modify_save').click(function() {
         // store...
         storeItem();
     });
+    $(document.body).on('click', '.tagit-choice-read-only', function() {
+        var tagname = $(this).text();
+        if (tagname.indexOf("(") != -1)
+        {
+            tagname = tagname.substr(0, tagname.indexOf("(")-1).trim();
+        }
+        openTagDialog(tagname);
+    });
     $('#filter_tag_edit').tagit({
         autocomplete: { source: function( search, showChoices) {
-        var that = this;
-            $.ajax({
-                url: "queries/query-tags.php",
-                data: {q: search.term},
-                dataType: "json",
-                success: function (choices) {
-                    showChoices(that._subtractArray(choices, that.assignedTags()));
-                }
-            });
-        }, delay: 2, minLength: 2},
-        singleField: true,
-        singleFieldNode: $('#filter_tags'),
-        afterTagAdded: function(event, ui) {
-            renderTable();
-        },
-        afterTagRemoved: function(event, ui) {
-            renderTable();
-        }
-    });
-    $.ajax({
-        url: "queries/query-tags.php",
-        data: {q: ''},
-        dataType: "json",
-        success: function (choices) {
-            for (var i=0; i<choices.length; i++) {
-                $('#taglist ul').append('<li>'+choices[i]+'</li>');
+        onlyTags = new Array();
+        for (var i=0; i<tagList.length; ++i)
+        {
+            if (tagList[i].name.toLowerCase().indexOf(search.term.toLowerCase()) != -1)
+            {
+                onlyTags.push(tagList[i].name);
             }
-            $('#taglist ul').tagit({readOnly: true});
         }
+        showChoices(this._subtractArray(onlyTags, this.assignedTags()));
+    }, delay: 2, minLength: 2},
+    singleField: true,
+    singleFieldNode: $('#filter_tags'),
+    afterTagAdded: function(event, ui) {
+        renderTable();
+    },
+    afterTagRemoved: function(event, ui) {
+        renderTable();
+    }
     });
+
 });

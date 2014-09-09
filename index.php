@@ -101,6 +101,19 @@
         </form>
       </div>
       <div id="log_dialog" style="display:none"></div>
+      <div id="tag_dialog" style="display:none">
+        <form>
+          <div class="modify_line">
+            <span class="modify_desc"><?php echo(TodoLang::_("TAG_NAME"));?>: </span>
+            <input type="text" id="tag_name" name="tag_name" size="20" maxlength="255" />
+          </div><div class="modify_line">
+            <span class="modify_desc"><?php echo(TodoLang::_("TAG_COUNT"));?>: </span>
+            <input type="text" id="tag_count" name="tag_count" size="10" readonly="true" />
+          </div>
+          <input type="image" src="images/Delete.png" name="tag_delete" id="tag_delete" value="<?php echo(TodoLang::_("DELETE"));?>" />
+          <input type="image" src="images/pencil.png" name="tag_save" id="tag_save" value="<?php echo(TodoLang::_("SAVE"));?>" />
+        </form>
+      </div>
     </div>
   </body>
 </html>
