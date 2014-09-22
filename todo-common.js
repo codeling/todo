@@ -476,21 +476,27 @@ function arrayContainsAny(needle, haystack) {
     return false;
 }
 
+function getTodoWithTag(filterTags)
+{
+    var result = new Array();
+    for (var i=0; i<itemList.length; i++) {
+        if (itemList[i].tags == null) {
+            continue;
+        }
+        var itemTags = itemList[i].tags.split(",");
+        if (arrayContainsAny(filterTags, itemTags)) {
+            result.push(itemList[i]);
+        }
+    }
+    return result;
+}
+
 function filterList() {
     if ($('#filter_tags').length == 0 || $('#filter_tags').val() == '') {
         result = itemList.slice(0);
     } else {
         filterTags = $('#filter_tags').val().split(",");
-        var result = new Array();
-        for (var i=0; i<itemList.length; i++) {
-            if (itemList[i].tags == null) {
-                continue;
-            }
-            var itemTags = itemList[i].tags.split(",");
-            if (arrayContainsAny(filterTags, itemTags)) {
-                result.push(itemList[i]);
-            }
-        }
+        result = getTodoWithTag(filterTags);
     }
     result.sort(ItemSort);
     return result;

@@ -113,6 +113,8 @@
           <input type="image" src="images/Delete.png" name="tag_delete" id="tag_delete" value="<?php echo(TodoLang::_("DELETE"));?>" />
           <input type="image" src="images/pencil.png" name="tag_save" id="tag_save" value="<?php echo(TodoLang::_("SAVE"));?>" />
         </form>
+        <div id="tag_todo_table">
+        </div>
       </div>
     </div>
   </body>

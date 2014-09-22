@@ -1,6 +1,6 @@
 <?php
 require("db.php");
-$sql = "SELECT name, COUNT(todo_id) AS tagCount FROM tags t ".
+$sql = "SELECT id, name, COUNT(todo_id) AS tagCount FROM tags t ".
     "LEFT JOIN todo_tags r ON t.id=r.tag_id ".
     "GROUP BY t.id ".
     "ORDER BY tagCount DESC";

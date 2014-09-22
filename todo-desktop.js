@@ -1,37 +1,47 @@
-
-function renderItem(it, line) {
-    var hasNote = it.notes != null && it.notes != '';
-    var hasTags = it.tags != null && it.tags != '';
-    var isRecurring = it.recurrenceMode != 0;
-    var today   = new Date();
-    var dueDate = parseDate(it.due);
-    var complDate = parseDate(it.completionDate);
-    var createDate = parseDate(it.creationDate);
-    var dueString = (it.completed == 0) ? formatDate(dueDate): formatDate(complDate);
-    var repetition = getRecurrenceString(it.recurrenceMode);
-    var line = '<div class="line'+
-            ((line%2!=0)?' line_odd':'')+
+function getTodoItemStart(it, lineNr) {
+    return '<div class="line'+
+            ((lineNr%2!=0)?' line_odd':'')+
             ((it.completed==1)?' todo_completed':'')+
         ((it.deleted==1)?' todo_deleted':'')+
-            '" id="todo'+it.id+'">'+
-        '<span class="todo" title="'+$T('CREATED')+': '+formatDate(createDate, true)+
+            '" id="todo'+it.id+'">';
+}
+
+function getTodoTitleHtml(it, lineNr, tagbasename, spanCssClass) {
+    var isRecurring = it.recurrenceMode != 0;
+    var hasNote = it.notes != null && it.notes != '';
+    var hasTags = it.tags != null && it.tags != '';
+    var createDate = parseDate(it.creationDate);
+    var repetition = getRecurrenceString(it.recurrenceMode);
+    var complDate = parseDate(it.completionDate);
+    line =   '<span class="'+spanCssClass+'" title="'+$T('CREATED')+': '+formatDate(createDate, true)+
             '; '+$T('RECURRENCE')+': '+repetition+
         ((it.completed != 0)? '; '+$T('DONE')+': '+formatDate(complDate, true):'')+
             '">'+
-            '<span class="todo_lineNr">'+(line+1)+'</span>. '+
+            '<span class="todo_lineNr">'+(lineNr+1)+'</span>. '+
             it.todo+
             (hasNote ? '<img src="images/note.png" />':'')+
             (isRecurring ? '<img src="images/recurring.png" id="reactivate'+it.id+'" />':'');
     if (hasTags) {
-        line += ' <ul id="todo_tags_'+it.id+'" class="todo_item_tags">';
-    tags = it.tags.split(",");
-    for (var i=0; i<tags.length; i++) {
-        line += '<li>'+tags[i]+'</li>';
-    }
+        line += ' <ul id="'+tagbasename+it.id+'" class="todo_item_tags">';
+        tags = it.tags.split(",");
+        for (var i=0; i<tags.length; i++) {
+            line += '<li>'+tags[i]+'</li>';
+        }
         line += '</ul>';
     }
-    line += '</span>'+
-        '<span class="due">'+ dueString+
+    line += '</span>';
+    return line;
+}
+
+function renderItem(it, lineNr) {
+    var today   = new Date();
+    var dueDate = parseDate(it.due);
+    var complDate = parseDate(it.completionDate);
+    var dueString = (it.completed == 0) ? formatDate(dueDate): formatDate(complDate);
+    var line = getTodoItemStart(it, lineNr);
+    var tagbasename = 'todo_tags_';
+    line += getTodoTitleHtml(it, lineNr, tagbasename, 'todo');
+    line += '<span class="due">'+ dueString+
                 ((it.completed==0 && dueDate != null && (today - dueDate) > 0) ?
                 ' <img src="images/exclamation.png" height="16px" />':'')+
                 '</span>'+
@@ -53,7 +63,7 @@ function renderItem(it, line) {
     }
     line += '</div>';
     $('#todoTable').append(line);
-    $('#todo_tags_'+it.id).tagit({readOnly: true});
+    $('#'+tagbasename+it.id).tagit({readOnly: true});
     $('#todo'+it.id).dblclick(function() {
         printItem(it);
     });
@@ -86,6 +96,17 @@ function openTagDialog(tagname)
         modal: true,
         title: $T('EDIT_TAG')
     });
+    $('#tag_todo_table').empty();
+    var filtered = getTodoWithTag(new Array(tagname));
+    filtered.sort(ItemSort);
+    var tagbase = 'tag_todo_tags_';
+    for (var i=0; i<filtered.length; i++) {
+        var line = '<div>'; //getTodoItemStart(filtered[i], i);
+        line += getTodoTitleHtml(filtered[i], i, tagbase, '');
+        line += '</div>'
+        $('#tag_todo_table').append(line);
+        $('#'+tagbase+filtered[i].id).tagit({readOnly: true});
+    }
 }
 
 function fillTagList(choices)
