@@ -105,6 +105,7 @@
         <form>
           <div class="modify_line">
             <span class="modify_desc"><?php echo(TodoLang::_("TAG_NAME"));?>: </span>
+            <input type="hidden" id="tag_id" name="tag_id" />
             <input type="text" id="tag_name" name="tag_name" size="20" maxlength="255" />
           </div><div class="modify_line">
             <span class="modify_desc"><?php echo(TodoLang::_("TAG_COUNT"));?>: </span>

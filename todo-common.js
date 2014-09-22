@@ -196,7 +196,7 @@ function emptyTrash() {
             }
         },
         error: function(jqXHR, textStatus, errorThrown) {
-            alert($T('TRANSMISSION_ERROR_WHILE_EMPTYING_TRASH'));
+            alert($T('TRANSMISSION_ERROR'));
         }
    });
 
@@ -229,7 +229,7 @@ function trashItem(id) {
             }
         },
         error: function(jqXHR, textStatus, errorThrown) {
-            alert($T('TRANSMISSION_ERROR_WHILE_DELETING'));
+            alert($T('TRANSMISSION_ERROR'));
         }
    });
 }
@@ -261,7 +261,7 @@ function restoreItem(id) {
             }
         },
         error: function(jqXHR, textStatus, errorThrown) {
-            alert($T('TRANSMISSION_ERROR_WHILE_RESTORING'));
+            alert($T('TRANSMISSION_ERROR'));
         }
    });
 }
@@ -280,7 +280,7 @@ function sendReactivate(id) {
             refresh();
         },
         error: function(jqXHR, textStatus, errorThrown) {
-            alert($T('TRANSMISSION_ERROR_WHILE_REACTIVATING'));
+            alert($T('TRANSMISSION_ERROR'));
         }
     });
 }
@@ -335,7 +335,7 @@ function toggleCompleted(id) {
             currentlyModified = null;
         },
         error: function(jqXHR, textStatus, errorThrown) {
-            alert($T('TRANSMISSION_ERROR_WHILE_UPDATING'));
+            alert($T('TRANSMISSION_ERROR'));
         }
     });
 }
@@ -600,7 +600,7 @@ function addItem(stuff) {
             }
         },
         error: function(jqXHR, textStatus, errorThrown) {
-            alert($T('TRANSMISSION_ERROR_WHILE_CREATING'));
+            alert($T('TRANSMISSION_ERROR'));
         }
     });
 }
@@ -647,7 +647,7 @@ function storeItem() {
             }
         },
         error: function(jqXHR, textStatus, errorThrown) {
-            alert($T('TRANSMISSION_ERROR_WHILE_MODIFYING'));
+            alert($T('TRANSMISSION_ERROR'));
         }
     });
 }
@@ -683,4 +683,16 @@ function refresh() {
 // TODO: change listener, or if that proves impossible,
 // refresh every 5-10 minues (or check with server if anything to refresh!!!
 //    setTimeout('refresh()', 30000);
+}
+
+function reloadTagList() {
+    $.ajax({
+        url: "queries/query-tags.php",
+        data: {q: ''},
+        dataType: "json",
+        success: function (tags) {
+            tagList = tags;
+            fillTagList(tagList);
+        }
+    });
 }

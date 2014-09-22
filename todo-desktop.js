@@ -87,11 +87,20 @@ function modifyItem(id) {
     });
 }
 
+function decodeHtml(val)
+{
+   var div = document.createElement('div');
+   div.innerHTML = val;
+   return div.firstChild.nodeValue;
+}
+
 function openTagDialog(tagname)
 {
     $('#tag_name').val(tagname);
-    var result = $.grep(tagList, function(e) { return e.name === tagname; });
+    var result = $.grep(tagList,
+        function(e) { return decodeHtml(e.name) === tagname; });
     $('#tag_count').val(result[0].tagCount);
+    $('#tag_id').val(result[0].id);
     $('#tag_dialog').dialog( {
         modal: true,
         title: $T('EDIT_TAG')
@@ -111,10 +120,23 @@ function openTagDialog(tagname)
 
 function fillTagList(choices)
 {
-    for (var i=0; i<choices.length; i++) {
-        $('#taglist ul').append('<li>'+choices[i].name+' ('+choices[i].tagCount+')</li>');
+    if ($('#taglist ul').html() != '')
+    {
+        $('#taglist ul').tagit("removeAll");
+        $('#taglist ul').empty();
     }
     $('#taglist ul').tagit({readOnly: true});
+    for (var i=0; i<choices.length; i++) {
+ //       $('#taglist ul').append('<li>'+choices[i].name+' ('+choices[i].tagCount+')</li>');
+        $('#taglist ul').tagit("createTag", choices[i].name+' ('+choices[i].tagCount+')');
+    }
+}
+
+function isInt(value)
+{
+    return !isNaN(value) && 
+        parseInt(Number(value)) == value && 
+        !isNaN(parseInt(value, 10));
 }
 
 $(document).ready(function() {
@@ -130,6 +152,34 @@ $(document).ready(function() {
             tagname = tagname.substr(0, tagname.indexOf("(")-1).trim();
         }
         openTagDialog(tagname);
+    });
+    $('#tag_delete').click(function() {
+        if (!confirm($T('CONFIRM_DELETE_TAG')))
+        {
+            return false;
+        }
+        var tagidobject = new Object();
+        tagidobject.id = $('#tag_id').val();
+        $.ajax( {
+            type: 'GET',
+            url: 'queries/delete-tag.php',
+            data: tagidobject,
+            success: function(returnValue) {
+                if (isInt(returnValue)) {
+                    log($T('DELETED_TAG_SUCCESSFUL'));
+                    $('#tag_dialog').dialog('close');
+                    refresh();
+                    reloadTagList();
+                } else {
+                    log($T('ERROR_WHILE_DELETING_TAG')+returnValue);
+                    alert($T('ERROR_WHILE_DELETING_TAG')+returnValue);
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                alert($T('TRANSMISSION_ERROR'));
+            }
+        });
+        return false;
     });
     $('#filter_tag_edit').tagit({
         autocomplete: { source: function( search, showChoices) {
@@ -152,5 +202,4 @@ $(document).ready(function() {
         renderTable();
     }
     });
-
 });

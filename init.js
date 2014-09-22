@@ -77,15 +77,7 @@ $(document).ready(function() {
         singleFieldNode: $('#modify_tags')
     });
 
-    $.ajax({
-        url: "queries/query-tags.php",
-        data: {q: ''},
-        dataType: "json",
-        success: function (tags) {
-            tagList = tags;
-            fillTagList(tagList);
-        }
-    });
+    reloadTagList();
 
     refresh();
 });
