@@ -123,12 +123,10 @@ function fillTagList(choices)
     if ($('#taglist ul').html() != '')
     {
         $('#taglist ul').tagit("removeAll");
-        $('#taglist ul').empty();
     }
     $('#taglist ul').tagit({readOnly: true});
     for (var i=0; i<choices.length; i++) {
- //       $('#taglist ul').append('<li>'+choices[i].name+' ('+choices[i].tagCount+')</li>');
-        $('#taglist ul').tagit("createTag", choices[i].name+' ('+choices[i].tagCount+')');
+        $('#taglist ul').tagit("createTag", decodeHtml(choices[i].name)+' ('+choices[i].tagCount+')');
     }
 }
 
