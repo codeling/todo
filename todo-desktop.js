@@ -151,6 +151,31 @@ $(document).ready(function() {
         }
         openTagDialog(tagname);
     });
+    $('#tag_save').click(function() {
+        var tagobject = new Object();
+        tagobject.id = $('#tag_id').val();
+        tagobject.tag_name = $('#tag_name').val();
+        $.ajax( {
+            type: 'GET',
+            url: 'queries/edit-tag.php',
+            data: tagobject,
+            success: function(returnValue) {
+                if (isInt(returnValue)) {
+                    log($T('EDITED_TAG_SUCCESSFUL'));
+                    $('#tag_dialog').dialog('close');
+                    reloadTagList();
+                    refresh();
+                } else {
+                    log($T('ERROR_WHILE_EDITING_TAG')+returnValue);
+                    alert($T('ERROR_WHILE_EDITING_TAG')+returnValue);
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                alert($T('TRANSMISSION_ERROR'));
+            }
+        });
+        return false;
+    });
     $('#tag_delete').click(function() {
         if (!confirm($T('CONFIRM_DELETE_TAG')))
         {
