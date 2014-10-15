@@ -110,11 +110,19 @@
           </div><div class="modify_line">
             <span class="modify_desc"><?php echo(TodoLang::_("TAG_COUNT"));?>: </span>
             <input type="text" id="tag_count" name="tag_count" size="10" readonly="true" />
+          </div><div class="modify_line">
+            <span class="modify_desc"><?php echo(TodoLang::_("MERGE_TO"));?>: </span>
+            <input type="hidden" id="merge_tag" name="merge_tag" />
+            <ul id="merge_tag_edit" class="tagit ui-widget ui-widget-content ui-corner-all tagit-choice-editable"></ul>
+            <input type="image" src="images/merge.png" name="tag_merge" id="tag_merge" value="<?php echo(TodoLang::_("MERGE"));?>" />
           </div>
           <input type="image" src="images/Delete.png" name="tag_delete" id="tag_delete" value="<?php echo(TodoLang::_("DELETE"));?>" />
           <input type="image" src="images/pencil.png" name="tag_save" id="tag_save" value="<?php echo(TodoLang::_("SAVE"));?>" />
         </form>
-        <div id="tag_todo_table">
+        <div id="tag_todo_container">
+          <span id="tag_todo_caption"><?php echo(TodoLang::_("TAG_TODO_LIST_CAPTION"));?></span>
+          <div id="tag_todo_table">
+          </div>
         </div>
       </div>
     </div>

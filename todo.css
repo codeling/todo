@@ -204,3 +204,18 @@ ul.ui-autocomplete {
 #enter_due {
     width: 70px;
 }
+#merge_tag_edit {
+    width: 180px;
+    display: inline-block;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+#tag_todo_container {
+    margin-top: 10px;
+}
+#tag_todo_caption {
+    font-weight: bold;
+}
+#tag_merge {
+    vertical-align: top;
+}

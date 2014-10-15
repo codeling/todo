@@ -103,8 +103,10 @@ function openTagDialog(tagname)
     $('#tag_id').val(result[0].id);
     $('#tag_dialog').dialog( {
         modal: true,
+        width: 400,
         title: $T('EDIT_TAG')
     });
+    $('#merge_tag_edit').tagit("removeAll");
     $('#tag_todo_table').empty();
     var filtered = getTodoWithTag(new Array(tagname));
     filtered.sort(ItemSort);
@@ -166,8 +168,8 @@ $(document).ready(function() {
                     reloadTagList();
                     refresh();
                 } else {
-                    log($T('ERROR_WHILE_EDITING_TAG')+returnValue);
-                    alert($T('ERROR_WHILE_EDITING_TAG')+returnValue);
+                    log($T('ERROR_WHILE_MODIFYING')+returnValue);
+                    alert($T('ERROR_WHILE_MODIFYING')+returnValue);
                 }
             },
             error: function(jqXHR, textStatus, errorThrown) {
@@ -194,8 +196,8 @@ $(document).ready(function() {
                     refresh();
                     reloadTagList();
                 } else {
-                    log($T('ERROR_WHILE_DELETING_TAG')+returnValue);
-                    alert($T('ERROR_WHILE_DELETING_TAG')+returnValue);
+                    log($T('ERROR_WHILE_DELETING')+returnValue);
+                    alert($T('ERROR_WHILE_DELETING')+returnValue);
                 }
             },
             error: function(jqXHR, textStatus, errorThrown) {
@@ -204,25 +206,99 @@ $(document).ready(function() {
         });
         return false;
     });
-    $('#filter_tag_edit').tagit({
-        autocomplete: { source: function( search, showChoices) {
-        onlyTags = new Array();
-        for (var i=0; i<tagList.length; ++i)
+    $('#tag_merge').click(function() {
+        var tagobject = new Object();
+        tagobject.id = $('#tag_id').val();
+        merge_tagname = $('#merge_tag').val();
+        var result = $.grep(tagList,
+            function(e) { return decodeHtml(e.name) === merge_tagname; });
+        if (result.length == 0 || result.length > 1)
         {
-            if (tagList[i].name.toLowerCase().indexOf(search.term.toLowerCase()) != -1)
-            {
-                onlyTags.push(tagList[i].name);
-            }
+            alert("Found no tag or more than one tag with that name, aborting merge!");
+            return false;
         }
-        showChoices(this._subtractArray(onlyTags, this.assignedTags()));
-    }, delay: 2, minLength: 2},
-    singleField: true,
-    singleFieldNode: $('#filter_tags'),
-    afterTagAdded: function(event, ui) {
-        renderTable();
-    },
-    afterTagRemoved: function(event, ui) {
-        renderTable();
-    }
+        tagobject.merge_id = result[0].id;
+        $.ajax( {
+            type: 'GET',
+            url: 'queries/merge-tag.php',
+            data: tagobject,
+            success: function(returnValue) {
+                if (isInt(returnValue)) {
+                    log($T('MERGE_TAG_SUCCESSFUL'));
+                    $('#tag_dialog').dialog('close');
+                    reloadTagList();
+                    refresh();
+                } else {
+                    log($T('ERROR_WHILE_MODIFYING')+returnValue);
+                    alert($T('ERROR_WHILE_MODIFYING')+returnValue);
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                alert($T('TRANSMISSION_ERROR'));
+            }
+        });
+        return false;
+    });
+
+    $('#filter_tag_edit').tagit({
+        autocomplete: {
+            source: function( search, showChoices) {
+                onlyTags = new Array();
+                for (var i=0; i<tagList.length; ++i)
+                {
+                    if (tagList[i].name.toLowerCase().indexOf(search.term.toLowerCase()) != -1)
+                    {
+                        onlyTags.push(tagList[i].name);
+                    }
+                }
+                showChoices(this._subtractArray(onlyTags, this.assignedTags()));
+            },
+            delay: 2, minLength: 2
+        },
+        singleField: true,
+        singleFieldNode: $('#filter_tags'),
+        afterTagAdded: function(event, ui) {
+            renderTable();
+        },
+        afterTagRemoved: function(event, ui) {
+            renderTable();
+        }
+    });
+    $('#modify_tag_edit').tagit({
+        autocomplete: {
+            source: function( search, showChoices) {
+                onlyTags = new Array();
+                for (var i=0; i<tagList.length; ++i)
+                {
+                    if (tagList[i].name.toLowerCase().indexOf(search.term.toLowerCase()) != -1)
+                    {
+                        onlyTags.push(tagList[i].name);
+                    }
+                }
+                showChoices(this._subtractArray(onlyTags, this.assignedTags()));
+            },
+            delay: 2, minLength: 2
+        },
+        singleField: true,
+        singleFieldNode: $('#modify_tags')
+    });
+    $('#merge_tag_edit').tagit({
+        autocomplete: {
+            source: function( search, showChoices) {
+                onlyTags = new Array();
+                for (var i=0; i<tagList.length; ++i)
+                {
+                    if (tagList[i].name.toLowerCase().indexOf(search.term.toLowerCase()) != -1)
+                    {
+                        onlyTags.push(tagList[i].name);
+                    }
+                }
+                showChoices(this._subtractArray(onlyTags, this.assignedTags()));
+            },
+            delay: 2, minLength: 2
+        },
+        singleField: true,
+        singleFieldNode: $('#merge_tag'),
+        tagLimit: 1
     });
 });

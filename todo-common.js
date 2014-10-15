@@ -316,8 +316,8 @@ function toggleCompleted(id) {
         data: stuff,
         success: function(returnValue) {
             if (returnValue != 1) {
-                log($T('ERROR_WHILE_UPDATING')+': '+returnValue);
-                alert($T('ERROR_WHILE_UPDATING')+': '+returnValue);
+                log($T('ERROR_WHILE_MODIFYING')+returnValue);
+                alert($T('ERROR_WHILE_MODIFYING')+returnValue);
                 // reset checkbox:
                 var checked = $('#completed'+currentlyModified.id).prop('checked');
                 if (checked=='checked') {
@@ -578,8 +578,8 @@ function addItem(stuff) {
         data: stuff,
         success: function(returnValue) {
             if (isNaN(returnValue)) {
-                log($T('ERROR_WHILE_CREATING')+': '+returnValue);
-                alert($T('ERROR_WHILE_CREATING')+': '+returnValue);
+                log($T('ERROR_WHILE_CREATING')+returnValue);
+                alert($T('ERROR_WHILE_CREATING')+returnValue);
                 // remove the item from local list; the  data of it
                 // will still remain in the edit fields anyway!
                 deleteLocally(findItem(-1));
