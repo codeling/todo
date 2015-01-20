@@ -99,6 +99,7 @@ $(document).ready(function() {
         emptyTrash();
     });
     // Fix bug resulting from combination of tag-it and jquery-mobile:
+    // https://github.com/aehlke/tag-it/issues/274
     $('#modifyPage').on('pageshow', function(event) {
         $('ul#modify_tag_edit li li').unwrap();
         $('ul#modify_tag_edit div input').unwrap().wrap('<li />');
