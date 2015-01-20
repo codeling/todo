@@ -48,23 +48,23 @@
     <div data-role="page" id="modifyPage">
       <form method="POST" onsubmit="return false;" id="modifyForm">
         <input type="hidden" id="modify_id" name="modify_id" />
-        <div class="modify_line">
-          <span class="modify_desc"><?php echo(TodoLang::_("TODO"));?>: </span>
-          <input type="text" id="modify_todo" name="modify_todo" size="50" maxlength="255" />
-        </div><div class="modify_line">
-          <span class="modify_desc"><?php echo(TodoLang::_("DUE"));?>: </span>
-          <input type="text" id="modify_due" name="modify_due" size="10" maxlength="20" />
-        </div><div class="modify_line">
-          <span class="modify_desc"><?php echo(TodoLang::_("PRIORITY"));?>:</span>
-          <input type="text" id="modify_priority" name="modify_priority" size="3" maxlength="4" />
-        </div><div class="modify_line">
-          <span class="modify_desc"><?php echo(TodoLang::_("EFFORT").TodoLang::_("EFFORT_REMARK"));?>:</span>
-          <input type="text" id="modify_effort" name="modify_effort" size="3" maxlength="4" />
-        </div><div class="modify_line">
-          <span class="modify_desc"><?php echo(TodoLang::_("NOTES"));?>:</span>
+        <div class="modify_line" data-role="fieldcontain">
+          <label class="modify_desc" for="modify_todo"><?php echo(TodoLang::_("TODO"));?>: </label>
+          <input type="text" id="modify_todo" name="modify_todo" maxlength="255" />
+        </div><div class="modify_line" data-role="fieldcontain">
+          <label class="modify_desc" for="modify_due"><?php echo(TodoLang::_("DUE"));?>: </label>
+          <input type="text" id="modify_due" name="modify_due" maxlength="20" />
+        </div><div class="modify_line" data-role="fieldcontain">
+          <label class="modify_desc" for="modify_priority"><?php echo(TodoLang::_("PRIORITY"));?>:</label>
+          <input type="text" id="modify_priority" name="modify_priority" maxlength="4" />
+        </div><div class="modify_line" data-role="fieldcontain">
+          <label class="modify_desc" for="modify_effort"><?php echo(TodoLang::_("EFFORT").TodoLang::_("EFFORT_REMARK"));?>:</label>
+          <input type="text" id="modify_effort" name="modify_effort" maxlength="4" />
+        </div><div class="modify_line" data-role="fieldcontain">
+          <label class="modify_desc" for="modify_notes"><?php echo(TodoLang::_("NOTES"));?>:</label>
           <textarea type="text" id="modify_notes" name="modify_notes" rows="10" cols="50"></textarea>
-        </div><div class="modify_line">
-          <span class="modify_desc"><?php echo(TodoLang::_("RECURRENCE"));?>:</span>
+        </div><div class="modify_line" data-role="fieldcontain">
+          <label class="modify_desc" for="modify_recurrenceMode"><?php echo(TodoLang::_("RECURRENCE"));?>:</label>
           <select name="modify_recurrenceMode" id="modify_recurrenceMode">
             <option value="0"><?php echo(TodoLang::_("DONT_REPEAT"));?></option>
             <option value="3"><?php echo(TodoLang::_("REPEAT_EVERY_THREE_DAYS"));?></option>
@@ -81,8 +81,8 @@
             <option value="1460"><?php echo(TodoLang::_("REPEAT_FOURYEARLY"));?></option>
             <option value="1805"><?php echo(TodoLang::_("REPEAT_FIVEYEARLY"));?></option>
           </select>
-        </div><div class="modify_line">
-          <span class="modify_desc"><?php echo(TodoLang::_("TAGS"));?>:</span>
+        </div><div class="modify_line" data-role="fieldcontain">
+          <label class="modify_desc" for="modify_tags"><?php echo(TodoLang::_("TAGS"));?>:</label>
           <input type="hidden" id="modify_tags" name="modify_tags" />
           <ul id="modify_tag_edit" class="tagit ui-widget ui-widget-content ui-corner-all tagit-choice-editable"></ul>
         </div>
