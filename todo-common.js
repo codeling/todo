@@ -192,7 +192,8 @@ function emptyTrash() {
                 alert($T('ERROR_WHILE_EMPTYING_TRASH')+returnValue);
             } else {
                 log($T('EMPTYING_TRASH_SUCCESSFUL'));
-        emptyTrashLocally();
+                emptyTrashLocally();
+                reloadTagList();
             }
         },
         error: function(jqXHR, textStatus, errorThrown) {
@@ -584,6 +585,7 @@ function addItem(stuff) {
                 // will still remain in the edit fields anyway!
                 deleteLocally(findItem(-1));
             } else {
+                reloadTagList(); // a tag might have been added or removed
                 log($T('CREATING_SUCCESSFUL'));
                 $('#enter_todo').val('');
                 $('#enter_due').val('');
@@ -637,6 +639,7 @@ function storeItem() {
                 alert($T('ERROR_WHILE_MODIFYING')+returnValue);
             // just keep dialog open...then changed values aren't lost
             } else {
+                reloadTagList(); // a tag might have been added or removed
                 // if everything went fine, close dialog:
                 log($T('SAVING_SUCCESSFUL'));
                 $('#modify_dialog').dialog('close');
@@ -693,6 +696,7 @@ function reloadTagList() {
         success: function (tags) {
             tagList = tags;
             fillTagList(tagList);
-        }
+        },
+        cache: false
     });
 }
