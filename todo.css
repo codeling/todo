@@ -33,6 +33,7 @@ div.line_odd {
 }
 #todoTable{
     border: 1px solid black;
+    display: inline-block;
 }
 .line_header {
     border-bottom: 1px solid black;
@@ -218,4 +219,19 @@ ul.ui-autocomplete {
 }
 #tag_merge {
     vertical-align: top;
+}
+#sidebar {
+    float: right;
+    width: 200px;
+}
+#taglist {
+    font-size: 8pt;
+}
+#lists {
+    border: 1px solid black;
+}
+#lists ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 2px;
 }

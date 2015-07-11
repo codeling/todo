@@ -10,8 +10,8 @@ CREATE TABLE `todo` (
   `notes` varchar(10000) DEFAULT '',
   `version` int(11) NOT NULL DEFAULT 1,
   `recurrenceMode` int(11) NOT NULL DEFAULT 0,
-  `user_id` int(11) NOT NULL,
   `deleted` tinyint(1) NOT NULL DEFAULT 0,
+  `list_id` int(11) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 ;
 
@@ -24,6 +24,7 @@ CREATE TABLE `recurringCopied` (
 CREATE TABLE `list` (
 	id int(11) NOT NULL AUTO_INCREMENT,
 	name VARCHAR(255),
+    user_id int(11) NOT NULL,
 	PRIMARY KEY (`id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 ;
 

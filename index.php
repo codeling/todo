@@ -48,13 +48,18 @@
           <span class="actions"><input type="image" src="images/Add.png" name="save" value="<?php echo(TodoLang::_("SAVE"));?>" onclick="enter()" /></span>
         </div>
       </form>
+      <div id="sidebar">
+          <div id="lists">
+              <ul></ul>
+          </div>
+          <div id="taglist">
+              <ul></ul>
+          </div>
+      </div>
       <div id="todoTable">
       </div>
       <div id="loadMoreBox">
           <a href="#" id="loadMoreLink" /><?php echo(TodoLang::_("LOAD_MORE"));?></a>
-      </div>
-      <div id="taglist">
-          <ul></ul>
       </div>
       <div id="modify_dialog" style="display:none;">
         <form method="POST" onsubmit="return false;" id="inputform">
@@ -96,7 +101,12 @@
             <span class="modify_desc"><?php echo(TodoLang::_("TAGS"));?>:</span>
             <input type="hidden" id="modify_tags" name="modify_tags" />
             <ul id="modify_tag_edit" class="tagit ui-widget ui-widget-content ui-corner-all tagit-choice-editable"></ul>
+          </div><div class="modify_line">
+            <span class="modify_desc"><?php echo(TodoLang::_("LIST"));?>:</span>
+            <select id="modify_list">
+            </select>
           </div>
+
           <input type="image" src="images/pencil.png" name="modify_save" id="modify_save" value="<?php echo(TodoLang::_("SAVE"));?>" />
         </form>
       </div>

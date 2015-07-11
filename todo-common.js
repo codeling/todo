@@ -1,12 +1,16 @@
 // holds all items of the todo list
 var itemList;
 
+// holds all lists of current user
+var lists;
+
 var currentlyModified = null;
-var reloadData = {age: 30};
+var reloadData = {age: 30, list_id: 0};
+var listsData = {user_id: 0};
 
 function Todo(id, todo, due, priority, effort,
         completed, notes, tags, deleted,
-        version, recurrenceMode, completionDate, creationDate) {
+        version, recurrenceMode, completionDate, creationDate, list_id) {
     this.id        = parseInt(id);
     this.todo      = todo;
     this.due       = due;
@@ -21,6 +25,7 @@ function Todo(id, todo, due, priority, effort,
     this.recurrenceMode = parseInt(recurrenceMode);
     this.completionDate = completionDate;
     this.creationDate = creationDate;
+    this.list_id   = list_id;
 }
 
 function copyTodo(item)
@@ -29,7 +34,7 @@ function copyTodo(item)
         item.id, item.todo, item.due, item.priority, item.effort,
         item.completed, item.notes, item.tags, item.deleted,
         item.version, item.recurrenceMode, item.completionDate,
-        item.creationDate
+        item.creationDate, item.list_id
     );
 }
 
@@ -362,7 +367,6 @@ function fillModifyForm(id) {
     $('#modify_priority').val(item.priority);
     $('#modify_effort').val(item.effort);
     $('#modify_notes').val(html_entity_decode(item.notes));
-
     $("#modify_tag_edit").tagit("removeAll");
     var tags = (item.tags == null) ? new Array() : item.tags.split(",");
     for (var i=0; i<tags.length; i++)
@@ -372,6 +376,9 @@ function fillModifyForm(id) {
 
     $('#modify_recurrenceMode option:selected').prop('selected', false);
     $('#modify_recurrenceMode option[value="'+item.recurrenceMode+'"]').prop('selected', true);
+
+    $('#modify_list option:selected').prop('selected', false);
+    $('#modify_list option[value="'+item.list_id+'"]').prop('selected', true);
 }
 
 function emptyModifyForm()
@@ -468,6 +475,33 @@ function renderTable() {
     }
 }
 
+function renderList(listItem)
+{
+    var liItem = $.parseHTML('<li>' + listItem.name + '</li>');
+    $('#lists ul').append(liItem);
+}
+
+function renderLists() {
+    $('#lists ul').empty();
+    for (var i=0; i<lists.length; ++i) {
+        renderList(lists[i]);
+    }
+    $('#lists ul li').on('click', function(event) { 
+        for (var i=0; i<lists.length; ++i) {
+             if (lists[i].name == $(this).text()) {
+                 reloadData.list_id = lists[i].id;
+                 reload();
+                 break;
+             }
+        }
+    });
+
+    $('#modify_list').empty();
+    for (var i=0; i<lists.length; ++i) {
+        $('#modify_list').append('<option value='+lists[i].id+'>'+lists[i].name+'</option>');
+    }
+}
+
 function arrayContainsAny(needle, haystack) {
     for (var i=0; i<needle.length; i++) {
         if (haystack.indexOf(needle[i]) != -1) {
@@ -533,7 +567,7 @@ function toggleWorking(show) {
 function reload() {
     log($T('LOADING_TODO_LIST'));
     var jsontext = $.ajax({
-        url: 'queries/query-list.php',
+        url: 'queries/query-todos.php',
         type: 'GET',
         data: reloadData,
         async: false
@@ -554,6 +588,21 @@ function reload() {
         itemList[i].recurrenceMode = parseInt(itemList[i].recurrenceMode);
     }
     renderTable();
+
+    var jsontext = $.ajax({
+        url: 'queries/query-lists.php',
+        type: 'GET',
+        data: listsData,
+        async: false
+    }).responseText;
+    try {
+        lists = JSON.parse(jsontext);
+    } catch (e) {
+        alert($T('SERVER_DELIVERED_INVALID_DATA')+': "'+jsontext+
+            '";'+$T('JSON_PARSER_MESSAGE')+' : '+e);
+    }
+    renderLists();
+
     updateProgress();
     log($T('LOADING_FINISHED'));
 }
@@ -626,7 +675,9 @@ function storeItem() {
         itemList[idx].version,
         $('#modify_recurrenceMode').val(),
         itemList[idx].completionDate,
-        itemList[idx].creationDate);
+        itemList[idx].creationDate,
+        $('#modify_list').val()
+    );
     currentlyModified = stuff;
     log($T('SAVING_MODIFICATIONS'));
     $.ajax({
@@ -645,7 +696,11 @@ function storeItem() {
                 $('#modify_dialog').dialog('close');
                 // only set locally now, else it could be confusing
                 currentlyModified.version = currentlyModified.version+1;
-                modifyLocally(currentlyModified);
+                if (currentlyModified.list_id != reloadData.list_id) {
+                    deleteLocally(findItem(currentlyModified.id));
+                } else {
+                    modifyLocally(currentlyModified);
+                }
                 currentlyModified = null;
             }
         },
@@ -675,7 +730,8 @@ function enter() {
     }
     var stuff = new Todo(-1, todo, $('#enter_due').val(),
             $('#enter_priority').val(), $('#enter_effort').val(),
-            0, '', tags, 0, 1, 0, null, formatDate(getUTCDate(), true));
+            0, '', tags, 0, 1, 0, null, formatDate(getUTCDate(), true),
+            reloadData.list_id);
     addItem(stuff);
 }
 

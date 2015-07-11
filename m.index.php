@@ -34,6 +34,13 @@
           <a href="#" id="loadMoreLink" /><?php echo(TodoLang::_("LOAD_MORE"));?></a>
       </div>
 
+      <div id="listsContainer">
+          Lists:
+          <div id="lists">
+              <ul></ul>
+          </div>
+      </div>
+
       <!-- menu bar -->
       <div data-theme="a" data-role="footer" data-position="fixed">
             <input type="button" id="emptyTrashBtn" value ="<?php echo(TodoLang::_("EMPTY_TRASH"));?>" />
@@ -85,6 +92,9 @@
           <label class="modify_desc" for="modify_tags"><?php echo(TodoLang::_("TAGS"));?>:</label>
           <input type="hidden" id="modify_tags" name="modify_tags" />
           <ul id="modify_tag_edit" class="tagit ui-widget ui-widget-content ui-corner-all tagit-choice-editable"></ul>
+        </div><div class="modify_line" data-role="fieldcontain">
+          <label class="modify_desc" for="modify_list"><?php echo(TodoLang::_("LIST"));?>:</label>
+          <select id="modify_list" name="modify_list"></select>
         </div>
         <div data-theme="a" data-role="footer" data-position="fixed">
 	  <input type="button" id="restoreBtn" value="<?php echo(TodoLang::_("RESTORE"));?>" />

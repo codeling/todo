@@ -123,3 +123,12 @@ ul#modify_tags {
 img.ui-datepicker-trigger {
     display:none;
 }
+#lists ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 2px;
+}
+#lists, #lists ul li {
+    display: inline-block;
+    margin-right: 20px;
+}
