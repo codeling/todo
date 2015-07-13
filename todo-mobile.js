@@ -141,7 +141,7 @@ $(document).ready(function() {
             var stuff = new Todo(-1,
                 $('#modify_todo').val(),
                 $('#modify_due').val(),
-                $('#modify_priority').val(),
+                $('#modify_start').val(),
                 $('#modify_effort').val(),
                 0,  // currently not taken into account on server, and not modifiable at server
                 $('#modify_notes').val().trim(),

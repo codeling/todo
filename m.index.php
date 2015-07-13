@@ -62,8 +62,8 @@
           <label class="modify_desc" for="modify_due"><?php echo(TodoLang::_("DUE"));?>: </label>
           <input type="text" id="modify_due" name="modify_due" maxlength="20" />
         </div><div class="modify_line" data-role="fieldcontain">
-          <label class="modify_desc" for="modify_priority"><?php echo(TodoLang::_("PRIORITY"));?>:</label>
-          <input type="text" id="modify_priority" name="modify_priority" maxlength="4" />
+          <label class="modify_desc" for="modify_start"><?php echo(TodoLang::_("START"));?>:</label>
+          <input type="text" id="modify_start" name="modify_start" maxlength="4" />
         </div><div class="modify_line" data-role="fieldcontain">
           <label class="modify_desc" for="modify_effort"><?php echo(TodoLang::_("EFFORT").TodoLang::_("EFFORT_REMARK"));?>:</label>
           <input type="text" id="modify_effort" name="modify_effort" maxlength="4" />

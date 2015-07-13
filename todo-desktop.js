@@ -41,11 +41,11 @@ function renderItem(it, lineNr) {
     var line = getTodoItemStart(it, lineNr);
     var tagbasename = 'todo_tags_';
     line += getTodoTitleHtml(it, lineNr, tagbasename, 'todo');
-    line += '<span class="due">'+ dueString+
+    line +=  '<span class="start">'+((it.start == null)?'undef':formatDate(parseDate(it.start)))+'</span>'+
+        '<span class="due">'+ dueString+
                 ((it.completed==0 && dueDate != null && (today - dueDate) > 0) ?
                 ' <img src="images/exclamation.png" height="16px" />':'')+
                 '</span>'+
-        '<span class="priority">'+it.priority+'</span>'+
         '<span class="effort">'+it.effort+'</span>'+
         '<span class="completed"><input type="checkbox" id="completed'+it.id+'" '+
             ((it.completed==1)?'checked="true" ':'')+'/></span>';

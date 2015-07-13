@@ -5,7 +5,7 @@
     // TODO: get ID of logged in user here!
     $age = (int)$_GET["age"];
     $list_id = (int)$_GET["list_id"];
-    $sql = "SELECT todo.id, description as todo, dueDate as due, priority, effort, ".
+    $sql = "SELECT todo.id, description as todo, dueDate as due, startDate as start, effort, ".
         "completed, notes, version, recurrenceMode, completionDate, ".
         "creationDate, deleted, ".
         "GROUP_CONCAT( DISTINCT name ORDER BY name SEPARATOR ',') as tags, list_id ".

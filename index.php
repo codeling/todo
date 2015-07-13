@@ -37,14 +37,12 @@
         <div class="line line_header">
           <span class="todo"><?php echo(TodoLang::_("TODO"));?> <input type="image" src="images/refresh.png" name="refresh" value="refresh" onclick="refresh()" /></span>
           <span class="due"><?php echo(TodoLang::_("DUE"));?></span>
-          <span class="priority"><?php echo(TodoLang::_("PRIORITY"));?></span>
-          <span class="effort"><?php echo(TodoLang::_("EFFORT"));?></span>
+          <span class="start"><?php echo(TodoLang::_("START"));?></span>
         </div>
         <div class="line line_input">
           <span class="todo"><input type="text" id="enter_todo" name="enter_todo" size="60" maxlength="255" /></span>
           <span class="due"><input type="text" id="enter_due" name="enter_due" size="10" maxlength="20" /></span>
-          <span class="priority"><input type="text" id="enter_priority" name="enter_priority" size="3" maxlength="4" /></span>
-          <span class="effort"><input type="text" id="enter_effort" name="enter_effort" size="3" maxlength="4" value="1" /></span>
+          <span class="start"><input type="text" id="enter_start" name="enter_start" size="3" maxlength="4" /></span>
           <span class="actions"><input type="image" src="images/Add.png" name="save" value="<?php echo(TodoLang::_("SAVE"));?>" onclick="enter()" /></span>
         </div>
       </form>
@@ -68,11 +66,11 @@
             <span class="modify_desc"><?php echo(TodoLang::_("TODO"));?>: </span>
             <input type="text" id="modify_todo" name="modify_todo" size="50" maxlength="255" />
           </div><div class="modify_line">
+            <span class="modify_desc"><?php echo(TodoLang::_("START"));?>:</span>
+            <input type="text" id="modify_start" name="modify_start" size="10" maxlength="20" />
+          </div><div class="modify_line">
             <span class="modify_desc"><?php echo(TodoLang::_("DUE"));?>: </span>
             <input type="text" id="modify_due" name="modify_due" size="10" maxlength="20" />
-          </div><div class="modify_line">
-            <span class="modify_desc"><?php echo(TodoLang::_("PRIORITY"));?>:</span>
-            <input type="text" id="modify_priority" name="modify_priority" size="3" maxlength="4" />
           </div><div class="modify_line">
             <span class="modify_desc"><?php echo(TodoLang::_("EFFORT"));?>:</span>
             <input type="text" id="modify_effort" name="modify_effort" size="3" maxlength="4" /><?php echo(TodoLang::_("EFFORT_REMARK"));?>

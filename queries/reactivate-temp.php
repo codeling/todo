@@ -2,19 +2,20 @@
 $sql = "SELECT UTC_TIMESTAMP()";
 $qResult = dbQueryOrDie($db, $sql);
 $creationDate = $qResult->fetch_array()[0];
-$sql = "SELECT id, description, priority, ".
+$sql = "SELECT id, description, ".
+        "date_add(completionDate, INTERVAL 0.8*recurrenceMode DAY) as newStartDate, ".
         "date_add(completionDate, INTERVAL recurrenceMode DAY) as newDueDate, ".
         "notes, recurrenceMode, list_id FROM reviving;";
 $qResult = dbQueryOrDie($db, $sql);
 while ($toReactivate = $qResult->fetch_object())
 {
     $sql = "INSERT INTO todo ".
-            "(creationDate, description, priority, completed, ".
+            "(creationDate, description, startDate, completed, ".
             "dueDate, notes, version, recurrenceMode, list_id) ".
             "VALUES (".
             "'".$creationDate."', ".
             "'".$toReactivate->description."', ".
-            $toReactivate->priority.", ".
+            $toReactivate->startDate.", ".
             "0, ".   // complated
             "'".$toReactivate->newDueDate."', ".
             "'".$toReactivate->notes."', ".

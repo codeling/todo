@@ -44,6 +44,9 @@ $(document).ready(function() {
     createDatePicker("#enter_due");
     createDatePicker("#modify_due");
 
+    createDatePicker("#enter_start");
+    createDatePicker("#modify_start");
+
     $("#smallLog").click(function() {
         updateLog('#log_dialog', logItems.length);
         $('#log_dialog').html($('#log_dialog').html()+

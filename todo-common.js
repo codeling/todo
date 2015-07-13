@@ -8,14 +8,13 @@ var currentlyModified = null;
 var reloadData = {age: 30, list_id: 0};
 var listsData = {user_id: 0};
 
-function Todo(id, todo, due, priority, effort,
+function Todo(id, todo, due, start, effort,
         completed, notes, tags, deleted,
         version, recurrenceMode, completionDate, creationDate, list_id) {
     this.id        = parseInt(id);
     this.todo      = todo;
     this.due       = due;
-    this.priority  = parseInt(priority);
-    this.priority  = isNaN(this.priority) ? 0 : this.priority;
+    this.start     = start;
     this.effort    = parseInt(effort);
     this.completed = parseInt(completed);
     this.notes     = notes;
@@ -31,7 +30,7 @@ function Todo(id, todo, due, priority, effort,
 function copyTodo(item)
 {
     return new Todo(
-        item.id, item.todo, item.due, item.priority, item.effort,
+        item.id, item.todo, item.due, item.start, item.effort,
         item.completed, item.notes, item.tags, item.deleted,
         item.version, item.recurrenceMode, item.completionDate,
         item.creationDate, item.list_id
@@ -58,11 +57,13 @@ function ItemSort(item1, item2) {
                 (
                   (item1.completed == 0) &&
                   (
-                    (item1.priority > item2.priority) ||
-                    (
-                      (item1.priority == item2.priority) &&
-                      ((item1.tags!=null)?item1.tags+item1.todo:item1.todo) <
-                      ((item2.tags!=null)?item2.tags+item2.todo:item2.todo)
+                    (item2.start == null && item1.start != null || (
+                      item1.start < item2.start) ||
+                      (
+                        (item1.start == item2.start) &&
+                        ((item1.tags!=null)?item1.tags+item1.todo:item1.todo) <
+                        ((item2.tags!=null)?item2.tags+item2.todo:item2.todo)
+                      )
                     )
                   )
                 ) || (
@@ -71,7 +72,7 @@ function ItemSort(item1, item2) {
                     (item1.completionDate > item2.completionDate) ||
                     (
                       (item1.completionDate == item2.completionDate) &&
-                      item1.priority > item2.priority
+                      item1.start < item2.start
                     )
                   )
                 )
@@ -79,12 +80,12 @@ function ItemSort(item1, item2) {
             )
           )
         );
-    // log('item1: c='+item1.completed+', p='+item1.priority+'; item2: c='+item2.completed+', p='+item2.priority+'; less: '+less);
+    // log('item1: c='+item1.completed+', p='+item1.start+'; item2: c='+item2.completed+', p='+item2.start+'; less: '+less);
     if (less) {
         return -1;
     } else if (item1.deleted == item2.deleted &&
                item1.completed == item2.completed &&
-               item1.priority == item2.priority &&
+               item1.start == item2.start &&
                item1.todo == item2.todo &&
                item1.tags == item2.tags &&
                (item1.completed == 0 || item1.completionDate == item2.completionDate) ) {
@@ -133,9 +134,9 @@ function modifyLocally(item) {
         return;
     }
     itemList[index].todo     = item.todo;
-    itemList[index].priority = item.priority;
+    itemList[index].start    = (item.start == '') ? null: item.start;
     itemList[index].effort   = item.effort;
-    itemList[index].due      = item.due;
+    itemList[index].due      = (item.due == '') ? null: item.due;
     itemList[index].notes    = item.notes;
     itemList[index].tags     = item.tags;
     itemList[index].version  = item.version;
@@ -364,7 +365,7 @@ function fillModifyForm(id) {
     $('#modify_id').val(item.id);
     $('#modify_todo').val(html_entity_decode(item.todo));
     $('#modify_due').val(formatDate(parseDate(item.due)));
-    $('#modify_priority').val(item.priority);
+    $('#modify_start').val(formatDate(parseDate(item.start)));
     $('#modify_effort').val(item.effort);
     $('#modify_notes').val(html_entity_decode(item.notes));
     $("#modify_tag_edit").tagit("removeAll");
@@ -386,7 +387,7 @@ function emptyModifyForm()
     $('#modify_id').val(-1);
     $('#modify_todo').val("");
     $('#modify_due').val("");
-    $('#modify_priority').val("");
+    $('#modify_start').val("");
     $('#modify_effort').val(1);
     $('#modify_notes').val("");
     $("#modify_tag_edit").tagit("removeAll");
@@ -581,7 +582,6 @@ function reload() {
     for (var i=0; i<itemList.length; ++i) {
         // make "proper" Todo items out of the loaded values:
         itemList[i].id        = parseInt(itemList[i].id);
-        itemList[i].priority  = parseInt(itemList[i].priority);
         itemList[i].effort    = parseInt(itemList[i].effort);
         itemList[i].completed = parseInt(itemList[i].completed);
         itemList[i].version   = parseInt(itemList[i].version);
@@ -638,7 +638,7 @@ function addItem(stuff) {
                 log($T('CREATING_SUCCESSFUL'));
                 $('#enter_todo').val('');
                 $('#enter_due').val('');
-                $('#enter_priority').val('');
+                $('#enter_start').val('');
                 $('#enter_effort').val('1');
                 var index = findItem(-1);
                 var id = parseInt(returnValue);
@@ -666,7 +666,7 @@ function storeItem() {
     var stuff = new Todo(id,
         $('#modify_todo').val(),
         $('#modify_due').val(),
-        $('#modify_priority').val(),
+        $('#modify_start').val(),
         $('#modify_effort').val(),
         0,  // currently not taken into account on server, and not modifiable at server
         $('#modify_notes').val().trim(),
@@ -729,7 +729,7 @@ function enter() {
         todo = todo.substr(colon+1);
     }
     var stuff = new Todo(-1, todo, $('#enter_due').val(),
-            $('#enter_priority').val(), $('#enter_effort').val(),
+            $('#enter_start').val(), $('#enter_effort').val(),
             0, '', tags, 0, 1, 0, null, formatDate(getUTCDate(), true),
             reloadData.list_id);
     addItem(stuff);
