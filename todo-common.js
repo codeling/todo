@@ -729,7 +729,7 @@ function enter() {
         todo = todo.substr(colon+1);
     }
     var stuff = new Todo(-1, todo, $('#enter_due').val(),
-            $('#enter_start').val(), $('#enter_effort').val(),
+            $('#enter_start').val(), 1 /* effort */ ,
             0, '', tags, 0, 1, 0, null, formatDate(getUTCDate(), true),
             reloadData.list_id);
     addItem(stuff);

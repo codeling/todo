@@ -36,13 +36,13 @@
         <input type="hidden" name="user_id" id="user_id" value="<?php echo $curUserID; ?>" />
         <div class="line line_header">
           <span class="todo"><?php echo(TodoLang::_("TODO"));?> <input type="image" src="images/refresh.png" name="refresh" value="refresh" onclick="refresh()" /></span>
-          <span class="due"><?php echo(TodoLang::_("DUE"));?></span>
           <span class="start"><?php echo(TodoLang::_("START"));?></span>
+          <span class="due"><?php echo(TodoLang::_("DUE"));?></span>
         </div>
         <div class="line line_input">
-          <span class="todo"><input type="text" id="enter_todo" name="enter_todo" size="60" maxlength="255" /></span>
-          <span class="due"><input type="text" id="enter_due" name="enter_due" size="10" maxlength="20" /></span>
-          <span class="start"><input type="text" id="enter_start" name="enter_start" size="3" maxlength="4" /></span>
+          <span class="todo"><input type="text" id="enter_todo" name="enter_todo" maxlength="255" /></span>
+          <span class="start"><input type="text" id="enter_start" name="enter_start" maxlength="4" /></span>
+          <span class="due"><input type="text" id="enter_due" name="enter_due" maxlength="20" /></span>
           <span class="actions"><input type="image" src="images/Add.png" name="save" value="<?php echo(TodoLang::_("SAVE"));?>" onclick="enter()" /></span>
         </div>
       </form>
@@ -64,16 +64,16 @@
           <input type="hidden" id="modify_id" name="modify_id" />
           <div class="modify_line">
             <span class="modify_desc"><?php echo(TodoLang::_("TODO"));?>: </span>
-            <input type="text" id="modify_todo" name="modify_todo" size="50" maxlength="255" />
+            <input type="text" id="modify_todo" name="modify_todo" maxlength="255" />
           </div><div class="modify_line">
             <span class="modify_desc"><?php echo(TodoLang::_("START"));?>:</span>
-            <input type="text" id="modify_start" name="modify_start" size="10" maxlength="20" />
+            <input type="text" id="modify_start" name="modify_start" maxlength="20" />
           </div><div class="modify_line">
             <span class="modify_desc"><?php echo(TodoLang::_("DUE"));?>: </span>
-            <input type="text" id="modify_due" name="modify_due" size="10" maxlength="20" />
+            <input type="text" id="modify_due" name="modify_due" maxlength="20" />
           </div><div class="modify_line">
             <span class="modify_desc"><?php echo(TodoLang::_("EFFORT"));?>:</span>
-            <input type="text" id="modify_effort" name="modify_effort" size="3" maxlength="4" /><?php echo(TodoLang::_("EFFORT_REMARK"));?>
+            <input type="text" id="modify_effort" name="modify_effort" maxlength="4" /><?php echo(TodoLang::_("EFFORT_REMARK"));?>
           </div><div class="modify_line">
             <span class="modify_desc"><?php echo(TodoLang::_("RECURRENCE"));?>:</span>
             <select name="modify_recurrenceMode" id="modify_recurrenceMode">
@@ -94,7 +94,7 @@
             </select>
           </div><div class="modify_line">
             <span class="modify_desc"><?php echo(TodoLang::_("NOTES"));?>:</span>
-            <textarea type="text" id="modify_notes" name="modify_notes" rows="10" cols="50"></textarea>
+            <textarea type="text" id="modify_notes" name="modify_notes"></textarea>
           </div><div class="modify_line">
             <span class="modify_desc"><?php echo(TodoLang::_("TAGS"));?>:</span>
             <input type="hidden" id="modify_tags" name="modify_tags" />
@@ -114,10 +114,10 @@
           <div class="modify_line">
             <span class="modify_desc"><?php echo(TodoLang::_("TAG_NAME"));?>: </span>
             <input type="hidden" id="tag_id" name="tag_id" />
-            <input type="text" id="tag_name" name="tag_name" size="20" maxlength="255" />
+            <input type="text" id="tag_name" name="tag_name" maxlength="255" />
           </div><div class="modify_line">
             <span class="modify_desc"><?php echo(TodoLang::_("TAG_COUNT"));?>: </span>
-            <input type="text" id="tag_count" name="tag_count" size="10" readonly="true" />
+            <input type="text" id="tag_count" name="tag_count" readonly="true" />
           </div><div class="modify_line">
             <span class="modify_desc"><?php echo(TodoLang::_("MERGE_TO"));?>: </span>
             <input type="hidden" id="merge_tag" name="merge_tag" />
