@@ -15,7 +15,7 @@ while ($toReactivate = $qResult->fetch_object())
             "VALUES (".
             "'".$creationDate."', ".
             "'".$toReactivate->description."', ".
-            $toReactivate->startDate.", ".
+            "'".$toReactivate->startDate."', ".
             "0, ".   // complated
             "'".$toReactivate->newDueDate."', ".
             "'".$toReactivate->notes."', ".
