@@ -5,7 +5,11 @@ var itemList;
 var lists;
 
 var currentlyModified = null;
-var reloadData = {age: 30, list_id: 0};
+var reloadData = {
+    age: 0,
+    list_id: 0,
+    incomplete: false
+};
 var listsData = {user_id: 0};
 
 function Todo(id, todo, due, start, effort,

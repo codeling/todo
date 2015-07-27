@@ -31,7 +31,9 @@
       </div>
 
       <div id="loadMoreBox">
-          <a href="#" id="loadMoreLink" /><?php echo(TodoLang::_("LOAD_MORE"));?></a>
+          <a href="#" id="loadIncomplete" /><?php echo(TodoLang::_("LOAD_INCCOMPLETE"));?></a>
+          <a href="#" id="loadLessCompleted" /><?php echo(TodoLang::_("LOAD_LESS_COMPLETED"));?></a>
+          <a href="#" id="loadMoreCompleted" /><?php echo(TodoLang::_("LOAD_MORE_COMPLETED"));?></a>
       </div>
 
       <div id="listsContainer">

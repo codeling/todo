@@ -40,7 +40,7 @@
           <span class="due"><?php echo(TodoLang::_("DUE"));?></span>
         </div>
         <div class="line line_input">
-          <span class="todo"><input type="text" id="enter_todo" name="enter_todo" maxlength="255" /></span>
+          <span><input type="text" id="enter_todo" name="enter_todo" maxlength="255" /></span>
           <span class="start"><input type="text" id="enter_start" name="enter_start" maxlength="4" /></span>
           <span class="due"><input type="text" id="enter_due" name="enter_due" maxlength="20" /></span>
           <span class="actions"><input type="image" src="images/Add.png" name="save" value="<?php echo(TodoLang::_("SAVE"));?>" onclick="enter()" /></span>
@@ -57,7 +57,9 @@
       <div id="todoTable">
       </div>
       <div id="loadMoreBox">
-          <a href="#" id="loadMoreLink" /><?php echo(TodoLang::_("LOAD_MORE"));?></a>
+          <a href="#" id="loadIncomplete" /><?php echo(TodoLang::_("LOAD_INCOMPLETE"));?></a>
+          <a href="#" id="loadLessCompleted" /><?php echo(TodoLang::_("LOAD_LESS_COMPLETED"));?></a>
+          <a href="#" id="loadMoreCompleted" /><?php echo(TodoLang::_("LOAD_MORE_COMPLETED"));?></a>
       </div>
       <div id="modify_dialog" style="display:none;">
         <form method="POST" onsubmit="return false;" id="inputform">

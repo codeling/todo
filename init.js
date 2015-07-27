@@ -59,8 +59,21 @@ $(document).ready(function() {
         });
     });
 
-    $('#loadMoreLink').click(function() {
-        reloadData.age += 30;
+    $('#loadMoreCompleted').click(function() {
+        reloadData.age += 10;
+        reload();
+    });
+    $('#loadMoreCompleted').click(function() {
+        reloadData.age -= 10;
+        if (reloadData.age < 0)
+        {
+            reloadData.age = 0;
+        }
+        reload();
+    });
+    $('#loadIncomplete').click(function() {
+        reloadData.incomplete = !reloadData.incomplete;
+        $('#loadIncomplete').text(reloadData.incomplete?$T('LOAD_INCOMPLETE_HIDE'):$T('LOAD_INCOMPLETE'));
         reload();
     });
 

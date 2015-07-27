@@ -25,7 +25,7 @@ h2 {
 #progress,
 #todoTable,
 div.line {
-    min-width: 700px;
+/*    min-width: 700px; */
     padding: 1px 0px;
 }
 div.line_odd {
@@ -34,6 +34,7 @@ div.line_odd {
 #todoTable{
     border: 1px solid black;
     display: inline-block;
+    width: 700px;
 }
 .line_header {
     border-bottom: 1px solid black;
@@ -68,13 +69,18 @@ input[type="image"]
 }
 .todo {
     display:inline-block;
-    width: 35%;
+    width: 55%;
     text-align: left;
     padding-left: 4px !important;
 }
-.todo input[type="text"] {
-    width: 85%;
+#enter_todo {
+    width: 28%;
 }
+/*
+.todo input[type="text"] {
+    width: 35%;
+}
+*/
 .todo_completed {
     color: #777;
 }
@@ -109,7 +115,7 @@ input[disabled="disabled"] {
 }
 .due, .start {
     display:inline-block;
-    width: 120px;
+    width: 100px;
     text-align: left;
 }
 #working {
