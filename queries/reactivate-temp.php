@@ -3,7 +3,7 @@ $sql = "SELECT UTC_TIMESTAMP()";
 $qResult = dbQueryOrDie($db, $sql);
 $creationDate = $qResult->fetch_array()[0];
 $sql = "SELECT id, description, ".
-        "date_add(completionDate, INTERVAL (recurrenceMode - LEAST(GREATEST(0.9*recurrenceMode, 2), 21)) DAY) as newStartDate, ".
+        "date_add(completionDate, INTERVAL (recurrenceMode - LEAST(GREATEST(0.1*recurrenceMode, 0), 21)) DAY) as newStartDate, ".
         "date_add(completionDate, INTERVAL recurrenceMode DAY) as newDueDate, ".
         "notes, recurrenceMode, list_id FROM reviving;";
 $qResult = dbQueryOrDie($db, $sql);

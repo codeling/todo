@@ -63,7 +63,7 @@ $(document).ready(function() {
         reloadData.age += 10;
         reload();
     });
-    $('#loadMoreCompleted').click(function() {
+    $('#loadLessCompleted').click(function() {
         reloadData.age -= 10;
         if (reloadData.age < 0)
         {
