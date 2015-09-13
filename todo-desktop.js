@@ -40,7 +40,13 @@ function renderItem(it, lineNr) {
     var dueString = (it.completed == 0) ? formatDate(dueDate): formatDate(complDate);
     var line = getTodoItemStart(it, lineNr);
     var tagbasename = 'todo_tags_';
-    line += getTodoTitleHtml(it, lineNr, tagbasename, 'todo');
+    line += getTodoTitleHtml(it, lineNr, tagbasename, 'todo')+
+            '<span class="modify"><input type="image" value="'+
+               $T('EDIT')+'" id="modify'+it.id+
+               '" src="images/pencil.png" /></span>'+
+            '<span class="dotoday"><input type="image" value"'+
+               $T('DOTODAY')+'" id="dotoday'+it.id+
+               '" src="images/dotoday.png" /></span>';
     line +=  '<span class="start">'+((it.start == null)?'undef':formatDate(parseDate(it.start)))+'</span>'+
         '<span class="due">'+ dueString+
                 ((it.completed==0 && dueDate != null && (today - dueDate) > 0) ?
@@ -50,10 +56,7 @@ function renderItem(it, lineNr) {
         '<span class="completed"><input type="checkbox" id="completed'+it.id+'" '+
             ((it.completed==1)?'checked="true" ':'')+'/></span>';
     if (it.deleted == 0) {
-        line += '<span class="modify"><input type="image" value="'+
-               $T('EDIT')+'" id="modify'+it.id+
-               '" src="images/pencil.png" /></span>'+
-           '<span class="trash"><input type="image" value="'+
+        line +=            '<span class="trash"><input type="image" value="'+
                $T('DELETE')+'" id="trash'+it.id+
                '" src="images/trash_red.png" /></span>';
     } else {
@@ -300,5 +303,11 @@ $(document).ready(function() {
         singleField: true,
         singleFieldNode: $('#merge_tag'),
         tagLimit: 1
+    });
+    $("#enter_start").change(function() {
+        if ($("#enter_due").val() == "")
+        {
+            $("#enter_due").val($("#enter_start").val());
+        }
     });
 });

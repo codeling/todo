@@ -31,7 +31,7 @@
       </div>
 
       <div id="loadMoreBox">
-          <a href="#" id="loadIncomplete" /><?php echo(TodoLang::_("LOAD_INCCOMPLETE"));?></a>
+          <a href="#" id="loadIncomplete" /><?php echo(TodoLang::_("LOAD_INCOMPLETE"));?></a>
           <a href="#" id="loadLessCompleted" /><?php echo(TodoLang::_("LOAD_LESS_COMPLETED"));?></a>
           <a href="#" id="loadMoreCompleted" /><?php echo(TodoLang::_("LOAD_MORE_COMPLETED"));?></a>
       </div>
@@ -61,11 +61,11 @@
           <label class="modify_desc" for="modify_todo"><?php echo(TodoLang::_("TODO"));?>: </label>
           <input type="text" id="modify_todo" name="modify_todo" maxlength="255" />
         </div><div class="modify_line" data-role="fieldcontain">
-          <label class="modify_desc" for="modify_due"><?php echo(TodoLang::_("DUE"));?>: </label>
-          <input type="text" id="modify_due" name="modify_due" maxlength="20" />
-        </div><div class="modify_line" data-role="fieldcontain">
           <label class="modify_desc" for="modify_start"><?php echo(TodoLang::_("START"));?>:</label>
           <input type="text" id="modify_start" name="modify_start" maxlength="4" />
+        </div><div class="modify_line" data-role="fieldcontain">
+          <label class="modify_desc" for="modify_due"><?php echo(TodoLang::_("DUE"));?>: </label>
+          <input type="text" id="modify_due" name="modify_due" maxlength="20" />
         </div><div class="modify_line" data-role="fieldcontain">
           <label class="modify_desc" for="modify_effort"><?php echo(TodoLang::_("EFFORT").TodoLang::_("EFFORT_REMARK"));?>:</label>
           <input type="text" id="modify_effort" name="modify_effort" maxlength="4" />

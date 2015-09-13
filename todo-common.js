@@ -444,14 +444,29 @@ function formatDate(date, includeTime) {
     return result;
 }
 
+function doToday(id)
+{
+    var idx = findItem(id);
+    var today = new Date();
+    if (itemList[idx].start == null || parseDate(itemList[idx].start) > today)
+    {
+        itemList[idx].start = formatDate(getUTCDate(), false);
+        storeItemRemote(itemList[idx], function() {});
+    }
+}
 
 function setListener(id) {
     $('#completed'+id).click(function() {
         toggleCompleted(id);
     });
-    if ($('#modify'+id).length !== 0) {
+    if ($('#modify'+id).length !== 0) { // needed for mobile version - there we don't have the modifyID element
         $('#modify'+id).click(function() {
             modifyItem(id);
+        });
+    }
+    if ($('#dotoday'+id).length !== 0) { // needed for mobile version - there we don't have the modifyID element
+        $('#dotoday'+id).click(function() {
+            doToday(id);
         });
     }
     $('#trash'+id).click(function() {
@@ -660,6 +675,39 @@ function addItem(stuff) {
     });
 }
 
+function storeItemRemote(stuff, onsucc) {
+    currentlyModified = stuff;
+    log($T('SAVING_MODIFICATIONS'));
+    $.ajax({
+        type: 'POST',
+        url: 'queries/update.php',
+        data: stuff,
+        success: function(returnValue) {
+            if (isNaN(returnValue)) {
+                log($T('ERROR_WHILE_MODIFYING')+returnValue);
+                alert($T('ERROR_WHILE_MODIFYING')+returnValue);
+            // just keep dialog open...then changed values aren't lost
+            } else {
+                reloadTagList(); // a tag might have been added or removed
+                // if everything went fine, close dialog:
+                log($T('SAVING_SUCCESSFUL'));
+                onsucc();
+                // only set locally now, else it could be confusing
+                currentlyModified.version = currentlyModified.version+1;
+                if (currentlyModified.list_id != reloadData.list_id) {
+                    deleteLocally(findItem(currentlyModified.id));
+                } else {
+                    modifyLocally(currentlyModified);
+                }
+                currentlyModified = null;
+            }
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            alert($T('TRANSMISSION_ERROR'));
+        }
+    });
+}
+
 function storeItem() {
     var id = parseInt($('#modify_id').val());
     var idx = findItem(id);
@@ -682,35 +730,8 @@ function storeItem() {
         itemList[idx].creationDate,
         $('#modify_list').val()
     );
-    currentlyModified = stuff;
-    log($T('SAVING_MODIFICATIONS'));
-    $.ajax({
-        type: 'POST',
-        url: 'queries/update.php',
-        data: stuff,
-        success: function(returnValue) {
-            if (isNaN(returnValue)) {
-                log($T('ERROR_WHILE_MODIFYING')+returnValue);
-                alert($T('ERROR_WHILE_MODIFYING')+returnValue);
-            // just keep dialog open...then changed values aren't lost
-            } else {
-                reloadTagList(); // a tag might have been added or removed
-                // if everything went fine, close dialog:
-                log($T('SAVING_SUCCESSFUL'));
-                $('#modify_dialog').dialog('close');
-                // only set locally now, else it could be confusing
-                currentlyModified.version = currentlyModified.version+1;
-                if (currentlyModified.list_id != reloadData.list_id) {
-                    deleteLocally(findItem(currentlyModified.id));
-                } else {
-                    modifyLocally(currentlyModified);
-                }
-                currentlyModified = null;
-            }
-        },
-        error: function(jqXHR, textStatus, errorThrown) {
-            alert($T('TRANSMISSION_ERROR'));
-        }
+    storeItemRemote(stuff, function() {
+        $('#modify_dialog').dialog('close');
     });
 }
 
