@@ -511,6 +511,7 @@ function renderLists() {
              if (lists[i].name == $(this).text()) {
                  reloadData.list_id = lists[i].id;
                  reload();
+				 reloadTagList();
                  break;
              }
         }
@@ -770,9 +771,11 @@ function refresh() {
 }
 
 function reloadTagList() {
+    var stuff = new Object();
+    stuff.list_id = reloadData.list_id;
     $.ajax({
         url: "queries/query-tags.php",
-        data: {q: ''},
+        data: stuff,
         dataType: "json",
         success: function (tags) {
             tagList = tags;
