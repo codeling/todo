@@ -304,10 +304,11 @@ $(document).ready(function() {
         singleFieldNode: $('#merge_tag'),
         tagLimit: 1
     });
-    $("#enter_start").change(function() {
-        if ($("#enter_due").val() == "")
+    $('#enter_start').change(function() {
+        if ($('#enter_due').val() == "")
         {
-            $("#enter_due").val($("#enter_start").val());
+            $('#enter_due').val($('#enter_start').val());
         }
     });
+
 });

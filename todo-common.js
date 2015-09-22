@@ -370,6 +370,7 @@ function fillModifyForm(id) {
     $('#modify_todo').val(html_entity_decode(item.todo));
     $('#modify_due').val(formatDate(parseDate(item.due)));
     $('#modify_start').val(formatDate(parseDate(item.start)));
+    $('#modify_start').data('oldVal', formatDate(parseDate(item.start)));
     $('#modify_effort').val(item.effort);
     $('#modify_notes').val(html_entity_decode(item.notes));
     $("#modify_tag_edit").tagit("removeAll");
@@ -511,7 +512,7 @@ function renderLists() {
              if (lists[i].name == $(this).text()) {
                  reloadData.list_id = lists[i].id;
                  reload();
-				 reloadTagList();
+                 reloadTagList();
                  break;
              }
         }

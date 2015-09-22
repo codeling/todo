@@ -8,6 +8,15 @@ function createDatePicker(tagid) {
     });
 }
 
+// from https://stackoverflow.com/questions/3224834/get-difference-between-2-dates-in-javascript
+function dateDiffInDays(a, b) {
+    var _MS_PER_DAY = 1000 * 60 * 60 * 24;
+    // Discard the time and time-zone information.
+    var utc1 = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
+    var utc2 = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate());
+    return Math.floor((utc2 - utc1) / _MS_PER_DAY);
+}
+
 var tagList;
 
 $(document).ready(function() {
@@ -92,6 +101,18 @@ $(document).ready(function() {
         singleField: true,
         singleFieldNode: $('#modify_tags')
     });
+
+    $('#modify_start').change(function() {
+        var oldVal = parseDate($('#modify_start').data('oldVal'));
+        var newVal = parseDate($('#modify_start').val());
+        var dayDiff = dateDiffInDays(oldVal, newVal);
+        var newDueDate = new Date();
+        newDueDate.setDate(parseDate($('#modify_due').val()).getDate()+dayDiff);
+        // check how far apart start and due were before
+        $('#modify_due').val(formatDate(newDueDate));
+        $('#modify_start').data('oldVal', $('#modify_start').val());
+    });
+
 
     reloadTagList();
 
