@@ -193,9 +193,12 @@ function emptyTrash() {
     if (!confirm($T('CONFIRM_EMPTY_TRASH'))) {
         return;
     }
+    var stuff = new Object();
+    stuff.list_id = reloadData.list_id;
     $.ajax( {
         type: 'GET',
         url: 'queries/empty-trash.php',
+		data: stuff,
         success: function(returnValue) {
             if (returnValue != 1) {
                 log($T('ERROR_WHILE_EMPTYING_TRASH')+returnValue);
