@@ -673,6 +673,7 @@ function addItem(stuff) {
         },
         error: function(jqXHR, textStatus, errorThrown) {
             alert($T('TRANSMISSION_ERROR'));
+            deleteLocally(findItem(-1));
         }
     });
 }

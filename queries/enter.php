@@ -8,8 +8,18 @@
     $tags = explode(",", $_REQUEST['tags']);
     // checks:
     if (!checkDateStr($due)) {
-        $due = '';
-    } 
+		echo 'Invalid due date!';
+		die;
+    }
+	if (!checkDateStr($start)) {
+		echo 'Invalid start date!';
+		die;
+	}
+	if (convertStrToDate($due) < convertStrToDate($start))
+	{
+		echo 'Due date is earlier than start date!';
+		die;
+	}
     if ($todo == '') {
         echo 'Die Beschreibung darf nicht leer sein!';
         die;

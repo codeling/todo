@@ -108,11 +108,25 @@ $(document).ready(function() {
         var dayDiff = dateDiffInDays(oldVal, newVal);
         var newDueDate = new Date();
         newDueDate.setDate(parseDate($('#modify_due').val()).getDate()+dayDiff);
-        // check how far apart start and due were before
         $('#modify_due').val(formatDate(newDueDate));
         $('#modify_start').data('oldVal', $('#modify_start').val());
     });
 
+    $('#enter_start').change(function() {
+        var oldVal = parseDate($('#enter_start').data('oldVal'));
+        if (oldVal != null)
+        {
+            var newVal = parseDate($('#enter_start').val());
+            var dayDiff = dateDiffInDays(oldVal, newVal);
+            var newDueDate = new Date();
+            if ($('#enter_due').val() != null)
+            {
+                newDueDate.setDate(parseDate($('#enter_due').val()).getDate()+dayDiff);
+                $('#enter_due').val(formatDate(newDueDate));
+            }
+        }
+          $('#enter_start').data('oldVal', $('#enter_start').val());
+    });
 
     reloadTagList();
 
