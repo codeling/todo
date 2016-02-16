@@ -198,7 +198,7 @@ function emptyTrash() {
     $.ajax( {
         type: 'GET',
         url: 'queries/empty-trash.php',
-		data: stuff,
+        data: stuff,
         success: function(returnValue) {
             if (returnValue != 1) {
                 log($T('ERROR_WHILE_EMPTYING_TRASH')+returnValue);
@@ -376,7 +376,7 @@ function fillModifyForm(id) {
     $('#modify_start').data('oldVal', formatDate(parseDate(item.start)));
     $('#modify_effort').val(item.effort);
     $('#modify_notes').val(html_entity_decode(item.notes));
-    $("#modify_tag_edit").tagit("removeAll");
+    $('#modify_tag_edit').tagit('removeAll');
     var tags = (item.tags == null) ? new Array() : item.tags.split(",");
     for (var i=0; i<tags.length; i++)
     {
@@ -387,18 +387,18 @@ function fillModifyForm(id) {
     $('#modify_recurrenceMode option[value="'+item.recurrenceMode+'"]').prop('selected', true);
 
     $('#modify_list option:selected').prop('selected', false);
-    $('#modify_list option[value="'+item.list_id+'"]').prop('selected', true);
-}
+    $('#modify_list option[value="'+item.list_id+'"]').prop('selected', true); }
 
 function emptyModifyForm()
 {
     $('#modify_id').val(-1);
-    $('#modify_todo').val("");
-    $('#modify_due').val("");
-    $('#modify_start').val("");
+    $('#modify_todo').val('');
+    $('#modify_due').val('');
+    $('#modify_start').val('');
+    $('#modify_start').data('oldVal', '');
     $('#modify_effort').val(1);
-    $('#modify_notes').val("");
-    $("#modify_tag_edit").tagit("removeAll");
+    $('#modify_notes').val('');
+    $('#modify_tag_edit').tagit('removeAll');
     $('#modify_recurrenceMode option:selected').prop('selected', false);
 }
 
@@ -419,10 +419,10 @@ function parseDate(dateStr) {
     if (parts.length < 1 || parts.length > 2) {
         return null;
     }
-    var datePart = parts[0].split("-");
+    var datePart = parts[0].split('-');
     var timePart = new Array(0, 0, 0);
     if (parts.length > 1) {
-         timePart = parts[1].split(":");
+         timePart = parts[1].split(':');
     }
     return new Date(Date.UTC(datePart[0], datePart[1]-1, datePart[2], timePart[0], timePart[1], timePart[2], 0));
 }
@@ -543,7 +543,7 @@ function getTodoWithTag(filterTags)
         if (itemList[i].tags == null) {
             continue;
         }
-        var itemTags = itemList[i].tags.split(",");
+        var itemTags = itemList[i].tags.split(',');
         if (arrayContainsAny(filterTags, itemTags)) {
             result.push(itemList[i]);
         }
@@ -555,7 +555,7 @@ function filterList() {
     if ($('#filter_tags').length == 0 || $('#filter_tags').val() == '') {
         result = itemList.slice(0);
     } else {
-        filterTags = $('#filter_tags').val().split(",");
+        filterTags = $('#filter_tags').val().split(',');
         result = getTodoWithTag(filterTags);
     }
     result.sort(ItemSort);
@@ -663,6 +663,7 @@ function addItem(stuff) {
                 $('#enter_todo').val('');
                 $('#enter_due').val('');
                 $('#enter_start').val('');
+                $('#enter_start').data('oldVal', '');
                 $('#enter_effort').val('1');
                 var index = findItem(-1);
                 var id = parseInt(returnValue);
@@ -752,7 +753,7 @@ function enter() {
         return;
     }
     var todo = $('#enter_todo').val();
-    var colon = todo.lastIndexOf(":");
+    var colon = todo.lastIndexOf(':');
     var tags = '';
     if (colon != -1) {
         tags = todo.substr(0, colon);
@@ -779,9 +780,9 @@ function reloadTagList() {
     var stuff = new Object();
     stuff.list_id = reloadData.list_id;
     $.ajax({
-        url: "queries/query-tags.php",
+        url: 'queries/query-tags.php',
         data: stuff,
-        dataType: "json",
+        dataType: 'json',
         success: function (tags) {
             tagList = tags;
             fillTagList(tagList);
