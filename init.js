@@ -17,6 +17,13 @@ function dateDiffInDays(a, b) {
     return Math.floor((utc2 - utc1) / _MS_PER_DAY);
 }
 
+// from http://stackoverflow.com/a/19691491
+function addDays(date, days) {
+    var result = new Date(date);
+    result.setDate(result.getDate() + days);
+    return result;
+}
+
 var tagList;
 
 $(document).ready(function() {
@@ -106,8 +113,8 @@ $(document).ready(function() {
         var oldVal = parseDate($('#modify_start').data('oldVal'));
         var newVal = parseDate($('#modify_start').val());
         var dayDiff = dateDiffInDays(oldVal, newVal);
-        var newDueDate = new Date();
-        newDueDate.setDate(parseDate($('#modify_due').val()).getDate()+dayDiff);
+        var curDue  = parseDate($('#modify_due').val())
+        var newDueDate = addDays(curDue, dayDiff);
         $('#modify_due').val(formatDate(newDueDate));
         $('#modify_start').data('oldVal', $('#modify_start').val());
     });
