@@ -1,4 +1,5 @@
 <?php
+header('Content-type: application/x-javascript');
 require_once("lang.php");
 ?>
 var l10n = <?php echo json_encode(TodoLang::$langstrings); ?>;

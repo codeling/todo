@@ -1,4 +1,6 @@
-<?php include("todo-core.php"); ?>
+<?php
+header('Content-type: application/x-javascript');
+include("todo-core.php"); ?>
 var logItems = new Array('<?php echo(TodoLang::_("STARTING_LOG"));?>');
 var logLines = 3; /* const, but IE doesn't support that keyword */
 var logVisible = true;
