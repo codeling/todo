@@ -147,7 +147,7 @@ ul#modify_tag_edit {
     padding: 0;
 }
 ul.ui-autocomplete {
-    z-index: 102;
+    z-index: 200;
 }
 #progress {
     border: 1px solid black;
