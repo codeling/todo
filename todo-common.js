@@ -61,12 +61,19 @@ function ItemSort(item1, item2) {
                 (
                   (item1.completed == 0) &&
                   (
-                    (item2.start == null && item1.start != null || (
-                      item1.start < item2.start) ||
+                    (item2.start == null && item1.start != null) ||
+                    (
+                      (item1.start < item2.start) ||
                       (
                         (item1.start == item2.start) &&
-                        ((item1.tags!=null)?item1.tags+item1.todo:item1.todo) <
-                        ((item2.tags!=null)?item2.tags+item2.todo:item2.todo)
+                        (
+                          (item2.due == null && item1.due != null) ||
+                          (
+                            (item1.due < item2.due) ||
+                            (item1.due == item2.due &&
+                             item1.todo < item2.todo)
+                          )
+                        )
                       )
                     )
                   )
@@ -76,7 +83,16 @@ function ItemSort(item1, item2) {
                     (item1.completionDate > item2.completionDate) ||
                     (
                       (item1.completionDate == item2.completionDate) &&
-                      item1.start < item2.start
+                      (
+                        (item2.start == null && item1.start != null) ||
+                        (
+                          (item1.start < item2.start) ||
+                          (
+                            (item1.start == item2.start) ||
+                            (item1.todo < item2.todo)
+                          )
+                        )
+                      )
                     )
                   )
                 )
