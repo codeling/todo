@@ -11,6 +11,7 @@
     $tags     = explode(",", $_REQUEST['tags']);
     $version  = (int)$_REQUEST['version'];
     $recurrenceMode = (int)$_REQUEST['recurrenceMode'];
+    $recurrenceAnchor = (int)$_REQUEST['recurrenceAnchor'];
     $list_id  = (int)$_REQUEST['list_id'];
     if (strcmp($todo, '') == 0) {
         echo "Die Beschreibung darf nicht leer sein!";
@@ -31,6 +32,7 @@
                 "notes=$notes, ".
                 "version=".($version+1).", ".
                 "recurrenceMode=".$recurrenceMode.", ".
+                "recurrenceAnchor=".$recurrenceAnchor.", ".
                 "list_id=$list_id ".
             "WHERE id=$id AND version=$version";
     dbQueryOrDie($db, $sql);

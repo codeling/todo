@@ -90,6 +90,12 @@
             <option value="1460"><?php echo(TodoLang::_("REPEAT_FOURYEARLY"));?></option>
             <option value="1805"><?php echo(TodoLang::_("REPEAT_FIVEYEARLY"));?></option>
           </select>
+        </div><div class="modify_line recurrence_dependent" data-role="fieldcontain">
+          <label class="modify_desc" for="modify_recurrenceAnchor"><?php echo(TodoLang::_("RECURRENCE_ANCHOR"));?>:</label>
+          <select name="modify_recurrenceAnchor" id="modify_recurrenceAnchor">
+            <option value="0"><?php echo(TodoLang::_("REPEAT_ANCHOR_COMPLETIONDATE"));?></option>
+            <option value="1"><?php echo(TodoLang::_("REPEAT_ANCHOR_ENDDATE"));?></option>
+          </select>
         </div><div class="modify_line" data-role="fieldcontain">
           <label class="modify_desc" for="modify_tags"><?php echo(TodoLang::_("TAGS"));?>:</label>
           <input type="hidden" id="modify_tags" name="modify_tags" />
@@ -99,11 +105,11 @@
           <select id="modify_list" name="modify_list"></select>
         </div>
         <div data-theme="a" data-role="footer" data-position="fixed">
-	  <input type="button" id="restoreBtn" value="<?php echo(TodoLang::_("RESTORE"));?>" />
-	  <input type="button" id="toggleBtn" value="<?php echo(TodoLang::_("TOGGLE"));?>" />
+          <input type="button" id="restoreBtn" value="<?php echo(TodoLang::_("RESTORE"));?>" />
+          <input type="button" id="toggleBtn" value="<?php echo(TodoLang::_("TOGGLE"));?>" />
           <input type="button" id="deleteBtn" value="<?php echo(TodoLang::_("DELETE"));?>" />
           <input type="button" id="saveBtn" value="<?php echo(TodoLang::_("SAVE"));?>" />
-	  <input type="button" id="cancelBtn" value="<?php echo(TodoLang::_("CANCEL"));?>" />
+          <input type="button" id="cancelBtn" value="<?php echo(TodoLang::_("CANCEL"));?>" />
         </div>
       </form>
     </div>

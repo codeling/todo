@@ -3,25 +3,29 @@ $sql = "SELECT UTC_TIMESTAMP()";
 $qResult = dbQueryOrDie($db, $sql);
 $creationDate = $qResult->fetch_array()[0];
 $sql = "SELECT id, description, ".
-        "date_add(completionDate, INTERVAL (recurrenceMode - LEAST(GREATEST(0.1*recurrenceMode, 0), 21)) DAY) as newStartDate, ".
-        "date_add(completionDate, INTERVAL recurrenceMode DAY) as newDueDate, ".
-        "notes, recurrenceMode, list_id FROM reviving;";
+        "date_add(completionDate, INTERVAL (recurrenceMode - LEAST(GREATEST(0.1*recurrenceMode, 0), 21)) DAY) as newStartDate1, ".
+        "date_add(completionDate, INTERVAL recurrenceMode DAY) as newDueDate1, ".
+        "date_add(dueDate, INTERVAL (recurrenceMode - LEAST(GREATEST(0.1*recurrenceMode, 0), 21)) DAY) as newStartDate2, ".
+        "date_add(dueDate, INTERVAL recurrenceMode DAY) as newDueDate2, ".
+
+        "notes, recurrenceMode, recurrenceAnchor, list_id FROM reviving;";
 $qResult = dbQueryOrDie($db, $sql);
 while ($toReactivate = $qResult->fetch_object())
 {
     $sql = "INSERT INTO todo ".
             "(creationDate, description, startDate, completed, ".
-            "dueDate, notes, version, recurrenceMode, list_id) ".
+            "dueDate, notes, version, recurrenceMode, recurrenceAnchor, list_id) ".
             "VALUES (".
             "'".$creationDate."', ".
             "'".$toReactivate->description."', ".
-            "'".$toReactivate->newStartDate."', ".
-            "0, ".   // complated
-            "'".$toReactivate->newDueDate."', ".
+            "'".((((int)$toReactivate->recurrenceAnchor)==0)?$toReactivate->newStartDate1:$toReactivate->newStartDate2)."', ".
+            "0, ".   // completed
+            "'".((((int)$toReactivate->recurrenceAnchor)==0)?$toReactivate->newDueDate1:$toReactivate->newDueDate2)."', ".
             "'".$toReactivate->notes."', ".
             "1, ".   // version
-                $toReactivate->recurrenceMode.", ".
-                $toReactivate->list_id.")";
+            $toReactivate->recurrenceMode.", ".
+            $toReactivate->recurrenceAnchor.", ".
+            $toReactivate->list_id.")";
     dbQueryOrDie($db, $sql) ;
 
     $newId = $db->insert_id;

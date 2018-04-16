@@ -2,7 +2,7 @@
 function todoListQuery($list_id, $incomplete = true, $age = 0)
 {
     return "SELECT todo.id, description as todo, dueDate as due, startDate as start, effort, ".
-        "completed, notes, version, recurrenceMode, completionDate, ".
+        "completed, notes, version, recurrenceMode, recurrenceAnchor, completionDate, ".
         "creationDate, deleted, ".
         "GROUP_CONCAT( DISTINCT name ORDER BY name SEPARATOR ',') as tags, list_id ".
         "FROM todo ".

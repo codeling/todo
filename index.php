@@ -94,6 +94,12 @@
               <option value="1460"><?php echo(TodoLang::_("REPEAT_FOURYEARLY"));?></option>
               <option value="1805"><?php echo(TodoLang::_("REPEAT_FIVEYEARLY"));?></option>
             </select>
+          </div><div class="modify_line recurrence_dependent">
+            <span class="modify_desc"><?php echo(TodoLang::_("RECURRENCE_ANCHOR"));?>:</span>
+            <select name="modify_recurrenceAnchor" id="modify_recurrenceAnchor">
+              <option value="0"><?php echo(TodoLang::_("REPEAT_ANCHOR_COMPLETIONDATE"));?></option>
+              <option value="1"><?php echo(TodoLang::_("REPEAT_ANCHOR_ENDDATE"));?></option>
+            </select>
           </div><div class="modify_line">
             <span class="modify_desc"><?php echo(TodoLang::_("NOTES"));?>:</span>
             <textarea type="text" id="modify_notes" name="modify_notes"></textarea>

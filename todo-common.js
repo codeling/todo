@@ -14,7 +14,8 @@ var listsData = {user_id: 0};
 
 function Todo(id, todo, due, start, effort,
         completed, notes, tags, deleted,
-        version, recurrenceMode, completionDate, creationDate, list_id) {
+        version, recurrenceMode, recurrenceAnchor,
+        completionDate, creationDate, list_id) {
     this.id        = parseInt(id);
     this.todo      = todo;
     this.due       = due;
@@ -26,6 +27,7 @@ function Todo(id, todo, due, start, effort,
     this.deleted   = parseInt(deleted);
     this.version   = parseInt(version);
     this.recurrenceMode = parseInt(recurrenceMode);
+    this.recurrenceAnchor = parseInt(recurrenceAnchor);
     this.completionDate = completionDate;
     this.creationDate = creationDate;
     this.list_id   = list_id;
@@ -36,8 +38,8 @@ function copyTodo(item)
     return new Todo(
         item.id, item.todo, item.due, item.start, item.effort,
         item.completed, item.notes, item.tags, item.deleted,
-        item.version, item.recurrenceMode, item.completionDate,
-        item.creationDate, item.list_id
+        item.version, item.recurrenceMode, item.recurrenceAnchor,
+        item.completionDate, item.creationDate, item.list_id
     );
 }
 
@@ -161,6 +163,7 @@ function modifyLocally(item) {
     itemList[index].tags     = item.tags;
     itemList[index].version  = item.version;
     itemList[index].recurrenceMode = item.recurrenceMode;
+    itemList[index].recurrenceAnchor = item.recurrenceAnchor;
     renderTable();
 }
 
@@ -402,6 +405,9 @@ function fillModifyForm(id) {
     $('#modify_recurrenceMode option:selected').prop('selected', false);
     $('#modify_recurrenceMode option[value="'+item.recurrenceMode+'"]').prop('selected', true);
 
+    $('#modify_recurrenceAnchor option:selected').prop('selected', false);
+    $('#modify_recurrenceAnchor option[value="'+item.recurrenceAnchor+'"]').prop('selected', true);
+
     $('#modify_list option:selected').prop('selected', false);
     $('#modify_list option[value="'+item.list_id+'"]').prop('selected', true); }
 
@@ -416,6 +422,7 @@ function emptyModifyForm()
     $('#modify_notes').val('');
     $('#modify_tag_edit').tagit('removeAll');
     $('#modify_recurrenceMode option:selected').prop('selected', false);
+    $('#modify_recurrenceAnchor option:selected').prop('selected', false);
 }
 
 function fillStr(str, fillchar, count) {
@@ -626,6 +633,7 @@ function reload() {
         itemList[i].completed = parseInt(itemList[i].completed);
         itemList[i].version   = parseInt(itemList[i].version);
         itemList[i].recurrenceMode = parseInt(itemList[i].recurrenceMode);
+        itemList[i].recurrenceAnchor = parseInt(itemList[i].recurrenceAnchor);
     }
     renderTable();
 
@@ -749,6 +757,7 @@ function storeItem() {
         0,  // deleted items cannot be modified
         itemList[idx].version,
         $('#modify_recurrenceMode').val(),
+        $('#modify_recurrenceAnchor').val(),
         itemList[idx].completionDate,
         itemList[idx].creationDate,
         $('#modify_list').val()
