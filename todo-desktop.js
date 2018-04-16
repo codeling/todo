@@ -242,7 +242,6 @@ $(document).ready(function() {
         });
         return false;
     });
-
     $('#filter_tag_edit').tagit({
         autocomplete: {
             source: function( search, showChoices) {
@@ -310,5 +309,7 @@ $(document).ready(function() {
             $('#enter_due').val($('#enter_start').val());
         }
     });
-
+    $('#modify_recurrenceMode').change(function(e) {
+        toggleRecurrenceAnchor();
+    });
 });

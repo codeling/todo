@@ -379,6 +379,20 @@ function html_entity_decode(str) {
     return txtEl.value;
 }
 
+function toggleRecurrenceAnchor(e)
+{
+    var val = $("#modify_recurrenceMode option:selected").val();
+    if (val == 0)
+    {
+        $('.recurrence_dependent').hide();
+    }
+    else
+    {
+        $('.recurrence_dependent').show();
+    }
+}
+
+
 function fillModifyForm(id) {
     log($T('OPENING_UPDATE_DIALOG'));
     var index = findItem(id);
@@ -409,7 +423,9 @@ function fillModifyForm(id) {
     $('#modify_recurrenceAnchor option[value="'+item.recurrenceAnchor+'"]').prop('selected', true);
 
     $('#modify_list option:selected').prop('selected', false);
-    $('#modify_list option[value="'+item.list_id+'"]').prop('selected', true); }
+    $('#modify_list option[value="'+item.list_id+'"]').prop('selected', true);
+    toggleRecurrenceAnchor();
+}
 
 function emptyModifyForm()
 {

@@ -158,6 +158,9 @@ $(document).ready(function() {
         }
         $.mobile.changePage('#listPage', { transition: "slide" });
     });
+    $('#modify_recurrenceMode').change(function(e) {
+        toggleRecurrenceAnchor();
+    });
 });
 
 function fillTagList(choices)
