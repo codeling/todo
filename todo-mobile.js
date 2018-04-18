@@ -98,6 +98,13 @@ $(document).ready(function() {
     $('#emptyTrashBtn').click(function() {
         emptyTrash();
     });
+    $('#showLogBtn').click(function() {
+        updateLog('#logtext', logItems.length);
+        $.mobile.changePage('#logPage', { transition: "slide" });
+    });
+    $('#statisticsBtn').click(function() {
+        window.location = 'https://todo.bfroehler.info/statistik.php';
+    });
     // Fix bug resulting from combination of tag-it and jquery-mobile:
     // https://github.com/aehlke/tag-it/issues/274
     $('#modifyPage').on('pageshow', function(event) {
@@ -129,9 +136,7 @@ $(document).ready(function() {
         trashItem(id);
         $.mobile.changePage('#listPage', { transition: "slide" });
     });
-    $('#cancelBtn').click(function() {
-        var id = parseInt($('#modify_id').val());
-        var index = findItem(id);
+    $('#cancelBtn,#backBtn').click(function() {
         $.mobile.changePage('#listPage', { transition: "slide" });
     });
     $('#saveBtn').click(function() {
