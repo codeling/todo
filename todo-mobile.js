@@ -19,6 +19,8 @@ function showDetails(itemid)
     $.mobile.changePage('#modifyPage', { transition: "slide" });
     fillModifyForm(itemid);
     $('#modify_recurrenceMode').selectmenu("refresh", true);
+    $('#modify_recurrenceAnchor').selectmenu("refresh", true);
+    toggleRecurrenceAnchor();
 }
 
 function newTodo()
@@ -26,6 +28,8 @@ function newTodo()
     $.mobile.changePage('#modifyPage', { transition: "slide" });
     fillModifyForm(-1);
     $('#modify_recurrenceMode').selectmenu("refresh", true);
+    $('#modify_recurrenceAnchor').selectmenu("refresh", true);
+    toggleRecurrenceAnchor();
 }
 
 function renderItem(it, line) {
@@ -154,6 +158,7 @@ $(document).ready(function() {
                 0,  // deleted items cannot be modified
                 1,  // version
                 $('#modify_recurrenceMode').val(),
+                $('#modify_recurenceAnchor').val(),
                 null,
                 formatDate(getUTCDate(), true)
             );
