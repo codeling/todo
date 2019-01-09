@@ -12,7 +12,7 @@
                     "INTERVAL recurrenceMode DAY".
                 "),".
                 "UTC_DATE()".
-            ") < LEAST(GREATEST(recurrenceMode/4, 2), 30) ".
+            ") < GREATEST(DATEDIFF(dueDate, startDate), 4) ".
 			") OR (".
 			"recurrenceAnchor = 1 AND ".
             "DATEDIFF(".
@@ -21,7 +21,7 @@
                     "INTERVAL recurrenceMode DAY".
                 "),".
                 "UTC_DATE()".
-            ") < LEAST(GREATEST(recurrenceMode/4, 2), 30) ".
+            ") < GREATEST(DATEDIFF(dueDate, startDate), 4) ".
             ")) AND NOT EXISTS (SELECT 1 FROM recurringCopied r WHERE r.todo_id=t.id);";
     $qResult = dbQueryOrDie($db, $sql);
     require("reactivate-temp.php");
