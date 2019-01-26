@@ -615,7 +615,7 @@ function updateProgress() {
         }
     }
     var count = done+open;
-    var progressWidth = 99.5; // in percent
+    var progressWidth = 100; // in percent
     $('#progress_todo').css('width', ((progressWidth*open/count))+'%');
     $('#progress_done').css('width', ((progressWidth*done/count))+'%');
     $('#progress_todo').attr('title', $T('OPEN')+': '+open);

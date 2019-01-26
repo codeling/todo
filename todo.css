@@ -25,24 +25,20 @@ h2 {
 #progress,
 #todoTable,
 div.line {
-/*    min-width: 700px; */
     padding: 1px 0px;
 }
 div.line_odd {
     background-color: #EEEEEE;
 }
+#todo_content form,
 #todoTable{
-    border: 1px solid black;
-    display: inline-block;
     width: 700px;
 }
-.line_header {
-    border-bottom: 1px solid black;
-}
-.line_header,
-.line_input {
-    border-left: 1px solid black;
-    border-right: 1px solid black;
+#mainContent {
+    border: 1px solid black;
+    border-radius: 4px;
+    width: 700px;
+    float: left;
 }
 .line_input span,
 .line_header span {
@@ -69,18 +65,13 @@ input[type="image"]
 }
 .todo {
     display:inline-block;
-    width: 55%;
     text-align: left;
     padding-left: 4px !important;
 }
+.todo,
 #enter_todo {
-    width: 28%;
+    width: 50%;
 }
-/*
-.todo input[type="text"] {
-    width: 35%;
-}
-*/
 .todo_completed {
     color: #777;
 }
@@ -118,6 +109,9 @@ input[disabled="disabled"] {
     width: 100px;
     text-align: left;
 }
+.start {
+    margin-left: 32px;
+}
 #working {
     padding: 3px;
     margin: 2px;
@@ -149,19 +143,56 @@ ul#modify_tag_edit {
 ul.ui-autocomplete {
     z-index: 200;
 }
-#progress {
-    border: 1px solid black;
-}
 #progress_todo {
     background-color: #D66;
-    width: 40%;
+    width: 50%;
     display: inline-block;
-    border-right: 1px solid black;
 }
 #progress_done {
     background-color: #6D6;
-    width: 40%;
+    width: 50%;
     display: inline-block;
+}
+.effort {
+    display: inline-block;
+    width: 20px;
+}
+#enter_due, #enter_start {
+    width: 70px;
+}
+#merge_tag_edit {
+    width: 180px;
+    display: inline-block;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+#tag_todo_container {
+    margin-top: 10px;
+}
+#tag_todo_caption {
+    font-weight: bold;
+}
+#tag_merge {
+    vertical-align: top;
+}
+#sidebar {
+    float: right;
+    width: 200px;
+}
+#taglist {
+    font-size: 8pt;
+}
+#lists {
+    border: 1px solid black;
+    border-radius: 4px;
+}
+#lists ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 2px;
+}
+ul.tagit {
+    border-color: black !important;
 }
 /*******************/
 /* Statistics page */
@@ -198,37 +229,4 @@ ul.ui-autocomplete {
 }
 .emptystatbar {
     color: black;
-}
-#enter_due, #enter_start {
-    width: 70px;
-}
-#merge_tag_edit {
-    width: 180px;
-    display: inline-block;
-    padding: 0 !important;
-    margin: 0 !important;
-}
-#tag_todo_container {
-    margin-top: 10px;
-}
-#tag_todo_caption {
-    font-weight: bold;
-}
-#tag_merge {
-    vertical-align: top;
-}
-#sidebar {
-    float: right;
-    width: 200px;
-}
-#taglist {
-    font-size: 8pt;
-}
-#lists {
-    border: 1px solid black;
-}
-#lists ul {
-    list-style-type: none;
-    margin: 0;
-    padding: 2px;
 }
