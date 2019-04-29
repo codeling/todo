@@ -630,45 +630,44 @@ function toggleWorking(show) {
 
 function reload() {
     log($T('LOADING_TODO_LIST'));
-    var jsontext = $.ajax({
+    $.ajax({
         url: 'queries/query-todos.php',
         type: 'GET',
-        data: reloadData,
-        async: false
-    }).responseText;
-    try {
-        itemList = JSON.parse(jsontext);
-    } catch (e) {
-        alert($T('SERVER_DELIVERED_INVALID_DATA')+': "'+jsontext+
-            '";'+$T('JSON_PARSER_MESSAGE')+' : '+e);
-    }
-    for (var i=0; i<itemList.length; ++i) {
-        // make "proper" Todo items out of the loaded values:
-        itemList[i].id        = parseInt(itemList[i].id);
-        itemList[i].effort    = parseInt(itemList[i].effort);
-        itemList[i].completed = parseInt(itemList[i].completed);
-        itemList[i].version   = parseInt(itemList[i].version);
-        itemList[i].recurrenceMode = parseInt(itemList[i].recurrenceMode);
-        itemList[i].recurrenceAnchor = parseInt(itemList[i].recurrenceAnchor);
-    }
-    renderTable();
+        data: reloadData
+    }).done(function(responseText) {
+        try {
+            itemList = JSON.parse(responseText);
+        } catch (e) {
+            alert($T('SERVER_DELIVERED_INVALID_DATA')+': "'+responseText+
+                '";'+$T('JSON_PARSER_MESSAGE')+' : '+e);
+        }
+        for (var i=0; i<itemList.length; ++i) {
+            // make "proper" Todo items out of the loaded values:
+            itemList[i].id        = parseInt(itemList[i].id);
+            itemList[i].effort    = parseInt(itemList[i].effort);
+            itemList[i].completed = parseInt(itemList[i].completed);
+            itemList[i].version   = parseInt(itemList[i].version);
+            itemList[i].recurrenceMode = parseInt(itemList[i].recurrenceMode);
+            itemList[i].recurrenceAnchor = parseInt(itemList[i].recurrenceAnchor);
+        }
+        renderTable();
+        updateProgress();
+        log($T('LOADING_FINISHED'));
+    });
 
-    var jsontext = $.ajax({
+    $.ajax({
         url: 'queries/query-lists.php',
         type: 'GET',
-        data: listsData,
-        async: false
-    }).responseText;
-    try {
-        lists = JSON.parse(jsontext);
-    } catch (e) {
-        alert($T('SERVER_DELIVERED_INVALID_DATA')+': "'+jsontext+
-            '";'+$T('JSON_PARSER_MESSAGE')+' : '+e);
-    }
-    renderLists();
-
-    updateProgress();
-    log($T('LOADING_FINISHED'));
+        data: listsData
+    }).done( function(responseText) {
+        try {
+            lists = JSON.parse(responseText);
+        } catch (e) {
+            alert($T('SERVER_DELIVERED_INVALID_DATA')+': "'+responseText+
+                '";'+$T('JSON_PARSER_MESSAGE')+' : '+e);
+        }
+        renderLists();
+    });
 }
 
 function getUTCDate() {
