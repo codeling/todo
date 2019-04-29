@@ -499,26 +499,26 @@ function doToday(id)
 }
 
 function setListener(id) {
-    $('#completed'+id).click(function() {
+    $('#completed'+id).on('click', function() {
         toggleCompleted(id);
     });
     if ($('#modify'+id).length !== 0) { // needed for mobile version - there we don't have the modifyID element
-        $('#modify'+id).click(function() {
+        $('#modify'+id).on('click', function() {
             modifyItem(id);
         });
     }
     if ($('#dotoday'+id).length !== 0) { // needed for mobile version - there we don't have the modifyID element
-        $('#dotoday'+id).click(function() {
+        $('#dotoday'+id).on('click', function() {
             doToday(id);
         });
     }
-    $('#trash'+id).click(function() {
+    $('#trash'+id).on('click', function() {
         trashItem(id);
     });
-    $('#restore'+id).click(function() {
+    $('#restore'+id).on('click', function() {
         restoreItem(id);
     });
-    $('#reactivate'+id).click(function() {
+    $('#reactivate'+id).on('click', function() {
         reactivate(id);
     });
 }

@@ -67,7 +67,7 @@ function renderItem(it, lineNr) {
     line += '</div>';
     $('#todoTable').append(line);
     $('#'+tagbasename+it.id).tagit({readOnly: true});
-    $('#todo'+it.id).dblclick(function() {
+    $('#todo'+it.id).on('dblclick', function() {
         printItem(it);
     });
     if (it.id != -1) {
@@ -144,7 +144,7 @@ function isInt(value)
 
 $(document).ready(function() {
 
-    $('#modify_save').click(function() {
+    $('#modify_save').on('click', function() {
         // store...
         storeItem();
     });
@@ -156,7 +156,7 @@ $(document).ready(function() {
         }
         openTagDialog(tagname);
     });
-    $('#tag_save').click(function() {
+    $('#tag_save').on('click', function() {
         var tagobject = new Object();
         tagobject.id = $('#tag_id').val();
         tagobject.tag_name = $('#tag_name').val();
@@ -181,7 +181,7 @@ $(document).ready(function() {
         });
         return false;
     });
-    $('#tag_delete').click(function() {
+    $('#tag_delete').on('click', function() {
         if (!confirm($T('CONFIRM_DELETE_TAG')))
         {
             return false;
@@ -209,7 +209,7 @@ $(document).ready(function() {
         });
         return false;
     });
-    $('#tag_merge').click(function() {
+    $('#tag_merge').on('click', function() {
         var tagobject = new Object();
         tagobject.id = $('#tag_id').val();
         merge_tagname = $('#merge_tag').val();
