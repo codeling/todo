@@ -69,10 +69,10 @@ function renderItem(it, line) {
     line += '</div>';
     $('#todoTable').append(line);
     $('#todo_tags_'+it.id).tagit({readOnly: true});
-    $('#todo'+it.id).dblclick(function() {
+    $('#todo'+it.id).on('dblclick', function() {
         printItem(it);
     });
-    $('#todo'+it.id).click(function() {
+    $('#todo'+it.id).on('click', function() {
         showDetails(it.id);
     });
     if (it.id != -1) {
@@ -92,21 +92,21 @@ function toggleButtons(deleted) {
 }
 
 $(document).ready(function() {
-    $('#newBtn').click(function() {
+    $('#newBtn').on('click', function() {
         emptyModifyForm();
         $.mobile.changePage('#modifyPage', { transition: "slide" });
     });
-    $('#refreshBtn').click(function() {
+    $('#refreshBtn').on('click', function() {
         refresh();
     });
-    $('#emptyTrashBtn').click(function() {
+    $('#emptyTrashBtn').on('click', function() {
         emptyTrash();
     });
-    $('#showLogBtn').click(function() {
+    $('#showLogBtn').on('click', function() {
         updateLog('#logtext', logItems.length);
         $.mobile.changePage('#logPage', { transition: "slide" });
     });
-    $('#statisticsBtn').click(function() {
+    $('#statisticsBtn').on('click', function() {
         window.location = 'https://todo.bfroehler.info/statistik.php';
     });
     // Fix bug resulting from combination of tag-it and jquery-mobile:
@@ -124,26 +124,26 @@ $(document).ready(function() {
             toggleButtons(itemList[index].deleted == 1);
         }
     });
-    $('#restoreBtn').click(function() {
+    $('#restoreBtn').on('click', function() {
         var id = parseInt($('#modify_id').val());
         restoreItem(id);
         $.mobile.changePage('#listPage', { transition: "slide" });
     });
-    $('#toggleBtn').click(function() {
+    $('#toggleBtn').on('click', function() {
         var id = parseInt($('#modify_id').val());
         var index = findItem(id);
         toggleCompleted(id);
         $.mobile.changePage('#listPage', { transition: "slide" });
     });
-    $('#deleteBtn').click(function() {
+    $('#deleteBtn').on('click', function() {
         var id = parseInt($('#modify_id').val());
         trashItem(id);
         $.mobile.changePage('#listPage', { transition: "slide" });
     });
-    $('#cancelBtn,#backBtn').click(function() {
+    $('#cancelBtn,#backBtn').on('click', function() {
         $.mobile.changePage('#listPage', { transition: "slide" });
     });
-    $('#saveBtn').click(function() {
+    $('#saveBtn').on('click', function() {
         var id = parseInt($('#modify_id').val());
         if (id == -1)
         {
@@ -168,7 +168,7 @@ $(document).ready(function() {
         }
         $.mobile.changePage('#listPage', { transition: "slide" });
     });
-    $('#modify_recurrenceMode').change(function(e) {
+    $('#modify_recurrenceMode').on('change', function(e) {
         toggleRecurrenceAnchor();
     });
 });
