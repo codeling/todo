@@ -12,7 +12,7 @@
     <script type="text/javascript" src="todo-common.js"></script>
     <script type="text/javascript" src="todo-desktop.js"></script>
     <script type="text/javascript" src="init.js"></script>
-    <script type="text/javascript" src="jquery/jquery-ui-tag-it.js" charset="utf-8"></script>
+    <script type="text/javascript" src="jquery/jquery-ui-tag-it.min.js"></script>
     <script type="text/javascript" src="lang-js.php"></script>
     <link rel="stylesheet" type="text/css" href="todo.css" />
     <link rel="stylesheet" type="text/css" href="jquery/jquery-ui-1.12.1.min.css"/>
