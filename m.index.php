@@ -7,7 +7,7 @@
     <!-- JQuery & JQuery UI -->
     <script type="text/javascript" src="jquery/jquery-1.11.1.min.js"></script>
     <script type="text/javascript" src="jquery/jquery-ui-1.11.0.custom.min.js"></script>
-    <script type="text/javascript" src="jquery/jquery.mobile-1.4.3.min.js"></script>
+    <script type="text/javascript" src="jquery/jquery.mobile-1.4.5.min.js"></script>
     <script type="text/javascript" src="log.js.php"></script>
     <script type="text/javascript" src="todo-common.js"></script>
     <script type="text/javascript" src="todo-mobile.js"></script>
@@ -16,7 +16,7 @@
     <script type="text/javascript" src="lang-js.php"></script>
     <link rel="stylesheet" type="text/css" href="todo-mobile.css" />
     <link rel="stylesheet" type="text/css" href="jquery/jquery-ui-1.11.0.custom.min.css"/>
-    <link rel="stylesheet" href="jquery/jquery.mobile-1.4.3.min.css" />
+    <link rel="stylesheet" href="jquery/jquery.mobile-1.4.5.min.css" />
     <link rel="stylesheet" type="text/css" href="css/jquery.tagit.css">
     <link rel="stylesheet" type="text/css" href="css/tagit.ui-zendesk.css">
   </head>
