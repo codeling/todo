@@ -63,7 +63,7 @@ $(document).ready(function() {
     createDatePicker("#enter_start");
     createDatePicker("#modify_start");
 
-    $("#smallLog").click(function() {
+    $("#smallLog").on('click', function() {
         updateLog('#log_dialog', logItems.length);
         $('#log_dialog').html($('#log_dialog').html()+
                 '<br /><a href="javascript:toggleLog()">'+$T('LOG_ONOFF')+'</a>');
@@ -75,11 +75,11 @@ $(document).ready(function() {
         });
     });
 
-    $('#loadMoreCompleted').click(function() {
+    $('#loadMoreCompleted').on('click', function() {
         reloadData.age += 10;
         reload();
     });
-    $('#loadLessCompleted').click(function() {
+    $('#loadLessCompleted').on('click', function() {
         reloadData.age -= 10;
         if (reloadData.age < 0)
         {
@@ -87,7 +87,7 @@ $(document).ready(function() {
         }
         reload();
     });
-    $('#loadIncomplete').click(function() {
+    $('#loadIncomplete').on('click', function() {
         reloadData.incomplete = !reloadData.incomplete;
         $('#loadIncomplete').text(reloadData.incomplete?$T('LOAD_INCOMPLETE_HIDE'):$T('LOAD_INCOMPLETE'));
         reload();
@@ -109,7 +109,7 @@ $(document).ready(function() {
         singleFieldNode: $('#modify_tags')
     });
 
-    $('#modify_start').change(function() {
+    $('#modify_start').on('change', function() {
         var oldVal = parseDate($('#modify_start').data('oldVal'));
         var newVal = parseDate($('#modify_start').val());
         var dayDiff = dateDiffInDays(oldVal, newVal);
@@ -119,7 +119,7 @@ $(document).ready(function() {
         $('#modify_start').data('oldVal', $('#modify_start').val());
     });
 
-    $('#enter_start').change(function() {
+    $('#enter_start').on('change', function() {
         var oldVal = parseDate($('#enter_start').data('oldVal'));
         if (oldVal != null)
         {

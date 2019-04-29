@@ -303,13 +303,13 @@ $(document).ready(function() {
         singleFieldNode: $('#merge_tag'),
         tagLimit: 1
     });
-    $('#enter_start').change(function() {
+    $('#enter_start').on('change', function() {
         if ($('#enter_due').val() == "")
         {
             $('#enter_due').val($('#enter_start').val());
         }
     });
-    $('#modify_recurrenceMode').change(function(e) {
+    $('#modify_recurrenceMode').on('change', function(e) {
         toggleRecurrenceAnchor();
     });
 });
