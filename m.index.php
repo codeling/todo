@@ -5,20 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title><?php echo(TodoConstants::AppName); ?></title>
     <!-- JQuery & JQuery UI -->
-    <script type="text/javascript" src="jquery/jquery-1.11.1.min.js"></script>
-    <script type="text/javascript" src="jquery/jquery-ui-1.11.0.custom.min.js"></script>
+    <script type="text/javascript" src="jquery/jquery-3.4.0.min.js"></script>
+    <script type="text/javascript" src="jquery/jquery-migrate-3.0.1.js"></script>
+    <script type="text/javascript" src="jquery/jquery-ui-1.12.1.min.js"></script>
     <script type="text/javascript" src="jquery/jquery.mobile-1.4.5.min.js"></script>
     <script type="text/javascript" src="log.js.php"></script>
     <script type="text/javascript" src="todo-common.js"></script>
     <script type="text/javascript" src="todo-mobile.js"></script>
     <script type="text/javascript" src="init.js"></script>
-    <script type="text/javascript" src="js/tag-it.min.js" type="text/javascript" charset="utf-8"></script>
+    <script type="text/javascript" src="jquery/jquery-ui-tag-it.js" charset="utf-8"></script>
     <script type="text/javascript" src="lang-js.php"></script>
     <link rel="stylesheet" type="text/css" href="todo-mobile.css" />
-    <link rel="stylesheet" type="text/css" href="jquery/jquery-ui-1.11.0.custom.min.css"/>
+    <link rel="stylesheet" type="text/css" href="jquery/jquery-ui-1.12.1.min.css"/>
     <link rel="stylesheet" href="jquery/jquery.mobile-1.4.5.min.css" />
-    <link rel="stylesheet" type="text/css" href="css/jquery.tagit.css">
-    <link rel="stylesheet" type="text/css" href="css/tagit.ui-zendesk.css">
+    <link rel="stylesheet" type="text/css" href="jquery/jquery-ui-tag-it.css">
+    <link rel="stylesheet" type="text/css" href="jquery/jquery-ui-tag-it.theme.css">
+
   </head>
   <body>
     
