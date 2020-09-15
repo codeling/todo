@@ -32,7 +32,7 @@ function newTodo()
     toggleRecurrenceAnchor();
 }
 
-function renderItem(it, line) {
+function renderItem(it, lineNr) {
     var hasNote = it.notes != null && it.notes != '';
     var hasTags = it.tags != null && it.tags != '';
     var isRecurring = it.recurrenceMode != 0;
@@ -43,12 +43,13 @@ function renderItem(it, line) {
     var dueString = (it.completed == 0) ? formatDate(dueDate): formatDate(complDate);
     var repetition = getRecurrenceString(it.recurrenceMode);
     var line = '<div class="line'+
-            ((line%2!=0)?' line_odd':'')+
+            ((lineNr%2!=0)?' line_odd':'')+
             ((it.completed==1)?' todo_completed':'')+
         ((it.deleted==1)?' todo_deleted':'')+
             '" id="todo'+it.id+'">';
 
-    line += '<span class="todo" title="'+$T('CREATED')+': '+formatDate(createDate, true)+
+    line +=   '<span class="todo_lineNr">'+(lineNr+1)+'.</span>'+
+		'<span class="todo" title="'+$T('CREATED')+': '+formatDate(createDate, true)+
             '; '+$T('RECURRENCE')+': '+repetition+
         ((it.completed != 0)? '; '+$T('DONE')+': '+formatDate(complDate, true):'')+
             '">'+
