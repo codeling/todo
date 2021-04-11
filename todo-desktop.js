@@ -40,13 +40,7 @@ function renderItem(it, lineNr) {
     var dueString = (it.completed == 0) ? formatDate(dueDate): formatDate(complDate);
     var line = getTodoItemStart(it, lineNr);
     var tagbasename = 'todo_tags_';
-    line += getTodoTitleHtml(it, lineNr, tagbasename, 'todo')+
-            '<span class="modify"><input type="image" value="'+
-               $T('EDIT')+'" id="modify'+it.id+
-               '" src="images/pencil.png" /></span>'+
-            '<span class="dotoday"><input type="image" value"'+
-               $T('DOTODAY')+'" id="dotoday'+it.id+
-               '" src="images/dotoday.png" /></span>';
+    line += getTodoTitleHtml(it, lineNr, tagbasename, 'todo');
     line +=  '<span class="start">'+((it.start == null)?'undef':formatDate(parseDate(it.start)))+'</span>'+
         '<span class="due">'+ dueString+
                 ((it.completed==0 && dueDate != null && (today - dueDate) > 0) ?
@@ -55,6 +49,12 @@ function renderItem(it, lineNr) {
         '<span class="effort">'+it.effort+'</span>'+
         '<span class="completed"><input type="checkbox" id="completed'+it.id+'" '+
             ((it.completed==1)?'checked="true" ':'')+'/></span>';
+    line += '<span class="modify"><input type="image" value="'+
+               $T('EDIT')+'" id="modify'+it.id+
+               '" src="images/pencil.png" /></span>'+
+            '<span class="dotoday"><input type="image" value"'+
+               $T('DOTODAY')+'" id="dotoday'+it.id+
+               '" src="images/dotoday.png" /></span>'
     if (it.deleted == 0) {
         line +=            '<span class="trash"><input type="image" value="'+
                $T('DELETE')+'" id="trash'+it.id+
@@ -81,8 +81,7 @@ function modifyItem(id) {
     // show dialog:
     $('#modify_dialog').dialog( {
         modal: true,
-        minHeight: 180,
-        minWidth: 600,
+        minWidth: 500,
         title: $T('MODIFY_ENTRY'),
         close: function(ev,ui) {
             log($T('MODIFY_DIALOG_CLOSED'));

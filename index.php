@@ -40,7 +40,7 @@
             <span class="due"><?php echo(TodoLang::_("DUE"));?></span>
           </div>
           <div class="line line_input">
-            <span><input type="text" id="enter_todo" name="enter_todo" maxlength="255" /></span>
+            <input type="text" id="enter_todo" name="enter_todo" maxlength="255" />
             <span class="start"><input type="text" id="enter_start" name="enter_start" maxlength="4" /></span>
             <span class="due"><input type="text" id="enter_due" name="enter_due" maxlength="20" /></span>
             <span class="actions"><input type="image" src="images/Add.png" name="save" value="<?php echo(TodoLang::_("SAVE"));?>" onclick="enter()" /></span>
