@@ -155,7 +155,7 @@ ul#modify_tag_edit {
 ul.ui-autocomplete {
     z-index: 200;
 }
-.modify_line > select, .modify_line > input, .modify_line > textarea, .modify_line > ul#modify_tag_edit {
+.modify_line > select, .modify_line > input[type='text'], .modify_line > textarea, .modify_line > ul#modify_tag_edit {
     width: 300px;
     box-sizing: border-box;
 }

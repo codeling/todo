@@ -105,7 +105,7 @@ function openTagDialog(tagname)
     $('#tag_id').val(result[0].id);
     $('#tag_dialog').dialog( {
         modal: true,
-        width: 400,
+        width: 420,
         title: $T('EDIT_TAG')
     });
     $('#merge_tag_edit').tagit("removeAll");
