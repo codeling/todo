@@ -157,7 +157,7 @@
         <?php printPeriodicStat('MONTH', 100, 24, $dateName.'Date'); ?>
   
         <h3><?php echo(TodoLang::_("STATS_YEARLY")); ?></h3>
-        <?php printPeriodicStat('YEAR', 100, 5, $dateName.'Date'); ?>
+        <?php printPeriodicStat('YEAR', 100, 14, $dateName.'Date'); ?>
 <?php
     }
 ?>
