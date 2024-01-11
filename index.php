@@ -6,7 +6,7 @@
     <title><?php echo(TodoConstants::AppName); ?></title>
     <!-- JQuery & JQuery UI -->
     <script type="text/javascript" src="jquery/jquery-3.7.1.min.js"></script>
-    <script type="text/javascript" src="jquery/jquery-ui-1.12.1.min.js"></script>
+    <script type="text/javascript" src="jquery/jquery-ui-1.13.2.min.js"></script>
     <script type="text/javascript" src="log.js.php"></script>
     <script type="text/javascript" src="todo-common.js"></script>
     <script type="text/javascript" src="todo-desktop.js"></script>
@@ -14,7 +14,7 @@
     <script type="text/javascript" src="jquery/jquery-ui-tag-it.min.js"></script>
     <script type="text/javascript" src="lang-js.php"></script>
     <link rel="stylesheet" type="text/css" href="todo.css" />
-    <link rel="stylesheet" type="text/css" href="jquery/jquery-ui-1.12.1.min.css"/>
+    <link rel="stylesheet" type="text/css" href="jquery/jquery-ui-1.13.2.min.css"/>
     <link rel="stylesheet" type="text/css" href="jquery/jquery-ui-tag-it.css">
     <link rel="stylesheet" type="text/css" href="jquery/jquery-ui-tag-it.theme.css">
   </head>
