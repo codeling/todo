@@ -1,12 +1,3 @@
-// source: http://stackoverflow.com/questions/1199352/smart-way-to-shorten-long-strings-with-javascript
-String.prototype.trunc =
-     function(n,useWordBoundary){
-         var toLong = this.length>n,
-             s_ = toLong ? this.substr(0,n-1) : this;
-         s_ = useWordBoundary && toLong ? s_.substr(0,s_.lastIndexOf(' ')) : s_;
-         return  toLong ? s_ + '&hellip;' : s_;
-      };
-
 /*
 $(document).on("pagebeforeshow", '#modifyPage', function(e, data) {
     alert(JSON.stringify(data).replace(/,/g,"\n").replace(/[{}\"]/g, ""));
@@ -52,8 +43,7 @@ function renderItem(it, lineNr) {
 		'<span class="todo" title="'+$T('CREATED')+': '+formatDate(createDate, true)+
             '; '+$T('RECURRENCE')+': '+repetition+
         ((it.completed != 0)? '; '+$T('DONE')+': '+formatDate(complDate, true):'')+
-            '">'+
-            it.todo.trunc(30, false)+
+            '"><span class="todotitleonly">'+ it.todo+'</span>'+
             (hasNote ? '<img src="images/note.png" />':'')+
             (isRecurring ? '<img src="images/recurring.png" id="reactivate'+it.id+'" />':'')+
         ((it.completed==0 && dueDate != null && (today - dueDate) > 0) ?

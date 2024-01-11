@@ -132,3 +132,8 @@ img.ui-datepicker-trigger {
     display: inline-block;
     margin-right: 20px;
 }
+.todotitleonly {
+    display: inline-block;
+    width: 250px;
+    white-space: normal;
+}
