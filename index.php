@@ -20,19 +20,18 @@
   </head>
   <body>
     <div id="todo_content">
-      <div id="smallLog"><?php echo(TodoLang::_("STARTING_LOG"));?></div>
-      <div id="logLink"><a href="javascript:toggleLog()"><?php echo(TodoLang::_("SHOW_LOG"));?></a></div>
-      <div id="working"><?php echo(TodoLang::_("WORKING"));?></div>
-      <div id="filter">
-          <input type="hidden" id="filter_tags" name="filter_tags" />
-          <ul id="filter_tag_edit" class="tagit ui-widget ui-widget-content ui-corner-all tagit-choice-editable"></ul>
-      </div>
-      <div id="emptytrashlink"><a href="javascript:emptyTrash()"><?php echo(TodoLang::_("EMPTY_TRASH"));?></a></div>
-      <div id="statistiklink"><a href="statistik.php"><?php echo(TodoLang::_("SHOW_STATISTICS"));?></a></div>
-      <div id="mobilelink"><a href="m.index.php"><?php echo(TodoLang::_("GOTO_MOBILE_VERSION"));?></a></div>
-      <h1><?php echo(TodoConstants::AppTitle); ?></h1>
       <div id="mainContent">
-
+        <div id="headerLine">
+          <h1><?php echo(TodoConstants::AppTitle); ?></h1>
+          <div id="working"><?php echo(TodoLang::_("WORKING"));?></div>
+          <div id="filter">
+            <input type="hidden" id="filter_tags" name="filter_tags" />
+            <ul id="filter_tag_edit" class="tagit ui-widget ui-widget-content ui-corner-all tagit-choice-editable"></ul>
+          </div>
+          <div id="emptytrashlink"><a href="javascript:emptyTrash()"><?php echo(TodoLang::_("EMPTY_TRASH"));?></a></div>
+          <div id="statistiklink"><a href="statistik.php"><?php echo(TodoLang::_("SHOW_STATISTICS"));?></a></div>
+          <div id="mobilelink"><a href="m.index.php"><?php echo(TodoLang::_("GOTO_MOBILE_VERSION"));?></a></div>
+        </div>
         <div id="progress"><span id="progress_done">&nbsp;</span><span id="progress_todo">&nbsp;</span></div>
         <form method="POST" onsubmit="return false;" id="inputform">
           <input type="hidden" name="user_id" id="user_id" value="<?php echo $curUserID; ?>" />
@@ -112,6 +111,8 @@
         </div>
       </div>
       <div id="sidebar">
+        <div id="smallLog"><?php echo(TodoLang::_("STARTING_LOG"));?></div>
+        <div id="logLink"><a href="javascript:toggleLog()"><?php echo(TodoLang::_("SHOW_LOG"));?></a></div>
         <div id="lists">
           <ul></ul>
         </div>

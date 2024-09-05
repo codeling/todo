@@ -9,7 +9,9 @@ body {
 h1 {
     font-size: 16pt;
     font-weight: bold;
-    margin-bottom: 5px;
+    margin-bottom: 3px;
+    margin-right: auto;
+    margin-left: 5px;
 }
 h2 {
     font-size: 14pt;
@@ -21,20 +23,25 @@ h2 {
 
 /*************/
 /* ToDo List */
-
+#todo_content, #headerLine {
+    display: flex;
+}
+#headerLine {
+    align-items: flex-end;
+}
 #progress,
 #todoTable,
-div.line {
+div.line,tr.line {
     padding: 1px 0px;
 }
-div.line_odd {
+div.line,tr.line_odd {
     background-color: #EEEEEE;
 }
 #mainContent {
     border: 1px solid black;
     border-radius: 4px;
-    float: left;
     overflow: hidden;
+    margin-left: auto;
 }
 .line_input span,
 .line_header span {
@@ -130,14 +137,12 @@ input[disabled="disabled"] {
 }
 #smallLog {
     font-size: 6pt;
-    float: right;
     background-color:#EEEEEE;
-    margin-top: -12px;
     margin-left: 2px;
     margin-right: 2px;
+    margin-bottom: 10px;
 }
 #logLink {
-    float: right;
     display: none;
 }
 span.modify_desc {
@@ -196,8 +201,9 @@ ul.ui-autocomplete {
     vertical-align: top;
 }
 #sidebar {
-    float: right;
-    width: 200px;
+    width: 20%;
+    margin-left: 10px;
+    margin-right: auto;
 }
 #taglist {
     font-size: 8pt;
@@ -214,20 +220,32 @@ ul.ui-autocomplete {
 ul.tagit {
     border-color: black !important;
 }
-/*******************/
-/* Statistics page */
 
 #emptytrashlink,
 #statistiklink,
 #mobilelink,
 #filter {
-    float: right;
-    margin-right: 10px;
+    margin-left: 5px;
+    margin-right: 5px;
+    margin-bottom: 3px;
 }
 #filter ul {
     margin: 0;
     padding: 0;
 }
+#loadMoreBox {
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-left: 5px;
+    border-top: 1px solid black;
+}
+#loadMoreBox a {
+    margin-left: 10px;
+}
+
+/*******************/
+/* Statistics page */
+
 .stat_row_bar {
     vertical-align:bottom;
 }
