@@ -37,12 +37,12 @@
         <form method="POST" onsubmit="return false;" id="inputform">
           <input type="hidden" name="user_id" id="user_id" value="<?php echo $curUserID; ?>" />
           <table id="todoTable">
-		    <tr>
+            <tr>
               <th class="todo"><?php echo(TodoLang::_("TODO"));?> <input type="image" src="images/refresh.png" name="refresh" value="refresh" onclick="refresh()" /></th>
               <th class="start"><?php echo(TodoLang::_("START"));?></th>
               <th class="due"><?php echo(TodoLang::_("DUE"));?></th>
-			  <th class="actions" colspan="2">Actions</th>
-			</tr>
+              <th class="actions" colspan="2"><?php echo(TodoLang::_("ACTIONS"));?></th>
+            </tr>
             <tr class="line line_input">
               <td><input type="text" id="enter_todo" name="enter_todo" maxlength="255" /></td>
               <td class="start"><input type="text" id="enter_start" name="enter_start" maxlength="4" /></td>
