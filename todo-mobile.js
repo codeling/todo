@@ -5,6 +5,11 @@ $(document).on("pagebeforeshow", '#modifyPage', function(e, data) {
 });
 */
 
+function clearTable()
+{
+    $('#todoTable').empty();
+}
+
 function showDetails(itemid)
 {
     $.mobile.changePage('#modifyPage', { transition: "slide" });

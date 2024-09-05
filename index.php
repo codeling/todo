@@ -32,23 +32,25 @@
       <div id="mobilelink"><a href="m.index.php"><?php echo(TodoLang::_("GOTO_MOBILE_VERSION"));?></a></div>
       <h1><?php echo(TodoConstants::AppTitle); ?></h1>
       <div id="mainContent">
+
+        <div id="progress"><span id="progress_done">&nbsp;</span><span id="progress_todo">&nbsp;</span></div>
         <form method="POST" onsubmit="return false;" id="inputform">
           <input type="hidden" name="user_id" id="user_id" value="<?php echo $curUserID; ?>" />
-          <div class="line line_header">
-            <span class="todo"><?php echo(TodoLang::_("TODO"));?> <input type="image" src="images/refresh.png" name="refresh" value="refresh" onclick="refresh()" /></span>
-            <span class="start"><?php echo(TodoLang::_("START"));?></span>
-            <span class="due"><?php echo(TodoLang::_("DUE"));?></span>
-          </div>
-          <div class="line line_input">
-            <input type="text" id="enter_todo" name="enter_todo" maxlength="255" />
-            <span class="start"><input type="text" id="enter_start" name="enter_start" maxlength="4" /></span>
-            <span class="due"><input type="text" id="enter_due" name="enter_due" maxlength="20" /></span>
-            <span class="actions"><input type="image" src="images/Add.png" name="save" value="<?php echo(TodoLang::_("SAVE"));?>" onclick="enter()" /></span>
-          </div>
+          <table id="todoTable">
+		    <tr>
+              <th class="todo"><?php echo(TodoLang::_("TODO"));?> <input type="image" src="images/refresh.png" name="refresh" value="refresh" onclick="refresh()" /></th>
+              <th class="start"><?php echo(TodoLang::_("START"));?></th>
+              <th class="due"><?php echo(TodoLang::_("DUE"));?></th>
+			  <th class="actions" colspan="2">Actions</th>
+			</tr>
+            <tr class="line line_input">
+              <td><input type="text" id="enter_todo" name="enter_todo" maxlength="255" /></td>
+              <td class="start"><input type="text" id="enter_start" name="enter_start" maxlength="4" /></td>
+              <td class="due"><input type="text" id="enter_due" name="enter_due" maxlength="20" /></td>
+              <td class="actions" colspan="2"><input type="image" src="images/Add.png" name="save" value="<?php echo(TodoLang::_("SAVE"));?>" onclick="enter()" /></td>
+            </tr>
+          </table>
         </form>
-        <div id="progress"><span id="progress_done">&nbsp;</span><span id="progress_todo">&nbsp;</span></div>
-        <div id="todoTable">
-        </div>
         <div id="loadMoreBox">
             <a href="#" id="loadIncomplete" /><?php echo(TodoLang::_("LOAD_INCOMPLETE"));?></a>
             <a href="#" id="loadLessCompleted" /><?php echo(TodoLang::_("LOAD_LESS_COMPLETED"));?></a>

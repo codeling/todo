@@ -531,7 +531,7 @@ function getRecurrenceString(recurrenceMode)
 
 
 function renderTable() {
-    $('#todoTable').empty();
+    clearTable();
     var filtered = filterList();
     for (var i=0; i<filtered.length; i++) {
         renderItem(filtered[i], i);

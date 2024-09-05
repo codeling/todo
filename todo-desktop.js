@@ -1,19 +1,20 @@
-function getTodoItemStart(it, lineNr) {
-    return '<div class="line'+
-            ((lineNr%2!=0)?' line_odd':'')+
-            ((it.completed==1)?' todo_completed':'')+
-        ((it.deleted==1)?' todo_deleted':'')+
-            '" id="todo'+it.id+'">';
+function clearTable()
+{
+    // from https://stackoverflow.com/a/16270116, but not working:
+    // $("#todoTable:not(:first)").remove();
+    // from https://stackoverflow.com/a/46577141; not ideal, but working:
+    for(var i = 2;i<todoTable.rows.length;){
+        todoTable.deleteRow(i);
+    }
 }
-
-function getTodoTitleHtml(it, lineNr, tagbasename, spanCssClass) {
+function getTodoTitleHtml(it, lineNr, tagbasename, spanCssClass, baseElem) {
     var isRecurring = it.recurrenceMode != 0;
     var hasNote = it.notes != null && it.notes != '';
     var hasTags = it.tags != null && it.tags != '';
     var createDate = parseDate(it.creationDate);
     var repetition = getRecurrenceString(it.recurrenceMode);
     var complDate = parseDate(it.completionDate);
-    line =   '<span class="'+spanCssClass+'" title="'+$T('CREATED')+': '+formatDate(createDate, true)+
+    line =   '<'+baseElem+' class="'+spanCssClass+'" title="'+$T('CREATED')+': '+formatDate(createDate, true)+
             '; '+$T('RECURRENCE')+': '+repetition+
         ((it.completed != 0)? '; '+$T('DONE')+': '+formatDate(complDate, true):'')+
             '">'+
@@ -29,7 +30,7 @@ function getTodoTitleHtml(it, lineNr, tagbasename, spanCssClass) {
         }
         line += '</ul>';
     }
-    line += '</span>';
+    line += '</'+baseElem+'>';
     return line;
 }
 
@@ -38,25 +39,30 @@ function renderItem(it, lineNr) {
     var dueDate = parseDate(it.due);
     var complDate = parseDate(it.completionDate);
     var dueString = (it.completed == 0) ? formatDate(dueDate): formatDate(complDate);
-    var line = getTodoItemStart(it, lineNr);
+    var line = '<tr class="line'+
+        ((lineNr%2!=0)?' line_odd':'')+
+        ((it.completed==1)?' todo_completed':'')+
+        ((it.deleted==1)?' todo_deleted':'')+
+            '" id="todo'+it.id+'">';
     var tagbasename = 'todo_tags_';
-    line += getTodoTitleHtml(it, lineNr, tagbasename, 'todo');
-    line +=  '<span class="start">'+((it.start == null)?'undef':formatDate(parseDate(it.start)))+'</span>'+
-        '<span class="due">'+ dueString+
+    line += getTodoTitleHtml(it, lineNr, tagbasename, 'todo', 'td');
+    line +=  '<td class="start">'+((it.start == null)?'undef':formatDate(parseDate(it.start)))+'</td>'+
+        '<td class="due">'+ dueString+
                 ((it.completed==0 && dueDate != null && (today - dueDate) > 0) ?
                 ' <img src="images/exclamation.png" height="16px" />':'')+
-                '</span>'+
-        '<span class="effort">'+it.effort+'</span>'+
-        '<span class="completed"><input type="checkbox" id="completed'+it.id+'" '+
-            ((it.completed==1)?'checked="true" ':'')+'/></span>';
-    line += '<span class="modify"><input type="image" value="'+
-               $T('EDIT')+'" id="modify'+it.id+
-               '" src="images/pencil.png" /></span>'+
+        '</td>'+
+        '<td class="effort">'+it.effort+'</td>'+
+        '<td class="actions">'+
+            '<span class="completed"><input type="checkbox" id="completed'+it.id+'" '+
+            ((it.completed==1)?'checked="true" ':'')+'/></span>'+
+            '<span class="modify"><input type="image" value="'+
+                $T('EDIT')+'" id="modify'+it.id+
+                '" src="images/pencil.png" /></span>'+
             '<span class="dotoday"><input type="image" value"'+
-               $T('DOTODAY')+'" id="dotoday'+it.id+
-               '" src="images/dotoday.png" /></span>'
+                $T('DOTODAY')+'" id="dotoday'+it.id+
+                '" src="images/dotoday.png" /></span>';
     if (it.deleted == 0) {
-        line +=            '<span class="trash"><input type="image" value="'+
+        line += '<span class="trash"><input type="image" value="'+
                $T('DELETE')+'" id="trash'+it.id+
                '" src="images/trash_red.png" /></span>';
     } else {
@@ -64,7 +70,7 @@ function renderItem(it, lineNr) {
                $T('RESTORE')+'" id="restore'+it.id+
                '" src="images/undelete.png" /></span>';
     }
-    line += '</div>';
+    line += '</td></tr>';
     $('#todoTable').append(line);
     $('#'+tagbasename+it.id).tagit({readOnly: true});
     $('#todo'+it.id).on('dblclick', function() {
@@ -114,7 +120,7 @@ function openTagDialog(tagname)
     filtered.sort(ItemSort);
     var tagbase = 'tag_todo_tags_';
     for (var i=0; i<filtered.length; i++) {
-        var line = '<div>'; //getTodoItemStart(filtered[i], i);
+        var line = '<div>';
         line += getTodoTitleHtml(filtered[i], i, tagbase, '');
         line += '</div>'
         $('#tag_todo_table').append(line);

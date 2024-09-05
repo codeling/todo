@@ -30,15 +30,11 @@ div.line {
 div.line_odd {
     background-color: #EEEEEE;
 }
-#todo_content form,
-#todoTable{
-    width: 700px;
-}
 #mainContent {
     border: 1px solid black;
     border-radius: 4px;
-    width: 700px;
     float: left;
+    overflow: hidden;
 }
 .line_input span,
 .line_header span {
@@ -64,8 +60,11 @@ input[type="image"]
     height: 16px;
 }
 .todo {
-    display:inline-block;
     text-align: left;
+}
+.due,
+.actions {
+    white-space: nowrap;
 }
 #enter_todo,#enter_start,#enter_due {
     border: 1px solid black;
@@ -75,11 +74,11 @@ input[type="image"]
 }
 .todo,
 #enter_todo {
-    width: 50%;
     padding-left: 4px !important;
 }
 #enter_todo {
     margin-left: 1px;
+    width: 95%;
 }
 .ui-datepicker-trigger {
     vertical-align: middle;
@@ -109,7 +108,6 @@ input[disabled="disabled"] {
     display: none;
 }
 .todo_lineNr {
-    display: inline-block;
     width: 20px;
     text-align:right;
 }
@@ -117,12 +115,12 @@ input[disabled="disabled"] {
     font-style: italic;
 }
 .due, .start {
-    display:inline-block;
-    width: 100px;
     text-align: left;
+    padding-left: 5px;
+    padding-right: 5px;
 }
 .start {
-    margin-left: 25px;
+    margin-left: 5px;
 }
 #working {
     padding: 3px;
@@ -180,7 +178,7 @@ ul.ui-autocomplete {
     width: 20px;
 }
 #enter_due, #enter_start {
-    width: 75px;
+    width: 75%;
 }
 #merge_tag_edit {
     width: 180px;
