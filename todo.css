@@ -115,6 +115,7 @@ input[disabled="disabled"] {
     display: none;
 }
 .todo_lineNr {
+    display:inline-block;
     width: 20px;
     text-align:right;
 }
@@ -150,17 +151,16 @@ span.modify_desc {
     width: 80px;
     vertical-align: top;
 }
-ul#modify_tag_edit {
-    display: inline-block;
-    margin: 0;
-    padding: 0;
-}
 ul.ui-autocomplete {
     z-index: 200;
 }
-.modify_line > select, .modify_line > input[type='text'], .modify_line > textarea, .modify_line > ul#modify_tag_edit {
+.modify_line > select, .modify_line > input[type='text'], .modify_line > textarea, .modify_line > .tagify {
     width: 300px;
     box-sizing: border-box;
+}
+.tagify {
+    --tag-hide-transition: 0s;
+    --readonly-striped: 0;
 }
 .ui-autocomplete-input {
     width: 100px !important;
@@ -179,8 +179,8 @@ ul.ui-autocomplete {
     display: inline-block;
 }
 .effort {
-    display: inline-block;
     width: 20px;
+    text-align: right;
 }
 #enter_due, #enter_start {
     width: 75%;
@@ -217,10 +217,6 @@ ul.ui-autocomplete {
     margin: 0;
     padding: 2px;
 }
-ul.tagit {
-    border-color: black !important;
-}
-
 #emptytrashlink,
 #statistiklink,
 #mobilelink,

@@ -5,18 +5,17 @@
     <meta charset="UTF-8">
     <title><?php echo(TodoConstants::AppName); ?></title>
     <!-- JQuery & JQuery UI -->
-    <script type="text/javascript" src="jquery/jquery-3.7.1.min.js"></script>
-    <script type="text/javascript" src="jquery/jquery-ui-1.13.2.min.js"></script>
-    <script type="text/javascript" src="log.js.php"></script>
-    <script type="text/javascript" src="todo-common.js"></script>
-    <script type="text/javascript" src="todo-desktop.js"></script>
-    <script type="text/javascript" src="init.js"></script>
-    <script type="text/javascript" src="jquery/jquery-ui-tag-it.min.js"></script>
-    <script type="text/javascript" src="lang-js.php"></script>
+    <script src="jquery/jquery-3.7.1.min.js"></script>
+    <script src="jquery/jquery-ui-1.13.2.min.js"></script>
+    <script src="log.js.php"></script>
+    <script src="todo-common.js"></script>
+    <script src="todo-desktop.js"></script>
+    <script src="init.js"></script>
+    <script src="tagify.js"></script>
+    <script src="lang-js.php"></script>
+    <link rel="stylesheet" type="text/css" href="tagify.css" />
     <link rel="stylesheet" type="text/css" href="todo.css" />
     <link rel="stylesheet" type="text/css" href="jquery/jquery-ui-1.13.2.min.css"/>
-    <link rel="stylesheet" type="text/css" href="jquery/jquery-ui-tag-it.css">
-    <link rel="stylesheet" type="text/css" href="jquery/jquery-ui-tag-it.theme.css">
   </head>
   <body>
     <div id="todo_content">
@@ -100,7 +99,7 @@
             </div><div class="modify_line">
               <span class="modify_desc"><?php echo(TodoLang::_("TAGS"));?>:</span>
               <input type="hidden" id="modify_tags" name="modify_tags" />
-              <ul id="modify_tag_edit" class="tagit ui-widget ui-widget-content ui-corner-all tagit-choice-editable"></ul>
+              <input id="modify_tag_edit"></ul>
             </div><div class="modify_line">
               <span class="modify_desc"><?php echo(TodoLang::_("LIST"));?>:</span>
               <select id="modify_list">
@@ -117,7 +116,7 @@
           <ul></ul>
         </div>
         <div id="taglist">
-          <ul></ul>
+          <input value="">
         </div>
       </div>
       <div id="log_dialog" style="display:none"></div>

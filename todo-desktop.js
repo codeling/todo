@@ -18,17 +18,12 @@ function getTodoTitleHtml(it, lineNr, tagbasename, spanCssClass, baseElem) {
             '; '+$T('RECURRENCE')+': '+repetition+
         ((it.completed != 0)? '; '+$T('DONE')+': '+formatDate(complDate, true):'')+
             '">'+
-            '<span class="todo_lineNr">'+(lineNr+1)+'</span>. '+
-            it.todo+
+            '<span class="todo_lineNr">'+(lineNr+1)+'.</span> '+
+            '<span>'+it.todo+'</span>'+
             (hasNote ? '<img src="images/note.png" />':'')+
             (isRecurring ? '<img src="images/recurring.png" id="reactivate'+it.id+'" />':'');
     if (hasTags) {
-        line += ' <ul id="'+tagbasename+it.id+'" class="todo_item_tags">';
-        tags = it.tags.split(",");
-        for (var i=0; i<tags.length; i++) {
-            line += '<li>'+tags[i]+'</li>';
-        }
-        line += '</ul>';
+        line += ' <input id="'+tagbasename+it.id+'" class="todo_item_tags" readonly value="'+it.tags+'">';
     }
     line += '</'+baseElem+'>';
     return line;
@@ -72,7 +67,8 @@ function renderItem(it, lineNr) {
     }
     line += '</td></tr>';
     $('#todoTable').append(line);
-    $('#'+tagbasename+it.id).tagit({readOnly: true});
+    var elem = $('#'+tagbasename+it.id); //.tagit({readOnly: true});
+    new Tagify(elem[0], { readOnly: true } );
     $('#todo'+it.id).on('dblclick', function() {
         printItem(it);
     });
@@ -114,7 +110,7 @@ function openTagDialog(tagname)
         width: 420,
         title: $T('EDIT_TAG')
     });
-    $('#merge_tag_edit').tagit("removeAll");
+    $('#merge_tag_edit')[0].__tagify.removeAllTags();
     $('#tag_todo_table').empty();
     var filtered = getTodoWithTag(new Array(tagname));
     filtered.sort(ItemSort);
@@ -124,19 +120,22 @@ function openTagDialog(tagname)
         line += getTodoTitleHtml(filtered[i], i, tagbase, '');
         line += '</div>'
         $('#tag_todo_table').append(line);
-        $('#'+tagbase+filtered[i].id).tagit({readOnly: true});
+        var elem = $('#'+tagbase+filtered[i].id); // .tagit({readOnly: true});
+        new Tagify(elem[0], { readOnly: true } );
     }
 }
 
 function fillTagList(choices)
 {
-    if ($('#taglist ul').html() != '')
-    {
-        $('#taglist ul').tagit("removeAll");
+    var tagify;
+    if ($('#taglist input')[0].__tagify) {
+        tagify = $('#taglist input')[0].__tagify;
+        tagify.removeAllTags();
+    } else {
+        tagify = new Tagify($('#taglist input')[0], { readonly: true } );
     }
-    $('#taglist ul').tagit({readOnly: true});
     for (var i=0; i<choices.length; i++) {
-        $('#taglist ul').tagit("createTag", decodeHtml(choices[i].name)+' ('+choices[i].tagCount+')');
+        tagify.addTags([ decodeHtml(choices[i].name) ]);
     }
 }
 
@@ -247,7 +246,10 @@ $(document).ready(function() {
         });
         return false;
     });
-    $('#filter_tag_edit').tagit({
+    var filterTagEdit = $('#filter_tag_edit');
+    new Tagify(filterTagEdit[0]);
+    /*
+    .tagit({
         autocomplete: {
             source: function( search, showChoices) {
                 onlyTags = new Array();
@@ -271,7 +273,10 @@ $(document).ready(function() {
             renderTable();
         }
     });
-    $('#modify_tag_edit').tagit({
+    */
+    var modifyTagEdit = $('#modify_tag_edit');
+    //new Tagify(modifyTagEdit[0]);
+    /*
         autocomplete: {
             source: function( search, showChoices) {
                 onlyTags = new Array();
@@ -289,7 +294,10 @@ $(document).ready(function() {
         singleField: true,
         singleFieldNode: $('#modify_tags')
     });
-    $('#merge_tag_edit').tagit({
+    */
+    var mergeTagEdit = $('#merge_tag_edit');
+    var mergeTagEditTagify = new Tagify(mergeTagEdit[0]);
+    /*
         autocomplete: {
             source: function( search, showChoices) {
                 onlyTags = new Array();
@@ -304,10 +312,11 @@ $(document).ready(function() {
             },
             delay: 2, minLength: 2
         },
-        singleField: true,
+        mode: select,
         singleFieldNode: $('#merge_tag'),
         tagLimit: 1
     });
+    */
     $('#enter_start').on('change', function() {
         if ($('#enter_due').val() == "")
         {

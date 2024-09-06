@@ -409,11 +409,11 @@ function fillModifyForm(id) {
     $('#modify_start').data('oldVal', formatDate(parseDate(item.start)));
     $('#modify_effort').val(item.effort);
     $('#modify_notes').val(html_entity_decode(item.notes));
-    $('#modify_tag_edit').tagit('removeAll');
+    $('#modify_tag_edit')[0].__tagify.removeAllTags();
     var tags = (item.tags == null) ? new Array() : item.tags.split(",");
     for (var i=0; i<tags.length; i++)
     {
-        $("#modify_tag_edit").tagit("createTag", html_entity_decode(tags[i]));
+        $("#modify_tag_edit")[0].__tagify.addTags([ html_entity_decode(tags[i]) ] );
     }
 
     $('#modify_recurrenceMode option:selected').prop('selected', false);
@@ -436,7 +436,7 @@ function emptyModifyForm()
     $('#modify_start').data('oldVal', '');
     $('#modify_effort').val(1);
     $('#modify_notes').val('');
-    $('#modify_tag_edit').tagit('removeAll');
+    $('#modify_tag_edit')[0].__tagify.removeAllTags();
     $('#modify_recurrenceMode option:selected').prop('selected', false);
     $('#modify_recurrenceAnchor option:selected').prop('selected', false);
 }
@@ -768,7 +768,7 @@ function storeItem() {
         $('#modify_effort').val(),
         0,  // currently not taken into account on server, and not modifiable at server
         $('#modify_notes').val().trim(),
-        $('#modify_tags').val(),
+        $('#modify_tag_edit')[0].__tagify.value.map((tag) => tag.value).join(","),
         0,  // deleted items cannot be modified
         itemList[idx].version,
         $('#modify_recurrenceMode').val(),
