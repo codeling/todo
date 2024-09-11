@@ -94,8 +94,8 @@ $(document).ready(function() {
     });
 
     new Tagify($('#modify_tag_edit')[0])
-	/*
-	.tagit({
+    /*
+    .tagit({
         autocomplete: { source: function( search, showChoices) {
             onlyTags = new Array();
             for (var i=0; i<tagList.length; ++i)
@@ -110,7 +110,7 @@ $(document).ready(function() {
         singleField: true,
         singleFieldNode: $('#modify_tags')
     });
-	*/
+    */
 
     $('#modify_start').on('change', function() {
         var oldVal = parseDate($('#modify_start').data('oldVal'));
