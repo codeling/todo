@@ -49,10 +49,10 @@ function renderItem(it, lineNr) {
             '; '+$T('RECURRENCE')+': '+repetition+
         ((it.completed != 0)? '; '+$T('DONE')+': '+formatDate(complDate, true):'')+
             '"><span class="todotitleonly">'+ it.todo+'</span>'+
-            (hasNote ? '<img src="images/note.png" />':'')+
-            (isRecurring ? '<img src="images/recurring.png" id="reactivate'+it.id+'" />':'')+
+            (hasNote ? '<span class="note" title="'+it.notes+'"></span>':'')+
+            (isRecurring ? '<input type="button" class="reactivate" id="reactivate'+it.id+'" />':'')+
         ((it.completed==0 && dueDate != null && (today - dueDate) > 0) ?
-                ' <img src="images/exclamation.png" height="16px" />':'');
+                ' <span class="exclamation"></span>':'');
 
     if (hasTags) {
         line += ' <ul id="todo_tags_'+it.id+'" class="todo_item_tags">';

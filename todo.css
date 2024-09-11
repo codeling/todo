@@ -238,6 +238,55 @@ ul.ui-autocomplete {
 #loadMoreBox a {
     margin-left: 10px;
 }
+/*******************/
+/* Button images   */
+.addButton, .editButton, .deleteButton, .undeleteButton, .todayButton, .refreshButton, .reactivateButton {
+    width: 20px;
+    height: 20px;
+    background-size: cover;
+    border: 0;
+    background-color: transparent;
+}
+.addButton:hover, .editButton:hover, .deleteButton:hover, .undeleteButton:hover, .todayButton:hover, .refreshButton:hover, .reactivateButton:hover, .ui-datepicker-trigger:hover
+ {
+    background-color: #DDD;
+}
+.addButton {
+    background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="m16 4c-7 0-12 5-12 12s5 12 12 12 12-5 12-12-5-12-12-12zm0 5c1 0 2 1 2 2v3h3c1 0 2 1 2 2s-1 2-2 2h-3v3c0 1-1 2-2 2s-2-1-2-2v-3h-3c-1 0-2-1-2-2s1-2 2-2h3v-3c0-1 1-2 2-2z" fill="%234b5"/></svg>');
+}
+.editButton {
+    background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="m21 4-17 17v7h7l17-17zm0 3 4 4-9 9h-4v-4zm-11 15h4l-4 4h-2l-2-2v-2l4-4z" fill="%23444"/></svg>');
+}
+.deleteButton {
+    background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="m10 4v4h2v-2h8v2h2v-4h-10zm-6 6v2h4v16h16v-16h4v-2zm6 2h12v14h-12z" fill="%23d45"/></svg>');
+}
+.undeleteButton {
+    background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="m10 4-2e-6 4h2v-2h8v2h2v-4zm-6 6v2h4v16h16v-16h4v-2zm6 2h12v14h-12z" fill="%23444"/><path d="m25 3-2 1 2 4c-1 0-6 0-8 2-2.7 2.5-3 6-3 10h3c0-3 0-5 2-7s4-2 6-2l-2 4 2 1 4-6.5z" fill="%23192"/></svg>');
+}
+.todayButton {
+    background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="m8 4v2h-4v22h24v-22h-4v-2h-2v2h-12v-2h-2zm-2 4h2v2h2v-2h12v2h2v-2h2v4h-20v-4zm0 6h20v12h-20v-12zm8 1 1 6-3-2-1 2 5 3 5-3-1-2-3 2 1-6h-4z" fill="%23444"/></svg>');
+}
+.refreshButton,
+.reactivateButton {
+    background-image: url('data:image/svg+xml;utf8,<svg version="1.1" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="m16 4c-6 0-11 5-11 11s3 8 7 10l1-2c-3-2-6-3-6-8s4-9 9-9 9 4 9 9-4 9-7 9l3-5h-2l-4 6 4 5h2l-3-4c4 0 9-5 9-11s-5-11-11-11z" fill="%23444"/></svg>');
+}
+.mergeButton {
+    background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="m4 8v3s9 4 9 5-9 5-9 5v3s12-6 14-6c2 0 5 0 5 0l-2 5 7-7-7-7 2 5h-5c-2 0-14-6-14-6z"/></svg>');
+}
+.exclamation, .note {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    background-size: cover;
+    vertical-align: middle;
+}
+.exclamation {
+    background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="m17 19v-7h-2v7zm12 8-13-23-13 23zm-22-2 9-17 9 17zm7-2 1 1 2 0 1-1 0-1-1-1-2-0-1 1z" fill="%23d45"/></svg>');
+}
+.note {
+    margin-left: 10px;
+    background-image: url('data:image/svg+xml;utf8,<svg version="1.1" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="m5 4v22l2 2h20v-24zm2 2h18v20h-12l-6-6zm0 16 4 4h-1l-3-3zm0 3 1 1h-1z" fill="%23444"/><path d="m10 10v2h12v-2zm0 4v2h12v-2zm0 4v2h12v-2z" fill="%23bbb"/></svg>');
+}
 
 /*******************/
 /* Statistics page */

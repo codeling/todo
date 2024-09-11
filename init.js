@@ -2,7 +2,7 @@ function createDatePicker(tagid) {
     $(tagid).datepicker( {
         showOn: 'both',
         buttonImageOnly: true,
-        buttonImage: 'images/calendar.png',
+        buttonImage: 'images/calendar.svg',
         dateFormat: 'yy-mm-dd',
         showAnim: ''
     });

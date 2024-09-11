@@ -36,7 +36,7 @@
           <input type="hidden" name="user_id" id="user_id" value="<?php echo $curUserID; ?>" />
           <table id="todoTable">
             <tr>
-              <th class="todo"><?php echo(TodoLang::_("TODO"));?> <input type="image" src="images/refresh.png" name="refresh" value="refresh" onclick="refresh()" /></th>
+              <th class="todo"><?php echo(TodoLang::_("TODO"));?> <input type="button" class="refreshButton" name="refresh" alt="refresh" onclick="refresh()" /></th>
               <th class="start"><?php echo(TodoLang::_("START"));?></th>
               <th class="due"><?php echo(TodoLang::_("DUE"));?></th>
               <th class="actions" colspan="2"><?php echo(TodoLang::_("ACTIONS"));?></th>
@@ -45,7 +45,7 @@
               <td><input type="text" id="enter_todo" name="enter_todo" maxlength="255" /></td>
               <td class="start"><input type="text" id="enter_start" name="enter_start" maxlength="4" /></td>
               <td class="due"><input type="text" id="enter_due" name="enter_due" maxlength="20" /></td>
-              <td class="actions" colspan="2"><input type="image" src="images/Add.png" name="save" value="<?php echo(TodoLang::_("SAVE"));?>" onclick="enter()" /></td>
+              <td class="actions" colspan="2"><input type="button" class="addButton" name="save" alt="<?php echo(TodoLang::_("SAVE"));?>" onclick="enter()" /></td>
             </tr>
           </table>
         </form>
@@ -105,7 +105,7 @@
               <select id="modify_list">
               </select>
             </div>
-            <input type="image" src="images/pencil.png" name="modify_save" id="modify_save" value="<?php echo(TodoLang::_("SAVE"));?>" />
+            <input type="button" class="editButton" name="modify_save" id="modify_save" alt="<?php echo(TodoLang::_("SAVE"));?>" />
           </form>
         </div>
       </div>
@@ -133,10 +133,10 @@
             <span class="modify_desc"><?php echo(TodoLang::_("MERGE_TO"));?>: </span>
             <input type="hidden" id="merge_tag" name="merge_tag" />
             <ul id="merge_tag_edit" class="tagit ui-widget ui-widget-content ui-corner-all tagit-choice-editable"></ul>
-            <input type="image" src="images/merge.png" name="tag_merge" id="tag_merge" value="<?php echo(TodoLang::_("MERGE"));?>" />
+            <input type="button" class="mergeButton" name="tag_merge" id="tag_merge" alt="<?php echo(TodoLang::_("MERGE"));?>" />
           </div>
-          <input type="image" src="images/Delete.png" name="tag_delete" id="tag_delete" value="<?php echo(TodoLang::_("DELETE"));?>" />
-          <input type="image" src="images/pencil.png" name="tag_save" id="tag_save" value="<?php echo(TodoLang::_("SAVE"));?>" />
+          <input type="button" src="deleteButton" name="tag_delete" id="tag_delete" alt="<?php echo(TodoLang::_("DELETE"));?>" />
+          <input type="button" class="editButton" name="tag_save" id="tag_save" alt="<?php echo(TodoLang::_("SAVE"));?>" />
         </form>
         <div id="tag_todo_container">
           <span id="tag_todo_caption"><?php echo(TodoLang::_("TAG_TODO_LIST_CAPTION"));?></span>

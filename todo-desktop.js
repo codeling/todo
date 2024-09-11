@@ -20,8 +20,8 @@ function getTodoTitleHtml(it, lineNr, tagbasename, spanCssClass, baseElem) {
             '">'+
             '<span class="todo_lineNr">'+(lineNr+1)+'.</span> '+
             '<span>'+it.todo+'</span>'+
-            (hasNote ? '<img src="images/note.png" />':'')+
-            (isRecurring ? '<img src="images/recurring.png" id="reactivate'+it.id+'" />':'');
+            (hasNote ? '<span class="note" title="'+it.notes+'"></span>':'')+
+            (isRecurring ? '<input type="button" class="reactivateButton" id="reactivate'+it.id+'" />':'');
     if (hasTags) {
         line += ' <input id="'+tagbasename+it.id+'" class="todo_item_tags" readonly value="'+it.tags+'">';
     }
@@ -44,26 +44,26 @@ function renderItem(it, lineNr) {
     line +=  '<td class="start">'+((it.start == null)?'undef':formatDate(parseDate(it.start)))+'</td>'+
         '<td class="due">'+ dueString+
                 ((it.completed==0 && dueDate != null && (today - dueDate) > 0) ?
-                ' <img src="images/exclamation.png" height="16px" />':'')+
+                ' <span class="exclamation"></span>':'')+
         '</td>'+
         '<td class="effort">'+it.effort+'</td>'+
         '<td class="actions">'+
             '<span class="completed"><input type="checkbox" id="completed'+it.id+'" '+
             ((it.completed==1)?'checked="true" ':'')+'/></span>'+
-            '<span class="modify"><input type="image" value="'+
+            '<span class="modify"><input type="button" alt="'+
                 $T('EDIT')+'" id="modify'+it.id+
-                '" src="images/pencil.png" /></span>'+
-            '<span class="dotoday"><input type="image" value"'+
+                '" class="editButton" /></span>'+
+            '<span class="dotoday"><input type="button" alt="'+
                 $T('DOTODAY')+'" id="dotoday'+it.id+
-                '" src="images/dotoday.png" /></span>';
+                '" class="todayButton" /></span>';
     if (it.deleted == 0) {
-        line += '<span class="trash"><input type="image" value="'+
+        line += '<span class="trash"><input type="button" alt="'+
                $T('DELETE')+'" id="trash'+it.id+
-               '" src="images/trash_red.png" /></span>';
+               '" class="deleteButton" /></span>';
     } else {
-        line += '<span class="restore"><input type="image" value="'+
+        line += '<span class="restore"><input type="button" alt="'+
                $T('RESTORE')+'" id="restore'+it.id+
-               '" src="images/undelete.png" /></span>';
+               '" class="undeleteButton" /></span>';
     }
     line += '</td></tr>';
     $('#todoTable').append(line);
