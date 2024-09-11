@@ -63,7 +63,9 @@ function renderItem(it, lineNr) {
     line += '</td></tr>';
     $('#todoTable tbody').append(line);
     var elem = $('#'+tagbasename+it.id); //.tagit({readOnly: true});
-    new Tagify(elem[0], { readOnly: true } );
+    if (it.tags != null && it.tags != '') {
+        new Tagify(elem[0], { readOnly: true } );
+    }
     $('#todo'+it.id).on('dblclick', function() {
         printItem(it);
     });
