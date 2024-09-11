@@ -47,10 +47,6 @@ div.line,tr.line_odd {
     padding-top: 3px !important;
     padding-bottom: 2px !important;
 }
-.line_input input[type="image"] {
-    padding-left: 20px;
-    vertical-align: middle;
-}
 .line_header {
     background-color: #EEE;
 }
