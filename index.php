@@ -16,6 +16,7 @@
     <link rel="stylesheet" type="text/css" href="tagify.css" />
     <link rel="stylesheet" type="text/css" href="todo.css" />
     <link rel="stylesheet" type="text/css" href="jquery/jquery-ui-1.13.2.min.css"/>
+    <link rel="icon" href="/todo.svg" type="image/svg+xml">
   </head>
   <body>
     <div id="todo_content">
