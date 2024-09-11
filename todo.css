@@ -5,13 +5,12 @@ body {
     font-family:Tahoma,sans-serif;
     background-color: #F8F8F8;
     font-size: 9pt;
+    margin: 5px;
 }
 h1 {
     font-size: 16pt;
     font-weight: bold;
-    margin-bottom: 3px;
-    margin-right: auto;
-    margin-left: 5px;
+    margin: 5px auto 3px 5px;
 }
 h2 {
     font-size: 14pt;
@@ -29,18 +28,18 @@ h2 {
 #headerLine {
     align-items: flex-end;
 }
-#progress,
-#todoTable,
-div.line,tr.line {
-    padding: 1px 0px;
-}
-div.line,tr.line_odd {
-    background-color: #EEEEEE;
-}
-#mainContent {
+#todoTable {
     border: 1px solid black;
     border-radius: 4px;
-    overflow: hidden;
+    border-spacing: 0;
+}
+div.line,tr.line_odd {
+    background-color: #EEE;
+}
+#todoTable td {
+    padding: 1px 0;
+}
+#mainContent {
     margin-left: auto;
 }
 .line_input span,
@@ -48,26 +47,27 @@ div.line,tr.line_odd {
     padding-top: 3px !important;
     padding-bottom: 2px !important;
 }
-.line_input input[type="image"]
-{
+.line_input input[type="image"] {
     padding-left: 20px;
     vertical-align: middle;
 }
 .line_header {
-    background-color: #EEEEEE;
+    background-color: #EEE;
 }
-input[type="text"]
-{
+input[type="text"] {
     font-family:Tahoma,sans-serif;
     font-size: 9pt;
 }
-input[type="image"]
-{
-    vertical-align: bottom;
+input[type="image"] {
+    vertical-align: text-bottom;
     height: 16px;
 }
 .todo {
     text-align: left;
+}
+.todo img {
+    vertical-align: text-bottom;
+    margin-left: 5px;
 }
 .due,
 .actions {
@@ -84,14 +84,17 @@ input[type="image"]
     padding-left: 4px !important;
 }
 #enter_todo {
-    margin-left: 1px;
+    margin-left: 5px;
     width: 95%;
 }
 .ui-datepicker-trigger {
-    vertical-align: middle;
+    vertical-align: bottom;
 }
 .todo_completed {
     color: #777;
+}
+.todo_completed input[type="checkbox"] {
+    accent-color: #0A0;
 }
 .todo_deleted {
     color: #777;
@@ -133,12 +136,12 @@ input[disabled="disabled"] {
 #working {
     padding: 3px;
     margin: 2px;
-    background-color:#EEEEEE;
+    background-color:#EEE;
     float: right;
 }
 #smallLog {
     font-size: 6pt;
-    background-color:#EEEEEE;
+    background-color:#EEE;
     margin-left: 2px;
     margin-right: 2px;
     margin-bottom: 10px;
@@ -162,11 +165,29 @@ ul.ui-autocomplete {
     --tag-hide-transition: 0s;
     --readonly-striped: 0;
 }
+.tagify[readonly] {
+    border: none;
+}
+.tagify[readonly] .tagify__input {
+    display: none;
+}
+.tagify__input {
+    margin: 2px;
+}
+.tagify__tag {
+    margin-block: 2px;
+}
 .ui-autocomplete-input {
     width: 100px !important;
 }
 .modify_line {
     margin-bottom: 1px;
+}
+#progress {
+    border: 1px solid black;
+    border-radius: 4px;
+    margin-bottom: 5px;
+    overflow: hidden;
 }
 #progress_todo {
     background-color: #D66;
@@ -208,9 +229,12 @@ ul.ui-autocomplete {
 #taglist {
     font-size: 8pt;
 }
+#taglist,
 #lists {
     border: 1px solid black;
     border-radius: 4px;
+    margin-top: 10px;
+    padding: 5px;
 }
 #lists ul {
     list-style-type: none;
@@ -230,13 +254,11 @@ ul.ui-autocomplete {
     padding: 0;
 }
 #loadMoreBox {
-    padding-top: 5px;
-    padding-bottom: 5px;
-    padding-left: 5px;
-    border-top: 1px solid black;
+    margin-top: 10px;
+    margin-bottom: 5px;
 }
 #loadMoreBox a {
-    margin-left: 10px;
+    margin-right: 10px;
 }
 /*******************/
 /* Button images   */
