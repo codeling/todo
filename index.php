@@ -37,7 +37,7 @@
           <input type="hidden" name="user_id" id="user_id" value="<?php echo $curUserID; ?>" />
           <table id="todoTable">
             <tr>
-              <th class="todo"><?php echo(TodoLang::_("TODO"));?> <input type="button" class="refreshButton" name="refresh" alt="refresh" onclick="refresh()" /></th>
+              <th class="todo"><?php echo(TodoLang::_("TODO"));?> <input type="button" class="refreshButton" id="refresh" alt="refresh" /></th>
               <th class="start"><?php echo(TodoLang::_("START"));?></th>
               <th class="due"><?php echo(TodoLang::_("DUE"));?></th>
               <th class="actions" colspan="2"><?php echo(TodoLang::_("ACTIONS"));?></th>

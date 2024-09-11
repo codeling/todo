@@ -138,6 +138,8 @@ $(document).ready(function() {
           $('#enter_start').data('oldVal', $('#enter_start').val());
     });
 
+    $('#refresh').on('click', refresh);
+
     reloadTagList();
 
     refresh();
