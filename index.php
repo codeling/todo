@@ -36,6 +36,7 @@
         <form method="POST" onsubmit="return false;" id="inputform">
           <input type="hidden" name="user_id" id="user_id" value="<?php echo $curUserID; ?>" />
           <table id="todoTable">
+            <thead>
             <tr>
               <th class="todo"><?php echo(TodoLang::_("TODO"));?> <input type="button" class="refreshButton" id="refresh" alt="refresh" /></th>
               <th class="start"><?php echo(TodoLang::_("START"));?></th>
@@ -48,6 +49,9 @@
               <td class="due"><input type="text" id="enter_due" name="enter_due" maxlength="20" /></td>
               <td class="actions" colspan="2"><input type="button" class="addButton" name="save" alt="<?php echo(TodoLang::_("SAVE"));?>" onclick="enter()" /></td>
             </tr>
+            </thead>
+            <tbody>
+            </tbody>
           </table>
         </form>
         <div id="loadMoreBox">

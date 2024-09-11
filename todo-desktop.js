@@ -1,11 +1,6 @@
 function clearTable()
 {
-    // from https://stackoverflow.com/a/16270116, but not working:
-    // $("#todoTable:not(:first)").remove();
-    // from https://stackoverflow.com/a/46577141; not ideal, but working:
-    for(var i = 2;i<todoTable.rows.length;){
-        todoTable.deleteRow(i);
-    }
+    $("#todoTable tbody").empty();
 }
 function getTodoTitleHtml(it, lineNr, tagbasename, spanCssClass, baseElem) {
     var isRecurring = it.recurrenceMode != 0;
@@ -66,7 +61,7 @@ function renderItem(it, lineNr) {
                '" class="undeleteButton" /></span>';
     }
     line += '</td></tr>';
-    $('#todoTable').append(line);
+    $('#todoTable tbody').append(line);
     var elem = $('#'+tagbasename+it.id); //.tagit({readOnly: true});
     new Tagify(elem[0], { readOnly: true } );
     $('#todo'+it.id).on('dblclick', function() {
