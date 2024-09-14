@@ -93,24 +93,7 @@ $(document).ready(function() {
         reload();
     });
 
-    new Tagify($('#modify_tag_edit')[0])
-    /*
-    .tagit({
-        autocomplete: { source: function( search, showChoices) {
-            onlyTags = new Array();
-            for (var i=0; i<tagList.length; ++i)
-            {
-                if (tagList[i].name.toLowerCase().indexOf(search.term.toLowerCase()) != -1)
-                {
-                    onlyTags.push(tagList[i].name);
-                }
-            }
-            showChoices(this._subtractArray(onlyTags, this.assignedTags()));
-        }, delay: 2, minLength: 2},
-        singleField: true,
-        singleFieldNode: $('#modify_tags')
-    });
-    */
+    new Tagify($('#modify_tag_edit')[0]);
 
     $('#modify_start').on('change', function() {
         var oldVal = parseDate($('#modify_start').data('oldVal'));
@@ -136,6 +119,10 @@ $(document).ready(function() {
             }
         }
           $('#enter_start').data('oldVal', $('#enter_start').val());
+    });
+    $('#filter .tagify__input').on('focus', function() {
+        let tagStrs = tagList.map( (x) => x.name );
+        $('#filter_tag_edit')[0].__tagify.settings.whitelist = tagStrs;
     });
 
     $('#refresh').on('click', refresh);

@@ -26,7 +26,7 @@
           <div id="working"><?php echo(TodoLang::_("WORKING"));?></div>
           <div id="filter">
             <input type="hidden" id="filter_tags" name="filter_tags" />
-            <ul id="filter_tag_edit" class="tagit ui-widget ui-widget-content ui-corner-all tagit-choice-editable"></ul>
+            <input id="filter_tag_edit" />
           </div>
           <div id="emptytrashlink"><a href="javascript:emptyTrash()"><?php echo(TodoLang::_("EMPTY_TRASH"));?></a></div>
           <div id="statistiklink"><a href="statistik.php"><?php echo(TodoLang::_("SHOW_STATISTICS"));?></a></div>
@@ -104,7 +104,7 @@
             </div><div class="modify_line">
               <span class="modify_desc"><?php echo(TodoLang::_("TAGS"));?>:</span>
               <input type="hidden" id="modify_tags" name="modify_tags" />
-              <input id="modify_tag_edit"></ul>
+              <input id="modify_tag_edit" />
             </div><div class="modify_line">
               <span class="modify_desc"><?php echo(TodoLang::_("LIST"));?>:</span>
               <select id="modify_list">
@@ -137,10 +137,10 @@
           </div><div class="modify_line">
             <span class="modify_desc"><?php echo(TodoLang::_("MERGE_TO"));?>: </span>
             <input type="hidden" id="merge_tag" name="merge_tag" />
-            <ul id="merge_tag_edit" class="tagit ui-widget ui-widget-content ui-corner-all tagit-choice-editable"></ul>
+            <input id="merge_tag_edit" >
             <input type="button" class="mergeButton" name="tag_merge" id="tag_merge" alt="<?php echo(TodoLang::_("MERGE"));?>" />
           </div>
-          <input type="button" src="deleteButton" name="tag_delete" id="tag_delete" alt="<?php echo(TodoLang::_("DELETE"));?>" />
+          <input type="button" class="deleteButton" name="tag_delete" id="tag_delete" alt="<?php echo(TodoLang::_("DELETE"));?>" />
           <input type="button" class="editButton" name="tag_save" id="tag_save" alt="<?php echo(TodoLang::_("SAVE"));?>" />
         </form>
         <div id="tag_todo_container">

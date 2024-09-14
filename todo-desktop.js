@@ -62,7 +62,7 @@ function renderItem(it, lineNr) {
     }
     line += '</td></tr>';
     $('#todoTable tbody').append(line);
-    var elem = $('#'+tagbasename+it.id); //.tagit({readOnly: true});
+    var elem = $('#'+tagbasename+it.id);
     if (it.tags != null && it.tags != '') {
         new Tagify(elem[0], { readOnly: true } );
     }
@@ -107,7 +107,9 @@ function openTagDialog(tagname)
         width: 420,
         title: $T('EDIT_TAG')
     });
-    $('#merge_tag_edit')[0].__tagify.removeAllTags();
+    var tagify = $('#merge_tag_edit')[0].__tagify;
+    tagify.removeAllTags();
+    tagify.settings.whitelist = tagList.map( (x) => x.name );
     $('#tag_todo_table').empty();
     var filtered = getTodoWithTag(new Array(tagname));
     filtered.sort(ItemSort);
@@ -149,8 +151,8 @@ $(document).ready(function() {
         // store...
         storeItem();
     });
-    $(document.body).on('click', '.tagit-choice-read-only', function() {
-        var tagname = $(this).text();
+    $(document.body).on('click', '#taglist .tagify__tag', function() {
+        var tagname = this.__tagifyTagData.value;
         if (tagname.indexOf("(") != -1)
         {
             tagname = tagname.substr(0, tagname.indexOf("(")-1).trim();
@@ -213,7 +215,7 @@ $(document).ready(function() {
     $('#tag_merge').on('click', function() {
         var tagobject = new Object();
         tagobject.id = $('#tag_id').val();
-        merge_tagname = $('#merge_tag').val();
+        merge_tagname = $('#merge_tag_edit')[0].__tagify.value.map((tag) => tag.value)[0];
         var result = $.grep(tagList,
             function(e) { return decodeHtml(e.name) === merge_tagname; });
         if (result.length == 0 || result.length > 1)
@@ -244,56 +246,17 @@ $(document).ready(function() {
         return false;
     });
     var filterTagEdit = $('#filter_tag_edit');
-    new Tagify(filterTagEdit[0]);
-    /*
-    .tagit({
-        autocomplete: {
-            source: function( search, showChoices) {
-                onlyTags = new Array();
-                for (var i=0; i<tagList.length; ++i)
-                {
-                    if (tagList[i].name.toLowerCase().indexOf(search.term.toLowerCase()) != -1)
-                    {
-                        onlyTags.push(tagList[i].name);
-                    }
-                }
-                showChoices(this._subtractArray(onlyTags, this.assignedTags()));
-            },
-            delay: 2, minLength: 2
-        },
-        singleField: true,
-        singleFieldNode: $('#filter_tags'),
-        afterTagAdded: function(event, ui) {
-            renderTable();
-        },
-        afterTagRemoved: function(event, ui) {
-            renderTable();
-        }
-    });
-    */
+    // tagList not set yet here ...
+    var tagify = new Tagify(filterTagEdit[0]);
+    tagify.on('change', function() {
+        renderTable();
+    } );
     var modifyTagEdit = $('#modify_tag_edit');
-    //new Tagify(modifyTagEdit[0]);
-    /*
-        autocomplete: {
-            source: function( search, showChoices) {
-                onlyTags = new Array();
-                for (var i=0; i<tagList.length; ++i)
-                {
-                    if (tagList[i].name.toLowerCase().indexOf(search.term.toLowerCase()) != -1)
-                    {
-                        onlyTags.push(tagList[i].name);
-                    }
-                }
-                showChoices(this._subtractArray(onlyTags, this.assignedTags()));
-            },
-            delay: 2, minLength: 2
-        },
-        singleField: true,
-        singleFieldNode: $('#modify_tags')
-    });
-    */
     var mergeTagEdit = $('#merge_tag_edit');
-    var mergeTagEditTagify = new Tagify(mergeTagEdit[0]);
+    var mergeTagEditTagify = new Tagify(mergeTagEdit[0], {
+        enforceWhitelist: true,
+        mode: "select"
+    });
     /*
         autocomplete: {
             source: function( search, showChoices) {

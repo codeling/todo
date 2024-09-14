@@ -409,11 +409,16 @@ function fillModifyForm(id) {
     $('#modify_start').data('oldVal', formatDate(parseDate(item.start)));
     $('#modify_effort').val(item.effort);
     $('#modify_notes').val(html_entity_decode(item.notes));
-    $('#modify_tag_edit')[0].__tagify.removeAllTags();
+
+    var tagify = $('#modify_tag_edit')[0].__tagify;
+    tagify.removeAllTags();
+    let tagStrs = tagList.map( (x) => x.name );
+    $('#modify_tag_edit')[0].__tagify.settings.whitelist = tagStrs;
+
     var tags = (item.tags == null) ? new Array() : item.tags.split(",");
     for (var i=0; i<tags.length; i++)
     {
-        $("#modify_tag_edit")[0].__tagify.addTags([ html_entity_decode(tags[i]) ] );
+        tagify.addTags([ html_entity_decode(tags[i]) ] );
     }
 
     $('#modify_recurrenceMode option:selected').prop('selected', false);
@@ -591,10 +596,10 @@ function getTodoWithTag(filterTags)
 }
 
 function filterList() {
-    if ($('#filter_tags').length == 0 || $('#filter_tags').val() == '') {
+    let filterTags = $('#filter_tag_edit')[0].__tagify.value.map((tag) => tag.value);
+    if (filterTags.length == 0) {
         result = itemList.slice(0);
     } else {
-        filterTags = $('#filter_tags').val().split(',');
         result = getTodoWithTag(filterTags);
     }
     result.sort(ItemSort);

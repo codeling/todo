@@ -202,11 +202,8 @@ ul.ui-autocomplete {
 #enter_due, #enter_start {
     width: 75%;
 }
-#merge_tag_edit {
-    width: 180px;
-    display: inline-block;
-    padding: 0 !important;
-    margin: 0 !important;
+#tag_dialog .tagify {
+    width: 280px;
 }
 #tag_todo_container {
     margin-top: 10px;
@@ -215,7 +212,7 @@ ul.ui-autocomplete {
     font-weight: bold;
 }
 #tag_merge {
-    vertical-align: top;
+    vertical-align: middle;
 }
 #sidebar {
     width: 20%;
