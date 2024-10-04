@@ -2,7 +2,8 @@ function clearTable()
 {
     $("#todoTable tbody").empty();
 }
-function getTodoTitleHtml(it, lineNr, tagbasename, spanCssClass, baseElem) {
+
+function getTodoTitleHtml(it, lineNr, tagbasename, spanCssClass, baseElem, checkbox) {
     var isRecurring = it.recurrenceMode != 0;
     var hasNote = it.notes != null && it.notes != '';
     var hasTags = it.tags != null && it.tags != '';
@@ -12,8 +13,13 @@ function getTodoTitleHtml(it, lineNr, tagbasename, spanCssClass, baseElem) {
     line =   '<'+baseElem+' class="'+spanCssClass+'" title="'+$T('CREATED')+': '+formatDate(createDate, true)+
             '; '+$T('RECURRENCE')+': '+repetition+
         ((it.completed != 0)? '; '+$T('DONE')+': '+formatDate(complDate, true):'')+
-            '">'+
-            '<span class="todo_lineNr">'+(lineNr+1)+'.</span> '+
+            '">';
+    if (checkbox)
+    {
+        line += '<span class="completed"><input type="checkbox" id="completed'+it.id+'" '+
+            ((it.completed==1)?'checked="true" ':'')+'/></span>';
+	}
+    line += '<span class="todo_lineNr">'+(lineNr+1)+'.</span> '+
             '<span>'+it.todo+'</span>'+
             (hasNote ? '<span class="note" title="'+it.notes+'"></span>':'')+
             (isRecurring ? '<input type="button" class="reactivateButton" id="reactivate'+it.id+'" />':'');
@@ -35,7 +41,7 @@ function renderItem(it, lineNr) {
         ((it.deleted==1)?' todo_deleted':'')+
             '" id="todo'+it.id+'">';
     var tagbasename = 'todo_tags_';
-    line += getTodoTitleHtml(it, lineNr, tagbasename, 'todo', 'td');
+    line += getTodoTitleHtml(it, lineNr, tagbasename, 'todo', 'td', true);
     line +=  '<td class="start">'+((it.start == null)?'undef':formatDate(parseDate(it.start)))+'</td>'+
         '<td class="due">'+ dueString+
                 ((it.completed==0 && dueDate != null && (today - dueDate) > 0) ?
@@ -43,8 +49,6 @@ function renderItem(it, lineNr) {
         '</td>'+
         '<td class="effort">'+it.effort+'</td>'+
         '<td class="actions">'+
-            '<span class="completed"><input type="checkbox" id="completed'+it.id+'" '+
-            ((it.completed==1)?'checked="true" ':'')+'/></span>'+
             '<span class="modify"><input type="button" alt="'+
                 $T('EDIT')+'" id="modify'+it.id+
                 '" class="editButton" /></span>'+
@@ -115,9 +119,7 @@ function openTagDialog(tagname)
     filtered.sort(ItemSort);
     var tagbase = 'tag_todo_tags_';
     for (var i=0; i<filtered.length; i++) {
-        var line = '<div>';
-        line += getTodoTitleHtml(filtered[i], i, tagbase, '');
-        line += '</div>'
+        var line = getTodoTitleHtml(filtered[i], i, tagbase, 'todo', 'div', false);
         $('#tag_todo_table').append(line);
         var elem = $('#'+tagbase+filtered[i].id); // .tagit({readOnly: true});
         new Tagify(elem[0], { readOnly: true } );
