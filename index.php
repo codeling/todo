@@ -45,8 +45,8 @@
             </tr>
             <tr class="line line_input">
               <td><input type="text" id="enter_todo" name="enter_todo" maxlength="255" /></td>
-              <td class="start"><input type="text" id="enter_start" name="enter_start" maxlength="4" /></td>
-              <td class="due"><input type="text" id="enter_due" name="enter_due" maxlength="20" /></td>
+              <td class="start"><input type="text" id="enter_start" name="enter_start" maxlength="10" /></td>
+              <td class="due"><input type="text" id="enter_due" name="enter_due" maxlength="10" /></td>
               <td class="actions" colspan="2"><input type="button" class="addButton" name="save" alt="<?php echo(TodoLang::_("SAVE"));?>" onclick="enter()" /></td>
             </tr>
             </thead>

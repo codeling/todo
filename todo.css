@@ -75,6 +75,9 @@ input[type="image"] {
     padding: 2px;
     box-sizing: border-box;
 }
+td.start, td.due {
+	width: 95px;
+}
 .todo,
 #enter_todo {
     padding-left: 4px !important;
@@ -200,7 +203,7 @@ ul.ui-autocomplete {
     text-align: right;
 }
 #enter_due, #enter_start {
-    width: 75%;
+    width: 70px;
 }
 #tag_dialog .tagify {
     width: 280px;
