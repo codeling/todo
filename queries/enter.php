@@ -6,27 +6,27 @@
     $due      = $db->real_escape_string(htmlentities($_REQUEST['due'], ENT_QUOTES, "UTF-8"));
     $start    = $db->real_escape_string(htmlentities($_REQUEST['start'], ENT_QUOTES, "UTF-8"));
     $tags = explode(",", $_REQUEST['tags']);
-    // checks:
-    if (!checkDateStr($due)) {
-		echo 'Invalid due date!';
-		die;
+    // checks (empty dates are allowed: start defaults to today, due stays empty):
+    if ($due != '' && !checkDateStr($due)) {
+        echo 'Invalid due date!';
+        die;
     }
-	if (!checkDateStr($start)) {
-		echo 'Invalid start date!';
-		die;
-	}
-	if (convertStrToDate($due) < convertStrToDate($start))
-	{
-		echo 'Due date is earlier than start date!';
-		die;
-	}
+    if ($start != '' && !checkDateStr($start)) {
+        echo 'Invalid start date!';
+        die;
+    }
+    if ($due != '' && $start != '' && convertStrToDate($due) < convertStrToDate($start))
+    {
+        echo 'Due date is earlier than start date!';
+        die;
+    }
     if ($todo == '') {
         echo 'Die Beschreibung darf nicht leer sein!';
         die;
     }
     $todo  = "'".$todo."'";
     $due   = (strcmp($due, '') == 0) ? "NULL" : "'$due'";
-    $start = (strcmp($start, '') == 0) ? "NULL" : "'$start'";
+    $start = (strcmp($start, '') == 0) ? "UTC_DATE()" : "'$start'";
     $list_id = (int)$_REQUEST['list_id'];
     // TODO: check if given list_id belongs to logged in user!
     $sql = "INSERT INTO todo ".

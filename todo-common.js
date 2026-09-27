@@ -507,12 +507,12 @@ function setListener(id) {
     $('#completed'+id).on('click', function() {
         toggleCompleted(id);
     });
-    if ($('#modify'+id).length !== 0) { // needed for mobile version - there we don't have the modifyID element
+    if ($('#modify'+id).length !== 0) {
         $('#modify'+id).on('click', function() {
             modifyItem(id);
         });
     }
-    if ($('#dotoday'+id).length !== 0) { // needed for mobile version - there we don't have the modifyID element
+    if ($('#dotoday'+id).length !== 0) {
         $('#dotoday'+id).on('click', function() {
             doToday(id);
         });
@@ -625,6 +625,12 @@ function updateProgress() {
     $('#progress_done').css('width', ((progressWidth*done/count))+'%');
     $('#progress_todo').attr('title', $T('OPEN')+': '+open);
     $('#progress_done').attr('title', $T('DONE')+': '+Math.round(100*done/count) + ' % ('+done+') '+$T('SINCE_DAYS_PREFIX')+reloadData.age+$T('SINCE_DAYS_POSTFIX'));
+}
+
+
+// dialog width limited to the window width (for small screens)
+function dialogWidth(maxWidth) {
+    return Math.min(maxWidth, $(window).width() - 20);
 }
 
 
@@ -805,9 +811,23 @@ function enter() {
         if (todo.charAt(colon+1) == ' ') { colon++; }
         todo = todo.substr(colon+1);
     }
-    var stuff = new Todo(-1, todo, $('#enter_due').val(),
-            $('#enter_start').val(), 1 /* effort */ ,
-            0, '', tags, 0, 1, 0, null, formatDate(getUTCDate(), true),
+    // incompletely entered date: value is empty, but input isn't
+    if ($('#enter_start')[0].validity.badInput || $('#enter_due')[0].validity.badInput) {
+        alert($T('INVALID_DATE'));
+        return;
+    }
+    // start/due inputs are hidden on narrow screens; default like the server:
+    // start today, no due date
+    var start = $('#enter_start').val();
+    if (start == '') {
+        start = formatDate(getUTCDate());
+    }
+    var due = $('#enter_due').val();
+    if (due == '') {
+        due = null;
+    }
+    var stuff = new Todo(-1, todo, due, start, 1 /* effort */ ,
+            0, '', tags, 0, 1, 0, null, null, formatDate(getUTCDate(), true),
             reloadData.list_id);
     addItem(stuff);
 }

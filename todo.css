@@ -50,7 +50,7 @@ div.line,tr.line_odd {
 .line_header {
     background-color: #EEE;
 }
-input[type="text"] {
+input[type="text"], input[type="date"] {
     font-family:Tahoma,sans-serif;
     font-size: 9pt;
 }
@@ -76,7 +76,7 @@ input[type="image"] {
     box-sizing: border-box;
 }
 td.start, td.due {
-	width: 95px;
+	width: 110px;
 }
 .todo,
 #enter_todo {
@@ -85,9 +85,6 @@ td.start, td.due {
 #enter_todo {
     margin-left: 5px;
     width: 95%;
-}
-.ui-datepicker-trigger {
-    vertical-align: bottom;
 }
 .todo_completed {
     color: #777;
@@ -156,7 +153,7 @@ span.modify_desc {
 ul.ui-autocomplete {
     z-index: 200;
 }
-.modify_line > select, .modify_line > input[type='text'], .modify_line > textarea, .modify_line > .tagify {
+.modify_line > select, .modify_line > input[type='text'], .modify_line > input[type='date'], .modify_line > textarea, .modify_line > .tagify {
     width: 300px;
     box-sizing: border-box;
 }
@@ -202,9 +199,6 @@ ul.ui-autocomplete {
     width: 20px;
     text-align: right;
 }
-#enter_due, #enter_start {
-    width: 70px;
-}
 #tag_dialog .tagify {
     width: 280px;
 }
@@ -239,7 +233,6 @@ ul.ui-autocomplete {
 }
 #emptytrashlink,
 #statistiklink,
-#mobilelink,
 #filter {
     margin-left: 5px;
     margin-right: 5px;
@@ -265,9 +258,13 @@ ul.ui-autocomplete {
     border: 0;
     background-color: transparent;
 }
-.addButton:hover, .editButton:hover, .deleteButton:hover, .undeleteButton:hover, .todayButton:hover, .refreshButton:hover, .reactivateButton:hover, .ui-datepicker-trigger:hover, .mergeButton:hover
- {
-    background-color: #DDD;
+/* only on devices with real hover, else the highlight sticks after a tap */
+@media (hover: hover)
+{
+    .addButton:hover, .editButton:hover, .deleteButton:hover, .undeleteButton:hover, .todayButton:hover, .refreshButton:hover, .reactivateButton:hover, .mergeButton:hover
+    {
+        background-color: #DDD;
+    }
 }
 .addButton {
     background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="m16 4c-7 0-12 5-12 12s5 12 12 12 12-5 12-12-5-12-12-12zm0 5c1 0 2 1 2 2v3h3c1 0 2 1 2 2s-1 2-2 2h-3v3c0 1-1 2-2 2s-2-1-2-2v-3h-3c-1 0-2-1-2-2s1-2 2-2h3v-3c0-1 1-2 2-2z" fill="%230A0"/></svg>');
@@ -334,10 +331,62 @@ ul.ui-autocomplete {
 
 /********************/
 /* Responsive design */
+/* due date / overdue marker inside the todo cell, replaces the start/due columns on narrow screens */
+.narrow_dates {
+	display: none;
+	white-space: nowrap;
+	color: #777;
+}
 @media (max-width: 575px)
 {
-	th.start, th.due, td.start, td.due {
+	th.start, th.due, td.start, td.due, td.effort {
 		display: none;
+	}
+	.narrow_dates {
+		display: inline;
+	}
+	#todoTable {
+		width: 100%;
+	}
+	#enter_todo {
+		width: 100%;
+		margin-left: 0;
+	}
+	/* header: title and links in first line, tag filter full width below */
+	#headerLine {
+		flex-wrap: wrap;
+		align-items: center;
+	}
+	#filter {
+		order: 1;
+		flex-basis: 100%;
+	}
+	#filter .tagify {
+		width: 100%;
+		box-sizing: border-box;
+	}
+	/* modify / tag dialog: labels above full-width fields */
+	span.modify_desc {
+		display: block;
+		width: auto;
+	}
+	.modify_line > select, .modify_line > input[type='text'], .modify_line > input[type='date'], .modify_line > textarea, .modify_line > .tagify,
+	#tag_dialog .tagify {
+		width: 100%;
+	}
+	/* larger touch targets */
+	.addButton, .editButton, .deleteButton, .undeleteButton, .todayButton, .refreshButton, .reactivateButton, .mergeButton {
+		width: 32px;
+		height: 32px;
+	}
+	.completed input[type="checkbox"] {
+		width: 22px;
+		height: 22px;
+		vertical-align: middle;
+	}
+	/* font size of at least 16px prevents iOS from zooming in on focus */
+	input, input[type="text"], input[type="date"], select, textarea, .tagify__input {
+		font-size: 16px;
 	}
 }
 @media (max-width: 950px)

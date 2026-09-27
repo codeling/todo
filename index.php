@@ -31,7 +31,6 @@
           </div>
           <div id="emptytrashlink"><a href="javascript:emptyTrash()"><?php echo(TodoLang::_("EMPTY_TRASH"));?></a></div>
           <div id="statistiklink"><a href="statistik.php"><?php echo(TodoLang::_("SHOW_STATISTICS"));?></a></div>
-          <div id="mobilelink"><a href="m.index.php"><?php echo(TodoLang::_("GOTO_MOBILE_VERSION"));?></a></div>
         </div>
         <div id="progress"><span id="progress_done">&nbsp;</span><span id="progress_todo">&nbsp;</span></div>
         <form method="POST" onsubmit="return false;" id="inputform">
@@ -46,8 +45,8 @@
             </tr>
             <tr class="line line_input">
               <td><input type="text" id="enter_todo" name="enter_todo" maxlength="255" /></td>
-              <td class="start"><input type="text" id="enter_start" name="enter_start" maxlength="10" /></td>
-              <td class="due"><input type="text" id="enter_due" name="enter_due" maxlength="10" /></td>
+              <td class="start"><input type="date" id="enter_start" name="enter_start" /></td>
+              <td class="due"><input type="date" id="enter_due" name="enter_due" /></td>
               <td class="actions" colspan="2"><input type="button" class="addButton" name="save" alt="<?php echo(TodoLang::_("SAVE"));?>" onclick="enter()" /></td>
             </tr>
             </thead>
@@ -56,22 +55,22 @@
           </table>
         </form>
         <div id="loadMoreBox">
-            <a href="#" id="loadIncomplete" /><?php echo(TodoLang::_("LOAD_INCOMPLETE"));?></a>
-            <a href="#" id="loadLessCompleted" /><?php echo(TodoLang::_("LOAD_LESS_COMPLETED"));?></a>
-            <a href="#" id="loadMoreCompleted" /><?php echo(TodoLang::_("LOAD_MORE_COMPLETED"));?></a>
+            <a href="#" id="loadIncomplete"><?php echo(TodoLang::_("LOAD_INCOMPLETE"));?></a>
+            <a href="#" id="loadLessCompleted"><?php echo(TodoLang::_("LOAD_LESS_COMPLETED"));?></a>
+            <a href="#" id="loadMoreCompleted"><?php echo(TodoLang::_("LOAD_MORE_COMPLETED"));?></a>
         </div>
         <div id="modify_dialog">
-          <form method="POST" onsubmit="return false;" id="inputform">
+          <form method="POST" onsubmit="return false;" id="modifyform">
             <input type="hidden" id="modify_id" name="modify_id" />
             <div class="modify_line">
               <span class="modify_desc"><?php echo(TodoLang::_("TODO"));?>: </span>
               <input type="text" id="modify_todo" name="modify_todo" maxlength="255" />
             </div><div class="modify_line">
               <span class="modify_desc"><?php echo(TodoLang::_("START"));?>:</span>
-              <input type="text" id="modify_start" name="modify_start" maxlength="20" />
+              <input type="date" id="modify_start" name="modify_start" />
             </div><div class="modify_line">
               <span class="modify_desc"><?php echo(TodoLang::_("DUE"));?>: </span>
-              <input type="text" id="modify_due" name="modify_due" maxlength="20" />
+              <input type="date" id="modify_due" name="modify_due" />
             </div><div class="modify_line">
               <span class="modify_desc"><?php echo(TodoLang::_("EFFORT"));?>:</span>
               <input type="text" id="modify_effort" name="modify_effort" maxlength="4" /><?php echo(TodoLang::_("EFFORT_REMARK"));?>
