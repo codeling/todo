@@ -1,6 +1,6 @@
 <?php include "todo-core.php"; ?>
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta charset="UTF-8">
     <title><?php echo(TodoConstants::AppName); ?></title>
@@ -17,6 +17,7 @@
     <link rel="stylesheet" type="text/css" href="todo.css" />
     <link rel="stylesheet" type="text/css" href="jquery/jquery-ui-1.13.2.min.css"/>
     <link rel="icon" href="/todo.svg" type="image/svg+xml">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
   </head>
   <body>
     <div id="todo_content">
@@ -59,7 +60,7 @@
             <a href="#" id="loadLessCompleted" /><?php echo(TodoLang::_("LOAD_LESS_COMPLETED"));?></a>
             <a href="#" id="loadMoreCompleted" /><?php echo(TodoLang::_("LOAD_MORE_COMPLETED"));?></a>
         </div>
-        <div id="modify_dialog" style="display:none;">
+        <div id="modify_dialog">
           <form method="POST" onsubmit="return false;" id="inputform">
             <input type="hidden" id="modify_id" name="modify_id" />
             <div class="modify_line">
@@ -124,8 +125,8 @@
           <input value="">
         </div>
       </div>
-      <div id="log_dialog" style="display:none"></div>
-      <div id="tag_dialog" style="display:none">
+      <div id="log_dialog"></div>
+      <div id="tag_dialog">
         <form>
           <div class="modify_line">
             <span class="modify_desc"><?php echo(TodoLang::_("TAG_NAME"));?>: </span>

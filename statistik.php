@@ -89,7 +89,7 @@
         if (count($item) > $valCount) {
             $item = array_splice($item, count($item)-$valCount, $valCount);
         }
-        $val_scale = (float)$maxHeight/$maxVal;
+        $val_scale = ($maxVal == 0) ? 1 : (float)$maxHeight/$maxVal;
         $width = (($ChartWidth-($valCount*4)) / ($valCount));
         foreach($item as $stuff)
         {

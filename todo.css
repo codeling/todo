@@ -331,3 +331,29 @@ ul.ui-autocomplete {
 .emptystatbar {
     color: black;
 }
+
+/********************/
+/* Responsive design */
+@media (max-width: 575px)
+{
+	th.start, th.due, td.start, td.due {
+		display: none;
+	}
+}
+@media (max-width: 950px)
+{
+	#todo_content {
+		display: block;
+		margin-right: auto;
+	}
+	#sidebar {
+		width: 100%;
+		margin-left: auto;
+		margin-right: auto;
+	}
+}
+/********************/
+/* Dialogs    */
+#modify_dialog, #log_dialog, #tag_dialog {
+	display: none;
+}
