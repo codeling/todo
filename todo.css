@@ -50,7 +50,7 @@ div.line,tr.line_odd {
 .line_header {
     background-color: #EEE;
 }
-input[type="text"] {
+input[type="text"], input[type="date"] {
     font-family:Tahoma,sans-serif;
     font-size: 9pt;
 }
@@ -76,7 +76,7 @@ input[type="image"] {
     box-sizing: border-box;
 }
 td.start, td.due {
-	width: 95px;
+	width: 110px;
 }
 .todo,
 #enter_todo {
@@ -85,9 +85,6 @@ td.start, td.due {
 #enter_todo {
     margin-left: 5px;
     width: 95%;
-}
-.ui-datepicker-trigger {
-    vertical-align: bottom;
 }
 .todo_completed {
     color: #777;
@@ -156,7 +153,7 @@ span.modify_desc {
 ul.ui-autocomplete {
     z-index: 200;
 }
-.modify_line > select, .modify_line > input[type='text'], .modify_line > textarea, .modify_line > .tagify {
+.modify_line > select, .modify_line > input[type='text'], .modify_line > input[type='date'], .modify_line > textarea, .modify_line > .tagify {
     width: 300px;
     box-sizing: border-box;
 }
@@ -201,9 +198,6 @@ ul.ui-autocomplete {
 .effort {
     width: 20px;
     text-align: right;
-}
-#enter_due, #enter_start {
-    width: 70px;
 }
 #tag_dialog .tagify {
     width: 280px;
@@ -267,7 +261,7 @@ ul.ui-autocomplete {
 /* only on devices with real hover, else the highlight sticks after a tap */
 @media (hover: hover)
 {
-    .addButton:hover, .editButton:hover, .deleteButton:hover, .undeleteButton:hover, .todayButton:hover, .refreshButton:hover, .reactivateButton:hover, .ui-datepicker-trigger:hover, .mergeButton:hover
+    .addButton:hover, .editButton:hover, .deleteButton:hover, .undeleteButton:hover, .todayButton:hover, .refreshButton:hover, .reactivateButton:hover, .mergeButton:hover
     {
         background-color: #DDD;
     }
@@ -376,13 +370,9 @@ ul.ui-autocomplete {
 		display: block;
 		width: auto;
 	}
-	.modify_line > select, .modify_line > input[type='text'], .modify_line > textarea, .modify_line > .tagify,
+	.modify_line > select, .modify_line > input[type='text'], .modify_line > input[type='date'], .modify_line > textarea, .modify_line > .tagify,
 	#tag_dialog .tagify {
 		width: 100%;
-	}
-	/* leave room for the datepicker icon */
-	.modify_line > #modify_start, .modify_line > #modify_due {
-		width: calc(100% - 30px);
 	}
 	/* larger touch targets */
 	.addButton, .editButton, .deleteButton, .undeleteButton, .todayButton, .refreshButton, .reactivateButton, .mergeButton {
@@ -395,7 +385,7 @@ ul.ui-autocomplete {
 		vertical-align: middle;
 	}
 	/* font size of at least 16px prevents iOS from zooming in on focus */
-	input, input[type="text"], select, textarea, .tagify__input {
+	input, input[type="text"], input[type="date"], select, textarea, .tagify__input {
 		font-size: 16px;
 	}
 }

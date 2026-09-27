@@ -1,13 +1,3 @@
-function createDatePicker(tagid) {
-    $(tagid).datepicker( {
-        showOn: 'both',
-        buttonImageOnly: true,
-        buttonImage: 'images/calendar.svg',
-        dateFormat: 'yy-mm-dd',
-        showAnim: ''
-    });
-}
-
 // from https://stackoverflow.com/questions/3224834/get-difference-between-2-dates-in-javascript
 function dateDiffInDays(a, b) {
     var _MS_PER_DAY = 1000 * 60 * 60 * 24;
@@ -24,44 +14,29 @@ function addDays(date, days) {
     return result;
 }
 
+// when the start date is changed, move the due date by the same number of days
+// (or, if fillEmptyDue is set and no due date is set yet, set it to the start date)
+function shiftDueWithStart(startSel, dueSel, fillEmptyDue) {
+    $(startSel).on('change', function() {
+        var oldVal = parseDate($(startSel).data('oldVal'));
+        var newVal = parseDate($(startSel).val());
+        var curDue = parseDate($(dueSel).val());
+        if (curDue == null) {
+            if (fillEmptyDue) {
+                $(dueSel).val($(startSel).val());
+            }
+        } else if (oldVal != null && newVal != null) {
+            $(dueSel).val(formatDate(addDays(curDue, dateDiffInDays(oldVal, newVal))));
+        }
+        $(startSel).data('oldVal', $(startSel).val());
+    });
+}
+
 var tagList;
 
 $(document).ready(function() {
 
     $.ajaxSetup({cache: false });
-
-    jQuery(function($){
-        $.datepicker.regional['de'] = {clearText: $T('DELETE'), clearStatus: $T('DELETE_CUR_DATE'),
-                closeText: $T('CLOSE'), closeStatus: $T('CLOSE_WITHOUT_CHANGE'),
-                prevText: $T('BACK'), prevStatus: $T('SHOW_LAST_MONTH'),
-                nextText: $T('FORWARD'), nextStatus: $T('SHOW_NEXT_MONTH'),
-                currentText: $T('TODAY'), currentStatus: '',
-                monthNames: [$T('JANUARY'), $T('FEBRUARY'), $T('MARCH'), $T('APRIL'),
-                    $T('MAY'), $T('JUNE'), $T('JULY'), $T('AUGUST'),
-                    $T('SEPTEMBER'), $T('OCTOBER'), $T('NOVEMBER'),
-                    $T('DECEMBER')],
-                monthNamesShort: [$T('JAN'), $T('FEB'), $T('MAR'), $T('APR'),
-                    $T('MAY'), $T('JUN'), $T('JUL'), $T('AUG'), $T('SEP'),
-                    $T('OCT'), $T('NOV'), $T('DEC')],
-                monthStatus: $T('SHOW_OTHER_MONTH'), yearStatus: $T('SHOW_OTHER_YEAR'),
-                weekHeader: $T('WEEK_SHORT'), weekStatus: $T('WEEK_OF_MONTH'),
-                dayNames: [$T('SUNDAY'), $T('MONDAY'), $T('TUESDAY'), $T('WEDNESDAY'),
-                    $T('THURSDAY'), $T('FRIDAY'), $T('SATURDAY')],
-                dayNamesShort: [$T('SU'), $T('MO'), $T('TU'), $T('WE'), $T('TH'),
-                    $T('FR'), $T('SA')],
-                dayNamesMin: [$T('SU'), $T('MO'), $T('TU'), $T('WE'), $T('TH'),
-                    $T('FR'), $T('SA')],
-                dayStatus: $T('CHOOSE_AS_FIRST_WEEKDAY'), dateStatus: $T('CHOOSE_D_M_d'),
-                dateFormat: 'dd.mm.yy', firstDay: 1,
-                initStatus: $T('CHOOSE_A_DATE'), isRTL: false};
-        $.datepicker.setDefaults($.datepicker.regional['de']);
-    });
-
-    createDatePicker("#enter_due");
-    createDatePicker("#modify_due");
-
-    createDatePicker("#enter_start");
-    createDatePicker("#modify_start");
 
     $("#smallLog").on('click', function() {
         updateLog('#log_dialog', logItems.length);
@@ -95,35 +70,9 @@ $(document).ready(function() {
 
     new Tagify($('#modify_tag_edit')[0]);
 
-    $('#modify_start').on('change', function() {
-        var oldVal = parseDate($('#modify_start').data('oldVal'));
-        var newVal = parseDate($('#modify_start').val());
-        var curDue  = parseDate($('#modify_due').val());
-        // shift due date along with start date (only if both were set before):
-        if (oldVal != null && newVal != null && curDue != null)
-        {
-            var dayDiff = dateDiffInDays(oldVal, newVal);
-            var newDueDate = addDays(curDue, dayDiff);
-            $('#modify_due').val(formatDate(newDueDate));
-        }
-        $('#modify_start').data('oldVal', $('#modify_start').val());
-    });
+    shiftDueWithStart('#modify_start', '#modify_due', false);
+    shiftDueWithStart('#enter_start', '#enter_due', true);
 
-    $('#enter_start').on('change', function() {
-        var oldVal = parseDate($('#enter_start').data('oldVal'));
-        if (oldVal != null)
-        {
-            var newVal = parseDate($('#enter_start').val());
-            var dayDiff = dateDiffInDays(oldVal, newVal);
-            var newDueDate = new Date();
-            if ($('#enter_due').val() != null)
-            {
-                newDueDate.setDate(parseDate($('#enter_due').val()).getDate()+dayDiff);
-                $('#enter_due').val(formatDate(newDueDate));
-            }
-        }
-          $('#enter_start').data('oldVal', $('#enter_start').val());
-    });
     $('#filter .tagify__input').on('focus', function() {
         let tagStrs = tagList.map( (x) => x.name );
         $('#filter_tag_edit')[0].__tagify.settings.whitelist = tagStrs;

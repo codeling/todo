@@ -811,6 +811,11 @@ function enter() {
         if (todo.charAt(colon+1) == ' ') { colon++; }
         todo = todo.substr(colon+1);
     }
+    // incompletely entered date: value is empty, but input isn't
+    if ($('#enter_start')[0].validity.badInput || $('#enter_due')[0].validity.badInput) {
+        alert($T('INVALID_DATE'));
+        return;
+    }
     // start/due inputs are hidden on narrow screens; default like the server:
     // start today, no due date
     var start = $('#enter_start').val();

@@ -287,12 +287,6 @@ $(document).ready(function() {
         tagLimit: 1
     });
     */
-    $('#enter_start').on('change', function() {
-        if ($('#enter_due').val() == "")
-        {
-            $('#enter_due').val($('#enter_start').val());
-        }
-    });
     $('#modify_recurrenceMode').on('change', function(e) {
         toggleRecurrenceAnchor();
     });

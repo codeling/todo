@@ -45,8 +45,8 @@
             </tr>
             <tr class="line line_input">
               <td><input type="text" id="enter_todo" name="enter_todo" maxlength="255" /></td>
-              <td class="start"><input type="text" id="enter_start" name="enter_start" maxlength="10" /></td>
-              <td class="due"><input type="text" id="enter_due" name="enter_due" maxlength="10" /></td>
+              <td class="start"><input type="date" id="enter_start" name="enter_start" /></td>
+              <td class="due"><input type="date" id="enter_due" name="enter_due" /></td>
               <td class="actions" colspan="2"><input type="button" class="addButton" name="save" alt="<?php echo(TodoLang::_("SAVE"));?>" onclick="enter()" /></td>
             </tr>
             </thead>
@@ -67,10 +67,10 @@
               <input type="text" id="modify_todo" name="modify_todo" maxlength="255" />
             </div><div class="modify_line">
               <span class="modify_desc"><?php echo(TodoLang::_("START"));?>:</span>
-              <input type="text" id="modify_start" name="modify_start" maxlength="20" />
+              <input type="date" id="modify_start" name="modify_start" />
             </div><div class="modify_line">
               <span class="modify_desc"><?php echo(TodoLang::_("DUE"));?>: </span>
-              <input type="text" id="modify_due" name="modify_due" maxlength="20" />
+              <input type="date" id="modify_due" name="modify_due" />
             </div><div class="modify_line">
               <span class="modify_desc"><?php echo(TodoLang::_("EFFORT"));?>:</span>
               <input type="text" id="modify_effort" name="modify_effort" maxlength="4" /><?php echo(TodoLang::_("EFFORT_REMARK"));?>
