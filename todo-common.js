@@ -507,12 +507,12 @@ function setListener(id) {
     $('#completed'+id).on('click', function() {
         toggleCompleted(id);
     });
-    if ($('#modify'+id).length !== 0) { // needed for mobile version - there we don't have the modifyID element
+    if ($('#modify'+id).length !== 0) {
         $('#modify'+id).on('click', function() {
             modifyItem(id);
         });
     }
-    if ($('#dotoday'+id).length !== 0) { // needed for mobile version - there we don't have the modifyID element
+    if ($('#dotoday'+id).length !== 0) {
         $('#dotoday'+id).on('click', function() {
             doToday(id);
         });
