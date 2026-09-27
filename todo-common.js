@@ -628,6 +628,12 @@ function updateProgress() {
 }
 
 
+// dialog width limited to the window width (for small screens)
+function dialogWidth(maxWidth) {
+    return Math.min(maxWidth, $(window).width() - 20);
+}
+
+
 function toggleWorking(show) {
     $('#working').css('display', show? 'block':'none');
 }

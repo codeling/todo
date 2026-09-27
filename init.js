@@ -70,7 +70,7 @@ $(document).ready(function() {
         $('#log_dialog').dialog({
             modal: true,
             minHeight: 150,
-            minWidth: 600,
+            width: dialogWidth(600),
             title: 'Log'
         });
     });

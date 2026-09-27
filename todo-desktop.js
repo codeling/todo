@@ -3,7 +3,7 @@ function clearTable()
     $("#todoTable tbody").empty();
 }
 
-function getTodoTitleHtml(it, lineNr, tagbasename, spanCssClass, baseElem, checkbox) {
+function getTodoTitleHtml(it, lineNr, tagbasename, spanCssClass, baseElem, checkbox, extraHtml) {
     var isRecurring = it.recurrenceMode != 0;
     var hasNote = it.notes != null && it.notes != '';
     var hasTags = it.tags != null && it.tags != '';
@@ -26,6 +26,9 @@ function getTodoTitleHtml(it, lineNr, tagbasename, spanCssClass, baseElem, check
     if (hasTags) {
         line += ' <input id="'+tagbasename+it.id+'" class="todo_item_tags" readonly value="'+it.tags+'">';
     }
+    if (extraHtml) {
+        line += extraHtml;
+    }
     line += '</'+baseElem+'>';
     return line;
 }
@@ -40,13 +43,15 @@ function renderItem(it, lineNr) {
         ((it.completed==1)?' todo_completed':'')+
         ((it.deleted==1)?' todo_deleted':'')+
             '" id="todo'+it.id+'">';
+    var overdue = (it.completed==0 && dueDate != null && (today - dueDate) > 0) ?
+                ' <span class="exclamation"></span>':'';
+    // shown instead of the start/due columns on narrow screens:
+    var narrowDates = (dueString != '' || overdue != '') ?
+        ' <span class="narrow_dates">'+dueString+overdue+'</span>' : '';
     var tagbasename = 'todo_tags_';
-    line += getTodoTitleHtml(it, lineNr, tagbasename, 'todo', 'td', true);
+    line += getTodoTitleHtml(it, lineNr, tagbasename, 'todo', 'td', true, narrowDates);
     line +=  '<td class="start">'+((it.start == null)?'undef':formatDate(parseDate(it.start)))+'</td>'+
-        '<td class="due">'+ dueString+
-                ((it.completed==0 && dueDate != null && (today - dueDate) > 0) ?
-                ' <span class="exclamation"></span>':'')+
-        '</td>'+
+        '<td class="due">'+ dueString+overdue+'</td>'+
         '<td class="effort">'+it.effort+'</td>'+
         '<td class="actions">'+
             '<span class="modify"><input type="button" alt="'+
@@ -70,9 +75,12 @@ function renderItem(it, lineNr) {
     if (it.tags != null && it.tags != '') {
         new Tagify(elem[0], { readOnly: true } );
     }
-    $('#todo'+it.id).on('dblclick', function() {
-        printItem(it);
-    });
+    if (window.matchMedia('(hover: hover)').matches) {
+        // debug output; not on touch devices, where a double tap would trigger it
+        $('#todo'+it.id).on('dblclick', function() {
+            printItem(it);
+        });
+    }
     if (it.id != -1) {
         setListener(it.id);
     }
@@ -84,7 +92,7 @@ function modifyItem(id) {
     // show dialog:
     $('#modify_dialog').dialog( {
         modal: true,
-        minWidth: 500,
+        width: dialogWidth(500),
         title: $T('MODIFY_ENTRY'),
         close: function(ev,ui) {
             log($T('MODIFY_DIALOG_CLOSED'));
@@ -108,7 +116,7 @@ function openTagDialog(tagname)
     $('#tag_id').val(result[0].id);
     $('#tag_dialog').dialog( {
         modal: true,
-        width: 420,
+        width: dialogWidth(420),
         title: $T('EDIT_TAG')
     });
     var tagify = $('#merge_tag_edit')[0].__tagify;
