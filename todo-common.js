@@ -805,9 +805,18 @@ function enter() {
         if (todo.charAt(colon+1) == ' ') { colon++; }
         todo = todo.substr(colon+1);
     }
-    var stuff = new Todo(-1, todo, $('#enter_due').val(),
-            $('#enter_start').val(), 1 /* effort */ ,
-            0, '', tags, 0, 1, 0, null, formatDate(getUTCDate(), true),
+    // start/due inputs are hidden on narrow screens; default like the server:
+    // start today, no due date
+    var start = $('#enter_start').val();
+    if (start == '') {
+        start = formatDate(getUTCDate());
+    }
+    var due = $('#enter_due').val();
+    if (due == '') {
+        due = null;
+    }
+    var stuff = new Todo(-1, todo, due, start, 1 /* effort */ ,
+            0, '', tags, 0, 1, 0, null, null, formatDate(getUTCDate(), true),
             reloadData.list_id);
     addItem(stuff);
 }

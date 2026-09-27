@@ -98,10 +98,14 @@ $(document).ready(function() {
     $('#modify_start').on('change', function() {
         var oldVal = parseDate($('#modify_start').data('oldVal'));
         var newVal = parseDate($('#modify_start').val());
-        var dayDiff = dateDiffInDays(oldVal, newVal);
-        var curDue  = parseDate($('#modify_due').val())
-        var newDueDate = addDays(curDue, dayDiff);
-        $('#modify_due').val(formatDate(newDueDate));
+        var curDue  = parseDate($('#modify_due').val());
+        // shift due date along with start date (only if both were set before):
+        if (oldVal != null && newVal != null && curDue != null)
+        {
+            var dayDiff = dateDiffInDays(oldVal, newVal);
+            var newDueDate = addDays(curDue, dayDiff);
+            $('#modify_due').val(formatDate(newDueDate));
+        }
         $('#modify_start').data('oldVal', $('#modify_start').val());
     });
 
