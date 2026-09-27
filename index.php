@@ -60,7 +60,7 @@
             <a href="#" id="loadMoreCompleted"><?php echo(TodoLang::_("LOAD_MORE_COMPLETED"));?></a>
         </div>
         <div id="modify_dialog">
-          <form method="POST" onsubmit="return false;" id="inputform">
+          <form method="POST" onsubmit="return false;" id="modifyform">
             <input type="hidden" id="modify_id" name="modify_id" />
             <div class="modify_line">
               <span class="modify_desc"><?php echo(TodoLang::_("TODO"));?>: </span>
