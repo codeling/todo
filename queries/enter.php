@@ -1,11 +1,13 @@
 <?php
+    require(__DIR__."/../session.php");
+    requirePostWithCsrf();
     require("db.php");
     require("date.php");
     require("tags.php");
-    $todo     = $db->real_escape_string(htmlentities($_REQUEST['todo'], ENT_QUOTES, "UTF-8"));
-    $due      = $db->real_escape_string(htmlentities($_REQUEST['due'], ENT_QUOTES, "UTF-8"));
-    $start    = $db->real_escape_string(htmlentities($_REQUEST['start'], ENT_QUOTES, "UTF-8"));
-    $tags = explode(",", $_REQUEST['tags']);
+    $todo     = encodeInput(postParam('todo'));
+    $due      = postParam('due');
+    $start    = postParam('start');
+    $tags = explode(",", postParam('tags'));
     // checks (empty dates are allowed: start defaults to today, due stays empty):
     if ($due != '' && !checkDateStr($due)) {
         echo 'Invalid due date!';
@@ -24,16 +26,14 @@
         echo 'Die Beschreibung darf nicht leer sein!';
         die;
     }
-    $todo  = "'".$todo."'";
-    $due   = (strcmp($due, '') == 0) ? "NULL" : "'$due'";
-    $start = (strcmp($start, '') == 0) ? "UTC_DATE()" : "'$start'";
-    $list_id = (int)$_REQUEST['list_id'];
+    $list_id = (int)postParam('list_id');
     // TODO: check if given list_id belongs to logged in user!
     $sql = "INSERT INTO todo ".
             "(creationDate, description, dueDate, startDate, effort, notes, list_id) ".
         "VALUES ".
-            "(UTC_TIMESTAMP(), $todo, $due, $start, 1, NULL, $list_id)";
-    dbQueryOrDie($db, $sql);
+            "(UTC_TIMESTAMP(), ?, ?, COALESCE(?, UTC_DATE()), 1, NULL, ?)";
+    dbExec($db, $sql, array($todo, ($due == '') ? NULL : $due,
+        ($start == '') ? NULL : $start, $list_id));
     $todo_id = $db->insert_id;
     updateTags($db, $todo_id, $tags);
     echo $todo_id;

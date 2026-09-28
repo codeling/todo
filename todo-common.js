@@ -215,7 +215,7 @@ function emptyTrash() {
     var stuff = new Object();
     stuff.list_id = reloadData.list_id;
     $.ajax( {
-        type: 'GET',
+        type: 'POST',
         url: 'queries/empty-trash.php',
         data: stuff,
         success: function(returnValue) {
@@ -377,6 +377,20 @@ function html_entity_decode(str) {
     var txtEl = document.createElement('textarea');
     txtEl.innerHTML = str;
     return txtEl.value;
+}
+
+function escapeHtml(str) {
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+
+// for inserting text from the server (stored HTML-encoded) or from user input
+// (not encoded yet) into HTML: decode once, then encode, so both end up correct and safe
+function textToHtml(str) {
+    if (str == null) {
+        return '';
+    }
+    return escapeHtml(html_entity_decode(str));
 }
 
 function toggleRecurrenceAnchor(e)
@@ -545,7 +559,7 @@ function renderTable() {
 
 function renderList(listItem)
 {
-    var liItem = $.parseHTML('<li>' + listItem.name + '</li>');
+    var liItem = $('<li></li>').text(html_entity_decode(listItem.name)).data('list_id', listItem.id);
     $('#lists ul').append(liItem);
 }
 
@@ -555,19 +569,14 @@ function renderLists() {
         renderList(lists[i]);
     }
     $('#lists ul li').on('click', function(event) { 
-        for (var i=0; i<lists.length; ++i) {
-             if (lists[i].name == $(this).text()) {
-                 reloadData.list_id = lists[i].id;
-                 reload();
-                 reloadTagList();
-                 break;
-             }
-        }
+        reloadData.list_id = $(this).data('list_id');
+        reload();
+        reloadTagList();
     });
 
     $('#modify_list').empty();
     for (var i=0; i<lists.length; ++i) {
-        $('#modify_list').append('<option value='+lists[i].id+'>'+lists[i].name+'</option>');
+        $('#modify_list').append($('<option></option>').val(lists[i].id).text(html_entity_decode(lists[i].name)));
     }
 }
 

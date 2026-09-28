@@ -1,43 +1,71 @@
 <?php
+    require(__DIR__."/../session.php");
+    requirePostWithCsrf();
     require("db.php");
     require("date.php");
     require("tags.php");
-    $id       = (int)$_REQUEST['id'];
-    $todo     = $db->real_escape_string(htmlentities($_REQUEST['todo'], ENT_QUOTES, "UTF-8"));
-    $due      = $db->real_escape_string(htmlentities($_REQUEST['due'], ENT_QUOTES, "UTF-8"));
-    $start    = $db->real_escape_string(htmlentities($_REQUEST['start'], ENT_QUOTES, "UTF-8"));
-    $effort   = (int)$_REQUEST['effort'];
-    $notes    = $db->real_escape_string(htmlentities($_REQUEST['notes'], ENT_QUOTES, "UTF-8"));
-    $tags     = explode(",", $_REQUEST['tags']);
-    $version  = (int)$_REQUEST['version'];
-    $recurrenceMode = (int)$_REQUEST['recurrenceMode'];
-    $recurrenceAnchor = (int)$_REQUEST['recurrenceAnchor'];
-    $list_id  = (int)$_REQUEST['list_id'];
+    $id       = (int)postParam('id');
+    $todo     = encodeInput(postParam('todo'));
+    $due      = postParam('due');
+    $start    = postParam('start');
+    $effort   = (int)postParam('effort');
+    $notes    = encodeInput(postParam('notes'));
+    $tags     = explode(",", postParam('tags'));
+    $version  = (int)postParam('version');
+    $recurrenceMode = (int)postParam('recurrenceMode');
+    $recurrenceAnchor = (int)postParam('recurrenceAnchor');
+    $list_id  = (int)postParam('list_id');
     if (strcmp($todo, '') == 0) {
         echo "Die Beschreibung darf nicht leer sein!";
         die;
     }
-     if (!checkDateStr($due)) {
-        $due = '';
+    // empty dates are allowed:
+    if ($due != '' && !checkDateStr($due)) {
+        echo 'Invalid due date!';
+        die;
     }
-    $due   = (strcmp($due,   '') == 0) ? "NULL" : "'$due'";
-    $notes = (strcmp($notes, '') == 0) ? "NULL" : "'".$notes."'";
-    $start = (strcmp($start, '') == 0) ? "NULL" : "'$start'";
-    $todo  = "'".$todo."'";
+    if ($start != '' && !checkDateStr($start)) {
+        echo 'Invalid start date!';
+        die;
+    }
+    if ($due != '' && $start != '' && convertStrToDate($due) < convertStrToDate($start))
+    {
+        echo 'Due date is earlier than start date!';
+        die;
+    }
+    if ($effort < 0 || $effort > 9999) {
+        echo 'Invalid effort!';
+        die;
+    }
+    // recurrence interval in days, at most 10 years:
+    if ($recurrenceMode < 0 || $recurrenceMode > 3650) {
+        echo 'Invalid recurrence mode!';
+        die;
+    }
+    if ($recurrenceAnchor != 0 && $recurrenceAnchor != 1) {
+        echo 'Invalid recurrence anchor!';
+        die;
+    }
     $sql = "UPDATE todo ".
-            "SET description=$todo, ".
-                "dueDate=$due, ".
-                "startDate=$start, ".
-                "effort=$effort, ".
-                "notes=$notes, ".
-                "version=".($version+1).", ".
-                "recurrenceMode=".$recurrenceMode.", ".
-                "recurrenceAnchor=".$recurrenceAnchor.", ".
-                "list_id=$list_id ".
-            "WHERE id=$id AND version=$version";
-    dbQueryOrDie($db, $sql);
+            "SET description=?, ".
+                "dueDate=?, ".
+                "startDate=?, ".
+                "effort=?, ".
+                "notes=?, ".
+                "version=?, ".
+                "recurrenceMode=?, ".
+                "recurrenceAnchor=?, ".
+                "list_id=? ".
+            "WHERE id=? AND version=?";
+    $stmt = dbExec($db, $sql, array($todo,
+        ($due == '') ? NULL : $due,
+        ($start == '') ? NULL : $start,
+        $effort,
+        ($notes == '') ? NULL : $notes,
+        $version+1, $recurrenceMode, $recurrenceAnchor, $list_id,
+        $id, $version));
 
-    $affectedRows = $db->affected_rows;
+    $affectedRows = $stmt->affected_rows;
     if ($affectedRows < 1) {
         echo "In der Datenbank ist eine andere Version gespeichert als du gesendet hast. Es scheint so als wäre der Eintrag in der Zwischenzeit verändert worden! Bitte lade die Einträge neu!";
     } else if ($affectedRows > 1) {
