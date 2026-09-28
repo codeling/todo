@@ -179,6 +179,10 @@ ul.ui-autocomplete {
 .modify_line {
     margin-bottom: 1px;
 }
+#modify_info {
+    color: #777;
+    margin-bottom: 5px;
+}
 #progress {
     border: 1px solid black;
     border-radius: 4px;

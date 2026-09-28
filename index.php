@@ -62,6 +62,7 @@
         <div id="modify_dialog">
           <form method="POST" onsubmit="return false;" id="modifyform">
             <input type="hidden" id="modify_id" name="modify_id" />
+            <div class="modify_line" id="modify_info"></div>
             <div class="modify_line">
               <span class="modify_desc"><?php echo(TodoLang::_("TODO"));?>: </span>
               <input type="text" id="modify_todo" name="modify_todo" maxlength="255" />

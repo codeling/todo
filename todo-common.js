@@ -409,6 +409,9 @@ function fillModifyForm(id) {
     $('#modify_start').data('oldVal', formatDate(parseDay(item.start)));
     $('#modify_effort').val(item.effort);
     $('#modify_notes').val(html_entity_decode(item.notes));
+    // otherwise only visible in the tooltip, which touch devices can't show:
+    $('#modify_info').text($T('CREATED')+': '+formatDate(parseDate(item.creationDate), true)+
+        ((item.completed != 0) ? '; '+$T('DONE')+': '+formatDate(parseDate(item.completionDate), true) : ''));
 
     var tagify = $('#modify_tag_edit')[0].__tagify;
     tagify.removeAllTags();
