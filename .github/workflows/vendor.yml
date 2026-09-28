@@ -14,4 +14,8 @@ jobs:
       - run: npm audit --omit=dev
       - run: npm run vendor
       - name: vendor/ matches package-lock.json
-        run: git diff --exit-code -- vendor || (echo "vendor/ is outdated: run 'npm ci && npm run vendor' and commit vendor/" && exit 1)
+        run: |
+          if ! git diff --exit-code -- vendor; then
+            echo "vendor/ is outdated, run 'npm ci && npm run vendor' and commit vendor/"
+            exit 1
+          fi
