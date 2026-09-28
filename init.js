@@ -18,9 +18,9 @@ function addDays(date, days) {
 // (or, if fillEmptyDue is set and no due date is set yet, set it to the start date)
 function shiftDueWithStart(startSel, dueSel, fillEmptyDue) {
     $(startSel).on('change', function() {
-        var oldVal = parseDate($(startSel).data('oldVal'));
-        var newVal = parseDate($(startSel).val());
-        var curDue = parseDate($(dueSel).val());
+        var oldVal = parseDay($(startSel).data('oldVal'));
+        var newVal = parseDay($(startSel).val());
+        var curDue = parseDay($(dueSel).val());
         if (curDue == null) {
             if (fillEmptyDue) {
                 $(dueSel).val($(startSel).val());

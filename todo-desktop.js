@@ -35,7 +35,7 @@ function getTodoTitleHtml(it, lineNr, tagbasename, spanCssClass, baseElem, check
 
 function renderItem(it, lineNr) {
     var today   = new Date();
-    var dueDate = parseDate(it.due);
+    var dueDate = parseDay(it.due);
     var complDate = parseDate(it.completionDate);
     var dueString = (it.completed == 0) ? formatDate(dueDate): formatDate(complDate);
     var line = '<tr class="line'+
@@ -50,7 +50,7 @@ function renderItem(it, lineNr) {
         ' <span class="narrow_dates">'+dueString+overdue+'</span>' : '';
     var tagbasename = 'todo_tags_';
     line += getTodoTitleHtml(it, lineNr, tagbasename, 'todo', 'td', true, narrowDates);
-    line +=  '<td class="start">'+((it.start == null)?'undef':formatDate(parseDate(it.start)))+'</td>'+
+    line +=  '<td class="start">'+((it.start == null)?'undef':formatDate(parseDay(it.start)))+'</td>'+
         '<td class="due">'+ dueString+overdue+'</td>'+
         '<td class="effort">'+it.effort+'</td>'+
         '<td class="actions">'+

@@ -404,9 +404,9 @@ function fillModifyForm(id) {
     // set values:
     $('#modify_id').val(item.id);
     $('#modify_todo').val(html_entity_decode(item.todo));
-    $('#modify_due').val(formatDate(parseDate(item.due)));
-    $('#modify_start').val(formatDate(parseDate(item.start)));
-    $('#modify_start').data('oldVal', formatDate(parseDate(item.start)));
+    $('#modify_due').val(formatDate(parseDay(item.due)));
+    $('#modify_start').val(formatDate(parseDay(item.start)));
+    $('#modify_start').data('oldVal', formatDate(parseDay(item.start)));
     $('#modify_effort').val(item.effort);
     $('#modify_notes').val(html_entity_decode(item.notes));
 
@@ -455,6 +455,7 @@ function fillStr(str, fillchar, count) {
 }
 
 
+// parse a UTC timestamp ("yyyy-mm-dd hh:mm:ss", e.g. creation or completion date)
 function parseDate(dateStr) {
     if (dateStr == null || dateStr == '') {
         return null;
@@ -469,6 +470,20 @@ function parseDate(dateStr) {
          timePart = parts[1].split(':');
     }
     return new Date(Date.UTC(datePart[0], datePart[1]-1, datePart[2], timePart[0], timePart[1], timePart[2], 0));
+}
+
+// parse a calendar day ("yyyy-mm-dd", optionally followed by a time which is
+// ignored; start and due date): local midnight of that day, so that it is
+// shown as the same day in every time zone
+function parseDay(dateStr) {
+    if (dateStr == null || dateStr == '') {
+        return null;
+    }
+    var datePart = dateStr.split(' ')[0].split('-');
+    if (datePart.length != 3) {
+        return null;
+    }
+    return new Date(datePart[0], datePart[1]-1, datePart[2]);
 }
  
 
@@ -496,7 +511,7 @@ function doToday(id)
 {
     var idx = findItem(id);
     var today = new Date();
-    if (itemList[idx].start == null || parseDate(itemList[idx].start) > today)
+    if (itemList[idx].start == null || parseDay(itemList[idx].start) > today)
     {
         itemList[idx].start = formatDate(getUTCDate(), false);
         storeItemRemote(itemList[idx], function() {});
