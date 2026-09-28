@@ -8,13 +8,13 @@
     <script src="jquery/jquery-3.7.1.min.js"></script>
     <script src="jquery/jquery-ui-1.13.2.min.js"></script>
     <script src="log.js.php"></script>
-    <script src="todo-common.js"></script>
-    <script src="todo-desktop.js"></script>
-    <script src="init.js"></script>
-    <script src="tagify.js"></script>
+    <script src="<?php echo(assetUrl("todo-common.js")); ?>"></script>
+    <script src="<?php echo(assetUrl("todo-desktop.js")); ?>"></script>
+    <script src="<?php echo(assetUrl("init.js")); ?>"></script>
+    <script src="<?php echo(assetUrl("tagify.js")); ?>"></script>
     <script src="lang-js.php"></script>
-    <link rel="stylesheet" type="text/css" href="tagify.css" />
-    <link rel="stylesheet" type="text/css" href="todo.css" />
+    <link rel="stylesheet" type="text/css" href="<?php echo(assetUrl("tagify.css")); ?>" />
+    <link rel="stylesheet" type="text/css" href="<?php echo(assetUrl("todo.css")); ?>" />
     <link rel="stylesheet" type="text/css" href="jquery/jquery-ui-1.13.2.min.css"/>
     <link rel="icon" href="/todo.svg" type="image/svg+xml">
     <meta name="viewport" content="width=device-width, initial-scale=1">
