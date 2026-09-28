@@ -8,9 +8,9 @@
     dbQueryOrDie($db, "DELETE FROM tags WHERE id=$id");
     $affectedRows = $db->affected_rows;
     if ($affectedRows < 1) {
-        echo "No rows affected!";
+        echo TodoLang::_("NO_ROWS_AFFECTED");
     } else if ($affectedRows > 1) {
-        echo "More than one tag affected!";
+        echo TodoLang::_("MORE_THAN_ONE_TAG_AFFECTED");
     } else {
         echo $deletedAssignments;
     }

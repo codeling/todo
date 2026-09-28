@@ -1,6 +1,6 @@
 <?php
 require("db.php");
-$user_id = 0;
+$user_id = (int)$curUserID;
 $sql = "SELECT id, name FROM list WHERE user_id=$user_id";
 $qResult = dbQueryOrDie($db, $sql);
 $allResults = array();

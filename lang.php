@@ -1,7 +1,7 @@
 <?php
 
-require_once("config.php");
-$langfile = "lang/".$language.".ini";
+require_once(__DIR__."/config.php");
+$langfile = __DIR__."/lang/".$language.".ini";
 
 class TodoLang {
     static $langstrings;

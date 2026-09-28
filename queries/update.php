@@ -13,8 +13,10 @@
     $recurrenceMode = (int)$_REQUEST['recurrenceMode'];
     $recurrenceAnchor = (int)$_REQUEST['recurrenceAnchor'];
     $list_id  = (int)$_REQUEST['list_id'];
+    requireOwnTodo($db, $id);
+    requireOwnList($db, $list_id);
     if (strcmp($todo, '') == 0) {
-        echo "Die Beschreibung darf nicht leer sein!";
+        echo TodoLang::_("TODO_MAY_NOT_BE_EMPTY");
         die;
     }
      if (!checkDateStr($due)) {
@@ -39,9 +41,9 @@
 
     $affectedRows = $db->affected_rows;
     if ($affectedRows < 1) {
-        echo "In der Datenbank ist eine andere Version gespeichert als du gesendet hast. Es scheint so als wäre der Eintrag in der Zwischenzeit verändert worden! Bitte lade die Einträge neu!";
+        echo TodoLang::_("VERSION_CONFLICT");
     } else if ($affectedRows > 1) {
-        echo "Schwerwiegender Applikationslogik-Fehler: Mehr als einen Eintrag verändert!";
+        echo TodoLang::_("MORE_THAN_ONE_ENTRY_CHANGED");
     } else {
         updateTags($db, $id, $tags);
         echo $affectedRows;

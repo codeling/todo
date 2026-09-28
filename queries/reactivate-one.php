@@ -1,6 +1,7 @@
 <?php
     require("db.php");
     $id = (int)$_REQUEST['id'];
+    requireOwnTodo($db, $id);
     // recurring events reactivation
     // for one specific event
     $sql = "CREATE TEMPORARY TABLE reviving AS ".
@@ -8,12 +9,13 @@
             "recurrenceMode != 0 AND ".
             "t.id=$id AND ".
             "NOT EXISTS (SELECT 1 FROM recurringCopied r WHERE r.todo_id=t.id);";
-    $affectedRows = dbQueryOrDie($db, $sql);
+    dbQueryOrDie($db, $sql);
+    $affectedRows = $db->affected_rows;
     if ($affectedRows < 1) {
-        echo "Either item is not completed, not recurring, or there is already a reactivated entry!";
+        echo TodoLang::_("REACTIVATION_NOT_POSSIBLE");
     } else if ($affectedRows > 1) {
-        echo "Schwerwiegender Applikationslogik-Fehler: Mehr als einen Eintrag verändert!";
+        echo TodoLang::_("MORE_THAN_ONE_ENTRY_CHANGED");
     } else {
-        echo "Reactivated entry...";
+        echo TodoLang::_("REACTIVATED_ENTRY");
         require("reactivate-temp.php");
     }
