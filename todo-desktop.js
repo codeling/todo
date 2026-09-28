@@ -93,6 +93,7 @@ function modifyItem(id) {
     $('#modify_dialog').dialog( {
         modal: true,
         width: dialogWidth(500),
+        maxWidth: 500,
         title: $T('MODIFY_ENTRY'),
         close: function(ev,ui) {
             log($T('MODIFY_DIALOG_CLOSED'));
@@ -117,6 +118,7 @@ function openTagDialog(tagname)
     $('#tag_dialog').dialog( {
         modal: true,
         width: dialogWidth(420),
+        maxWidth: 420,
         title: $T('EDIT_TAG')
     });
     var tagify = $('#merge_tag_edit')[0].__tagify;

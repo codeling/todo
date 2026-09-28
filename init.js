@@ -46,6 +46,7 @@ $(document).ready(function() {
             modal: true,
             minHeight: 150,
             width: dialogWidth(600),
+            maxWidth: 600,
             title: 'Log'
         });
     });

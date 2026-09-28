@@ -633,6 +633,20 @@ function dialogWidth(maxWidth) {
     return Math.min(maxWidth, $(window).width() - 20);
 }
 
+// keep open dialogs within the window when its size changes (e.g. rotating a phone)
+$(window).on('resize', function() {
+    $('.ui-dialog-content').each(function() {
+        if (!$(this).dialog('instance') || !$(this).dialog('isOpen')) {
+            return;
+        }
+        var maxWidth = $(this).dialog('option', 'maxWidth');
+        if (maxWidth) {
+            $(this).dialog('option', 'width', dialogWidth(maxWidth));
+        }
+        $(this).dialog('option', 'position', { my: 'center', at: 'center', of: window });
+    });
+});
+
 
 function toggleWorking(show) {
     $('#working').css('display', show? 'block':'none');

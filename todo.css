@@ -406,3 +406,8 @@ ul.ui-autocomplete {
 #modify_dialog, #log_dialog, #tag_dialog {
 	display: none;
 }
+/* never wider than the screen (the width set via dialogWidth() already
+   ensures that, this is a fallback e.g. after rotating the device) */
+.ui-dialog {
+	max-width: calc(100vw - 20px);
+}
