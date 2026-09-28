@@ -46,8 +46,13 @@ function renderItem(it, lineNr) {
     var overdue = (it.completed==0 && dueDate != null && (today - dueDate) > 0) ?
                 ' <span class="exclamation"></span>':'';
     // shown instead of the start/due columns on narrow screens:
-    var narrowDates = (dueString != '' || overdue != '') ?
-        ' <span class="narrow_dates">'+dueString+overdue+'</span>' : '';
+    // start -> due for open, completion date for completed todos
+    var narrowDateStr = dueString;
+    if (it.completed == 0 && it.start != null) {
+        narrowDateStr = formatDate(parseDay(it.start)) + ' \u2192 ' + dueString;
+    }
+    var narrowDates = (narrowDateStr != '' || overdue != '') ?
+        ' <span class="narrow_dates">'+narrowDateStr+overdue+'</span>' : '';
     var tagbasename = 'todo_tags_';
     line += getTodoTitleHtml(it, lineNr, tagbasename, 'todo', 'td', true, narrowDates);
     line +=  '<td class="start">'+((it.start == null)?'undef':formatDate(parseDay(it.start)))+'</td>'+
