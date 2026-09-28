@@ -8,8 +8,7 @@
     <script src="jquery/jquery-3.7.1.min.js"></script>
     <script src="jquery/jquery-ui-1.13.2.min.js"></script>
     <script src="log.js.php"></script>
-    <script src="<?php echo(assetUrl("todo-common.js")); ?>"></script>
-    <script src="<?php echo(assetUrl("todo-desktop.js")); ?>"></script>
+    <script src="<?php echo(assetUrl("todo.js")); ?>"></script>
     <script src="<?php echo(assetUrl("init.js")); ?>"></script>
     <script src="<?php echo(assetUrl("tagify.js")); ?>"></script>
     <script src="lang-js.php"></script>
