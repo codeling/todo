@@ -9,7 +9,7 @@ AuthUserFile /path/outside/webroot/.htpasswd
 Require valid-user
 
 # never serve internal files directly
-RedirectMatch 404 ^.*/(sql|scripts|node_modules|lang|\.git|\.github)(/|$)
+RedirectMatch 404 ^.*/(sql|scripts|tests|node_modules|lang|\.git|\.github)(/|$)
 <FilesMatch "(^\.|~$|\.(sql|sh|ini|bak|swp|orig|md|yml|lock|sample)$|^config.*\.php$|^package(-lock)?\.json$|^session\.php$|^todo-core\.php$|^lang\.php$)">
     Require all denied
 </FilesMatch>
