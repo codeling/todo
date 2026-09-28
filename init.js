@@ -51,11 +51,13 @@ $(document).ready(function() {
         });
     });
 
-    $('#loadMoreCompleted').on('click', function() {
+    $('#loadMoreCompleted').on('click', function(e) {
+        e.preventDefault();
         reloadData.age += 10;
         reload();
     });
-    $('#loadLessCompleted').on('click', function() {
+    $('#loadLessCompleted').on('click', function(e) {
+        e.preventDefault();
         reloadData.age -= 10;
         if (reloadData.age < 0)
         {
@@ -63,7 +65,8 @@ $(document).ready(function() {
         }
         reload();
     });
-    $('#loadIncomplete').on('click', function() {
+    $('#loadIncomplete').on('click', function(e) {
+        e.preventDefault();
         reloadData.incomplete = !reloadData.incomplete;
         $('#loadIncomplete').text(reloadData.incomplete?$T('LOAD_INCOMPLETE_HIDE'):$T('LOAD_INCOMPLETE'));
         reload();
