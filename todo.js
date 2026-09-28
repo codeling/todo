@@ -927,7 +927,7 @@ function renderItem(it, lineNr) {
     // start -> due for open, completion date for completed todos
     var narrowDateStr = dueString;
     if (it.completed == 0 && it.start != null) {
-        narrowDateStr = formatDate(parseDay(it.start)) + ' \u2192 ' + dueString;
+        narrowDateStr = formatDate(parseDay(it.start)) + ((dueString != '') ? ' \u2192 ' + dueString : '');
     }
     var narrowDates = (narrowDateStr != '' || overdue != '') ?
         ' <span class="narrow_dates">'+narrowDateStr+overdue+'</span>' : '';
