@@ -8,7 +8,9 @@
         $checkedDate='completionDate', $groupName=null)
     {
 //        $start = microtime(true);
-        global $db;
+        global $db, $curUserID;
+        // only todos in lists of the current user:
+        $ownTodo = "t.list_id IN (SELECT id FROM list WHERE user_id=".(int)$curUserID.")";
         if ($groupName == null) {
             $groupName = $periodName;
         }
@@ -18,7 +20,7 @@
             $sql = "SELECT COALESCE(YEAR(t.".$checkedDate."), 'not finished'), ".
                 "COALESCE(YEAR(t.".$checkedDate."), 'not finished'), ".
                 "COUNT(t.id) FROM `todo` t ".
-                "WHERE deleted = 0 ".
+                "WHERE deleted = 0 AND $ownTodo ".
                 "GROUP BY YEAR(t.".$checkedDate.") ".
                 "ORDER BY YEAR(t.".$checkedDate.")";
         }
@@ -34,7 +36,7 @@
                 "union all select 20 union all select 21 union all select 22 union all select 23 ".
                 "union all select 24) as x) as a ".
                 "left join `todo` t ON MONTH(a.Date) = MONTH(DATE(".$checkedDate.")) ".
-                "AND deleted = 0 ".
+                "AND deleted = 0 AND $ownTodo ".
                 "and YEAR(a.Date) = YEAR(DATE(".$checkedDate.")) ".
                 "GROUP BY YEAR(a.Date), MONTH(a.Date) ".
                 "ORDER BY YEAR(a.Date), MONTH(a.Date)";
@@ -58,7 +60,7 @@
                           "select 4 union all select 5 union all select 6 union all select 7 union all ".
                           "select 8 union all select 9) as c ".
                 ") a".
-                " LEFT JOIN `todo` t ON a.Date = DATE($checkedDate) AND t.deleted=0 ".
+                " LEFT JOIN `todo` t ON a.Date = DATE($checkedDate) AND t.deleted=0 AND $ownTodo ".
                 "WHERE a.Date BETWEEN (UTC_TIMESTAMP() - INTERVAL $valCount $periodName) ".
                     "AND (UTC_TIMESTAMP() + INTERVAL 1 DAY) ".
                 "GROUP BY YEAR(a.Date), $groupNameExpr ".
@@ -107,6 +109,7 @@
                  .TodoLang::_("AVERAGE").': '.sprintf("%.2f", $avg).'<br/>'
                  .TodoLang::_("MINIMUM").': '.$minVal.'</td>';
     ?>
+      <div class="stat_chart">
       <table>
         <tr>
           <td class="stat_row_header"><?php echo(TodoLang::_("STAT_FINISHED"));?></td>
@@ -117,25 +120,25 @@
           <?php echo($value_row); ?>
         </tr>
       </table>
+      </div>
     <?php
     }
 ?><!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?php echo TodoConstants::AppName; ?> - <?php echo TodoLang::_("STATISTICS"); ?></title>
-
-    <!-- JQuery & JQuery UI -->
-<!--
-    <script src="jquery/jquery-1.6.2.min.js"></script>
-    <link  href="jquery/jquery-ui-1.8.16.custom.css" rel="stylesheet" type="text/css"/>
-    <script src="jquery/jquery-ui-1.8.16.custom.min.js"></script>
-    <script type="text/javascript" src="todo.js"></script>
--->
-    <link rel="stylesheet" type="text/css" href="todo.css" />
+    <link rel="stylesheet" type="text/css" href="<?php echo(assetUrl("todo.css")); ?>" />
+    <link rel="icon" href="todo.svg" type="image/svg+xml">
   </head>
   <body>
-    <? require("../common/navigation.php"); ?>
+    <?php
+    // optional site navigation, outside of this repository:
+    if (file_exists(__DIR__."/../common/navigation.php")) {
+        require(__DIR__."/../common/navigation.php");
+    }
+    ?>
     <div id="todo_content">
       <div class="linkblock"><a href="index.php"><?php echo(TodoLang::_("TO_TODO"));?></a></div>
       <h1><?php echo(TodoLang::_("STATISTICS")); ?></h1>

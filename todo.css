@@ -328,6 +328,11 @@ ul.ui-autocomplete {
 .emptystatbar {
     color: black;
 }
+/* charts have a fixed width; scroll them horizontally on small screens */
+.stat_chart {
+    max-width: 100%;
+    overflow-x: auto;
+}
 
 /********************/
 /* Responsive design */
