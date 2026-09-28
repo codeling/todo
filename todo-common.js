@@ -856,7 +856,8 @@ function enter() {
         due = null;
     }
     var stuff = new Todo(-1, todo, due, start, 1 /* effort */ ,
-            0, '', tags, 0, 1, 0, null, null, formatDate(getUTCDate(), true),
+            0, '', tags, 0, 1, 0 /* recurrenceMode */, 0 /* recurrenceAnchor */,
+            null, formatDate(getUTCDate(), true),
             reloadData.list_id);
     addItem(stuff);
 }
