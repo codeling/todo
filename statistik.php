@@ -125,17 +125,9 @@
     <meta charset="UTF-8">
     <title><?php echo TodoConstants::AppName; ?> - <?php echo TodoLang::_("STATISTICS"); ?></title>
 
-    <!-- JQuery & JQuery UI -->
-<!--
-    <script src="jquery/jquery-1.6.2.min.js"></script>
-    <link  href="jquery/jquery-ui-1.8.16.custom.css" rel="stylesheet" type="text/css"/>
-    <script src="jquery/jquery-ui-1.8.16.custom.min.js"></script>
-    <script type="text/javascript" src="todo.js"></script>
--->
     <link rel="stylesheet" type="text/css" href="todo.css" />
   </head>
   <body>
-    <? require("../common/navigation.php"); ?>
     <div id="todo_content">
       <div class="linkblock"><a href="index.php"><?php echo(TodoLang::_("TO_TODO"));?></a></div>
       <h1><?php echo(TodoLang::_("STATISTICS")); ?></h1>

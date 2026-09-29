@@ -20,11 +20,11 @@ function getTodoTitleHtml(it, lineNr, tagbasename, spanCssClass, baseElem, check
             ((it.completed==1)?'checked="true" ':'')+'/></span>';
 	}
     line += '<span class="todo_lineNr">'+(lineNr+1)+'.</span> '+
-            '<span>'+it.todo+'</span>'+
-            (hasNote ? '<span class="note" title="'+it.notes+'"></span>':'')+
+            '<span>'+textToHtml(it.todo)+'</span>'+
+            (hasNote ? '<span class="note" title="'+textToHtml(it.notes)+'"></span>':'')+
             (isRecurring ? '<input type="button" class="reactivateButton" id="reactivate'+it.id+'" />':'');
     if (hasTags) {
-        line += ' <input id="'+tagbasename+it.id+'" class="todo_item_tags" readonly value="'+it.tags+'">';
+        line += ' <input id="'+tagbasename+it.id+'" class="todo_item_tags" readonly value="'+textToHtml(it.tags)+'">';
     }
     if (extraHtml) {
         line += extraHtml;
@@ -100,18 +100,11 @@ function modifyItem(id) {
     });
 }
 
-function decodeHtml(val)
-{
-   var div = document.createElement('div');
-   div.innerHTML = val;
-   return div.firstChild.nodeValue;
-}
-
 function openTagDialog(tagname)
 {
     $('#tag_name').val(tagname);
     var result = $.grep(tagList,
-        function(e) { return decodeHtml(e.name) === tagname; });
+        function(e) { return html_entity_decode(e.name) === tagname; });
     $('#tag_count').val(result[0].tagCount);
     $('#tag_id').val(result[0].id);
     $('#tag_dialog').dialog( {
@@ -144,7 +137,7 @@ function fillTagList(choices)
         tagify = new Tagify($('#taglist input')[0], { readonly: true } );
     }
     for (var i=0; i<choices.length; i++) {
-        tagify.addTags([ decodeHtml(choices[i].name) ]);
+        tagify.addTags([ html_entity_decode(choices[i].name) ]);
     }
 }
 
@@ -174,7 +167,7 @@ $(document).ready(function() {
         tagobject.id = $('#tag_id').val();
         tagobject.tag_name = $('#tag_name').val();
         $.ajax( {
-            type: 'GET',
+            type: 'POST',
             url: 'queries/edit-tag.php',
             data: tagobject,
             success: function(returnValue) {
@@ -202,7 +195,7 @@ $(document).ready(function() {
         var tagidobject = new Object();
         tagidobject.id = $('#tag_id').val();
         $.ajax( {
-            type: 'GET',
+            type: 'POST',
             url: 'queries/delete-tag.php',
             data: tagidobject,
             success: function(returnValue) {
@@ -227,7 +220,7 @@ $(document).ready(function() {
         tagobject.id = $('#tag_id').val();
         merge_tagname = $('#merge_tag_edit')[0].__tagify.value.map((tag) => tag.value)[0];
         var result = $.grep(tagList,
-            function(e) { return decodeHtml(e.name) === merge_tagname; });
+            function(e) { return html_entity_decode(e.name) === merge_tagname; });
         if (result.length == 0 || result.length > 1)
         {
             alert("Found no tag or more than one tag with that name, aborting merge!");
@@ -235,7 +228,7 @@ $(document).ready(function() {
         }
         tagobject.merge_id = result[0].id;
         $.ajax( {
-            type: 'GET',
+            type: 'POST',
             url: 'queries/merge-tag.php',
             data: tagobject,
             success: function(returnValue) {

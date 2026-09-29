@@ -13,6 +13,11 @@
 # Please note that you need to adapt
 # these values to your specific setup
 #
+# Security: the application has no login of
+# its own. Only deploy it behind HTTP
+# authentication and over HTTPS, see
+# .htaccess (Apache) or nginx.conf.sample.
+#
 ########################################
 # database connection settings:
 

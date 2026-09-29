@@ -406,3 +406,9 @@ ul.ui-autocomplete {
 #modify_dialog, #log_dialog, #tag_dialog {
 	display: none;
 }
+
+/* keep the almost invisible dialog overlay of the previously vendored jQuery UI theme
+   (the npm base theme uses opacity .3); more specific since jquery-ui.min.css loads later */
+body .ui-widget-overlay {
+    opacity: .003;
+}

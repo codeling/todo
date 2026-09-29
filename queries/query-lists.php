@@ -1,8 +1,7 @@
 <?php
 require("db.php");
 $user_id = 0;
-$sql = "SELECT id, name FROM list WHERE user_id=$user_id";
-$qResult = dbQueryOrDie($db, $sql);
+$qResult = dbExec($db, "SELECT id, name FROM list WHERE user_id=?", array($user_id))->get_result();
 $allResults = array();
 while ($stuff = $qResult->fetch_object())
 {

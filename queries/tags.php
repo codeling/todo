@@ -2,8 +2,7 @@
 function updateTags($db, $todo_id, $tags)
 {
     $todo_id = (int)$todo_id;
-    $sql = "DELETE FROM todo_tags WHERE todo_id=$todo_id";
-    dbQueryOrDie($db, $sql);
+    dbExec($db, "DELETE FROM todo_tags WHERE todo_id=?", array($todo_id));
     foreach ( $tags as $tag)
     {
         $trimmedTag = trim($tag);
@@ -11,18 +10,15 @@ function updateTags($db, $todo_id, $tags)
             // don't want to have empty tags in the database!
             continue;
         }
-	$quotedTag = quoteString($db, $trimmedTag);
-        $sql = "SELECT id FROM tags WHERE name=$quotedTag";
-        $qResult = dbQueryOrDie($db, $sql);
-        $obj = $qResult->fetch_object();
+        $encodedTag = encodeInput($trimmedTag);
+        $obj = dbExec($db, "SELECT id FROM tags WHERE name=?", array($encodedTag))
+            ->get_result()->fetch_object();
         if (is_null($obj)) {
-            $sql = "INSERT INTO tags (name) VALUES ($quotedTag)";
-            dbQueryOrDie($db, $sql);
+            dbExec($db, "INSERT INTO tags (name) VALUES (?)", array($encodedTag));
             $tag_id = $db->insert_id;
         } else {
             $tag_id = $obj->id;
         }
-        $sql = "INSERT INTO todo_tags (todo_id, tag_id) VALUES ($todo_id, $tag_id)";
-        dbQueryOrDie($db, $sql);
+        dbExec($db, "INSERT IGNORE INTO todo_tags (todo_id, tag_id) VALUES (?, ?)", array($todo_id, $tag_id));
     }
 }

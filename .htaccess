@@ -1,0 +1,25 @@
+# Apache configuration (requires AllowOverride AuthConfig FileInfo Limit)
+# The application has no login of its own: protect it with HTTP authentication,
+# and only serve it over HTTPS.
+
+AuthType Basic
+AuthName "Todo"
+# create with: htpasswd -c /path/outside/webroot/.htpasswd <user>
+AuthUserFile /path/outside/webroot/.htpasswd
+Require valid-user
+
+# never serve internal files directly
+RedirectMatch 404 ^.*/(sql|scripts|node_modules|lang|\.git|\.github)(/|$)
+<FilesMatch "(^\.|~$|\.(sql|sh|ini|bak|swp|orig|md|yml|lock|sample)$|^config.*\.php$|^package(-lock)?\.json$|^session\.php$|^todo-core\.php$|^lang\.php$)">
+    Require all denied
+</FilesMatch>
+# helper scripts which are only included by the query endpoints
+<If "%{REQUEST_URI} =~ m#/queries/(db|date|tags|todo-list-query|reactivate|reactivate-temp)\.php$#">
+    Require all denied
+</If>
+
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "DENY"
+    Header always set Referrer-Policy "same-origin"
+</IfModule>

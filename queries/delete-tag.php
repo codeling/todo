@@ -1,12 +1,12 @@
 <?php
+    require(__DIR__."/../session.php");
+    requirePostWithCsrf();
     require("db.php");
-    $id = (int)$_REQUEST['id'];
+    $id = (int)$_POST['id'];
 	// TODO: restrict to current list!
-    dbQueryOrDie($db, "DELETE FROM todo_tags WHERE tag_id=$id");
-    $deletedAssignments = $db->affected_rows;
+    $deletedAssignments = dbExec($db, "DELETE FROM todo_tags WHERE tag_id=?", array($id))->affected_rows;
 	// TODO: only delete if no tags left!
-    dbQueryOrDie($db, "DELETE FROM tags WHERE id=$id");
-    $affectedRows = $db->affected_rows;
+    $affectedRows = dbExec($db, "DELETE FROM tags WHERE id=?", array($id))->affected_rows;
     if ($affectedRows < 1) {
         echo "No rows affected!";
     } else if ($affectedRows > 1) {

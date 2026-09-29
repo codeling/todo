@@ -47,7 +47,7 @@ CREATE TABLE `settings` (
 	PRIMARY KEY(`key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-INSERT INTO `settings` ("db.version", "11");
+INSERT INTO `settings` VALUES ("db.version", "11");
 
 ALTER TABLE `todo_tags`
 	ADD FOREIGN KEY `todo_tags_tag_id` (tag_id)
