@@ -6,7 +6,7 @@
     "vendor": "sh scripts/vendor.sh"
   },
   "dependencies": {
-    "@yaireo/tagify": "4.31.3",
+    "@yaireo/tagify": "4.39.0",
     "jquery": "3.7.1",
     "jquery-ui": "1.13.2"
   }
