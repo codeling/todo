@@ -66,6 +66,28 @@ test('due recurring entries are reactivated when loading the list', async () => 
     assert.equal(copy.tags, 'w');
 });
 
+test('lists and todos of other users can neither be read nor changed', async () => {
+    const sess = await session();
+    const denied = 'Access denied: this list or entry does not belong to you!';
+    sql("INSERT INTO todo (id, creationDate, description, startDate, list_id) " +
+        "VALUES (100, UTC_TIMESTAMP(), 'foreign', UTC_DATE(), 2)");
+    const own = (await post('enter.php', { todo: 'own', due: '', start: '', list_id: 0 }, sess)).text;
+    assert.match(own, /^\d+$/);
+    assert.equal((await post('enter.php', { todo: 'x', due: '', start: '', list_id: 2 }, sess)).text, denied);
+    assert.equal((await post('update.php', todoFields({ id: 100, version: 1, todo: 'changed' }), sess)).text, denied);
+    // moving an own todo into a foreign list:
+    assert.equal((await post('update.php', todoFields({ id: own, version: 1, list_id: 2 }), sess)).text, denied);
+    assert.equal((await post('complete.php', { id: 100, completed: 1, version: 1 }, sess)).text, denied);
+    assert.equal((await post('trash.php', { id: 100, trash: 1, version: 1 }, sess)).text, denied);
+    assert.equal((await post('reactivate-one.php', { id: 100 }, sess)).text, denied);
+    assert.equal((await post('empty-trash.php', { list_id: 2 }, sess)).text, denied);
+    assert.equal((await get('query-todos.php?list_id=2')).text, denied);
+    assert.equal((await get('query-tags.php?list_id=2')).text, denied);
+    assert.deepEqual(JSON.parse((await get('query-lists.php')).text).map((l) => l.name), ['Main', 'Work']);
+    assert.deepEqual(sqlRows('SELECT id, description, completed, deleted, list_id FROM todo ORDER BY id'),
+        [['100', 'foreign', '0', '0', '2'], [own, 'own', '0', '0', '0']]);
+});
+
 test('invalid input is rejected', async () => {
     const sess = await session();
     assert.equal((await post('enter.php', { todo: 'a', due: '2026-01-10x', start: '', list_id: 0 }, sess)).text, 'Invalid due date!');

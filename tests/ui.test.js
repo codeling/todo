@@ -2,6 +2,8 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { chromium } = require('playwright');
 const { BASE, sql, resetDb } = require('./lib');
+const vendored = (pkg) => JSON.parse(require('node:fs').readFileSync(
+    require('node:path').join(__dirname, '..', 'node_modules', pkg, 'package.json'), 'utf8')).version;
 
 let browser;
 test.before(async () => {
@@ -52,6 +54,9 @@ test('HTML stored in the database is shown as text, not executed', async () => {
 test('main workflows work (and do not violate the Content-Security-Policy)', async () => {
     resetDb();
     const page = await openPage();
+    // runs with the versions from package-lock.json (vendor/ is checked to match them)
+    assert.equal(await page.evaluate(() => $.fn.jquery), vendored('jquery'));
+    assert.equal(await page.evaluate(() => $.ui.version), vendored('jquery-ui'));
     await page.fill('#enter_todo', 'tag1: new <i>item</i>');
     await page.click('#enter_save');
     await page.waitForFunction(() => itemList.length == 1 && itemList[0].id > 0);
@@ -62,6 +67,7 @@ test('main workflows work (and do not violate the Content-Security-Policy)', asy
     await page.fill('#modify_notes', 'a note');
     await page.click('#modify_save');
     await page.waitForFunction(() => itemList[0].version == 2);
+    assert.equal(sql(`SELECT notes FROM todo WHERE id=${id}`).trim(), 'a note');
 
     // tags are only listed while a todo of the current list has them
     await page.locator('#taglist .tagify__tag').first().click();

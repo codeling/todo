@@ -20,7 +20,8 @@ function resetDb() {
     sql("SET FOREIGN_KEY_CHECKS=0; TRUNCATE recurringCopied; TRUNCATE todo_tags; TRUNCATE tags; " +
         "TRUNCATE todo; TRUNCATE list; SET FOREIGN_KEY_CHECKS=1; " +
         "SET SESSION sql_mode=CONCAT(@@sql_mode, ',NO_AUTO_VALUE_ON_ZERO'); " +
-        "INSERT INTO list (id, name, user_id) VALUES (0, 'Main', 0), (1, 'Work', 0)");
+        // lists 0 and 1 belong to the (only, default) user 0, list 2 to another user
+        "INSERT INTO list (id, name, user_id) VALUES (0, 'Main', 0), (1, 'Work', 0), (2, 'Other', 1)");
 }
 
 // loads the page like a browser and returns session cookie and CSRF token
