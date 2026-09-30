@@ -895,7 +895,8 @@ function getTodoTitleHtml(it, lineNr, tagbasename, spanCssClass, baseElem, check
     var hasNote = it.notes != null && it.notes != '';
     var hasTags = it.tags != null && it.tags != '';
     var createDate = parseDate(it.creationDate);
-    var repetition = getRecurrenceString(it.recurrenceMode);
+    // label of the recurrence option (DOM text), goes into an HTML attribute:
+    var repetition = escapeHtml(getRecurrenceString(it.recurrenceMode));
     var complDate = parseDate(it.completionDate);
     line =   '<'+baseElem+' class="'+spanCssClass+'" title="'+$T('CREATED')+': '+formatDate(createDate, true)+
             '; '+$T('RECURRENCE')+': '+repetition+
