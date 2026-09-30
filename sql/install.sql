@@ -47,7 +47,11 @@ CREATE TABLE `settings` (
 	PRIMARY KEY(`key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-INSERT INTO `settings` VALUES ("db.version", "11");
+INSERT INTO `settings` (`key`, `value`) VALUES ("db.version", "11");
+
+-- default list of the default user (todo.list_id defaults to 0):
+SET SESSION sql_mode = CONCAT(@@sql_mode, ',NO_AUTO_VALUE_ON_ZERO');
+INSERT INTO `list` (`id`, `name`, `user_id`) VALUES (0, "Default", 0);
 
 ALTER TABLE `todo_tags`
 	ADD FOREIGN KEY `todo_tags_tag_id` (tag_id)

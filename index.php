@@ -6,17 +6,16 @@
     <meta name="csrf-token" content="<?php echo htmlspecialchars($csrfToken); ?>">
     <title><?php echo(TodoConstants::AppName); ?></title>
     <!-- JQuery & JQuery UI -->
-    <script src="vendor/jquery/jquery.min.js"></script>
-    <script src="vendor/jquery-ui/jquery-ui.min.js"></script>
+    <script src="<?php echo(assetUrl("vendor/jquery/jquery.min.js")); ?>"></script>
+    <script src="<?php echo(assetUrl("vendor/jquery-ui/jquery-ui.min.js")); ?>"></script>
     <script src="log.js.php"></script>
-    <script src="todo-common.js"></script>
-    <script src="todo-desktop.js"></script>
-    <script src="init.js"></script>
-    <script src="vendor/tagify/tagify.js"></script>
+    <script src="<?php echo(assetUrl("todo.js")); ?>"></script>
+    <script src="<?php echo(assetUrl("init.js")); ?>"></script>
+    <script src="<?php echo(assetUrl("vendor/tagify/tagify.js")); ?>"></script>
     <script src="lang-js.php"></script>
-    <link rel="stylesheet" type="text/css" href="vendor/tagify/tagify.css" />
-    <link rel="stylesheet" type="text/css" href="todo.css" />
-    <link rel="stylesheet" type="text/css" href="vendor/jquery-ui/jquery-ui.min.css"/>
+    <link rel="stylesheet" type="text/css" href="<?php echo(assetUrl("vendor/tagify/tagify.css")); ?>" />
+    <link rel="stylesheet" type="text/css" href="<?php echo(assetUrl("todo.css")); ?>" />
+    <link rel="stylesheet" type="text/css" href="<?php echo(assetUrl("vendor/jquery-ui/jquery-ui.min.css")); ?>"/>
     <link rel="icon" href="/todo.svg" type="image/svg+xml">
     <meta name="viewport" content="width=device-width, initial-scale=1">
   </head>
@@ -63,6 +62,7 @@
         <div id="modify_dialog">
           <form method="POST" id="modifyform">
             <input type="hidden" id="modify_id" name="modify_id" />
+            <div class="modify_line" id="modify_info"></div>
             <div class="modify_line">
               <span class="modify_desc"><?php echo(TodoLang::_("TODO"));?>: </span>
               <input type="text" id="modify_todo" name="modify_todo" maxlength="255" />

@@ -1,6 +1,7 @@
 <?php
 $prefix = (isset($prefix)? $prefix : "../");
 require_once($prefix."config.php");
+require_once(__DIR__."/../todo-core.php");
 
 // log details server-side only, don't leak them to the client:
 function failRequest($detail) {
@@ -8,7 +9,7 @@ function failRequest($detail) {
     if (!headers_sent()) {
         http_response_code(500);
     }
-    echo "Database error!";
+    echo TodoLang::_("DATABASE_ERROR");
     exit;
 }
 
@@ -54,4 +55,26 @@ function jsonQueryResults($db, $sql, $params = array())
         $allResults[] = $stuff;
     }
     return json_encode($allResults);
+}
+
+// stop with an error message unless the given list belongs to the current user
+function requireOwnList($db, $list_id) {
+    global $curUserID;
+    $qResult = dbExec($db, "SELECT 1 FROM list WHERE id=? AND user_id=?",
+        array((int)$list_id, (int)$curUserID))->get_result();
+    if ($qResult->num_rows < 1) {
+        echo TodoLang::_("ACCESS_DENIED");
+        exit;
+    }
+}
+
+// stop with an error message unless the given todo is in a list of the current user
+function requireOwnTodo($db, $todo_id) {
+    global $curUserID;
+    $qResult = dbExec($db, "SELECT 1 FROM todo t JOIN list l ON t.list_id=l.id ".
+        "WHERE t.id=? AND l.user_id=?", array((int)$todo_id, (int)$curUserID))->get_result();
+    if ($qResult->num_rows < 1) {
+        echo TodoLang::_("ACCESS_DENIED");
+        exit;
+    }
 }

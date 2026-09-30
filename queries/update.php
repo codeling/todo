@@ -15,35 +15,37 @@
     $recurrenceMode = (int)postParam('recurrenceMode');
     $recurrenceAnchor = (int)postParam('recurrenceAnchor');
     $list_id  = (int)postParam('list_id');
+    requireOwnTodo($db, $id);
+    requireOwnList($db, $list_id);
     if (strcmp($todo, '') == 0) {
-        echo "Die Beschreibung darf nicht leer sein!";
+        echo TodoLang::_("TODO_MAY_NOT_BE_EMPTY");
         die;
     }
     // empty dates are allowed:
     if ($due != '' && !checkDateStr($due)) {
-        echo 'Invalid due date!';
+        echo TodoLang::_("INVALID_DUE_DATE");
         die;
     }
     if ($start != '' && !checkDateStr($start)) {
-        echo 'Invalid start date!';
+        echo TodoLang::_("INVALID_START_DATE");
         die;
     }
     if ($due != '' && $start != '' && convertStrToDate($due) < convertStrToDate($start))
     {
-        echo 'Due date is earlier than start date!';
+        echo TodoLang::_("DUE_BEFORE_START");
         die;
     }
     if ($effort < 0 || $effort > 9999) {
-        echo 'Invalid effort!';
+        echo TodoLang::_("INVALID_EFFORT");
         die;
     }
     // recurrence interval in days, at most 10 years:
     if ($recurrenceMode < 0 || $recurrenceMode > 3650) {
-        echo 'Invalid recurrence mode!';
+        echo TodoLang::_("INVALID_RECURRENCE_MODE");
         die;
     }
     if ($recurrenceAnchor != 0 && $recurrenceAnchor != 1) {
-        echo 'Invalid recurrence anchor!';
+        echo TodoLang::_("INVALID_RECURRENCE_ANCHOR");
         die;
     }
     $sql = "UPDATE todo ".
@@ -67,9 +69,9 @@
 
     $affectedRows = $stmt->affected_rows;
     if ($affectedRows < 1) {
-        echo "In der Datenbank ist eine andere Version gespeichert als du gesendet hast. Es scheint so als wäre der Eintrag in der Zwischenzeit verändert worden! Bitte lade die Einträge neu!";
+        echo TodoLang::_("VERSION_CONFLICT");
     } else if ($affectedRows > 1) {
-        echo "Schwerwiegender Applikationslogik-Fehler: Mehr als einen Eintrag verändert!";
+        echo TodoLang::_("MORE_THAN_ONE_ENTRY_CHANGED");
     } else {
         updateTags($db, $id, $tags);
         echo $affectedRows;

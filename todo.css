@@ -179,6 +179,10 @@ ul.ui-autocomplete {
 .modify_line {
     margin-bottom: 1px;
 }
+#modify_info {
+    color: #777;
+    margin-bottom: 5px;
+}
 #progress {
     border: 1px solid black;
     border-radius: 4px;
@@ -328,6 +332,11 @@ ul.ui-autocomplete {
 .emptystatbar {
     color: black;
 }
+/* charts have a fixed width; scroll them horizontally on small screens */
+.stat_chart {
+    max-width: 100%;
+    overflow-x: auto;
+}
 
 /********************/
 /* Responsive design */
@@ -405,6 +414,11 @@ ul.ui-autocomplete {
 /* Dialogs    */
 #modify_dialog, #log_dialog, #tag_dialog {
 	display: none;
+}
+/* never wider than the screen (the width set via dialogWidth() already
+   ensures that, this is a fallback e.g. after rotating the device) */
+.ui-dialog {
+	max-width: calc(100vw - 20px);
 }
 
 /* keep the almost invisible dialog overlay of the previously vendored jQuery UI theme

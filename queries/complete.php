@@ -3,6 +3,7 @@
     requirePostWithCsrf();
     require("db.php");
     $id = (int)$_POST['id'];
+    requireOwnTodo($db, $id);
     $completed = ((int)$_POST['completed'] == 1) ? 1 : 0;
     $version   = (int)$_POST['version'];
     $stmt = dbExec($db, "UPDATE todo SET completed=?, ".
@@ -10,9 +11,9 @@
         array($completed, $completed, $version, $id, $version));
     $affectedRows = $stmt->affected_rows;
     if ($affectedRows < 1) {
-        echo "In der Datenbank ist eine andere Version gespeichert als du gesendet hast. Es scheint so als wäre der Eintrag in der Zwischenzeit verändert worden! Bitte lade die Einträge neu!";
+        echo TodoLang::_("VERSION_CONFLICT");
     } else if ($affectedRows > 1) {
-        echo "Schwerwiegender Applikationslogik-Fehler: Mehr als einen Eintrag verändert!";
+        echo TodoLang::_("MORE_THAN_ONE_ENTRY_CHANGED");
     } else {
         echo $affectedRows;
     }

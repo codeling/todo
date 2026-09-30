@@ -4,7 +4,7 @@
     require("db.php");
     if (!isset($_POST['id']) || !isset($_POST['merge_id']))
     {
-        die("Invalid parameters!");
+        die(TodoLang::_("INVALID_PARAMETERS"));
     }
     $id   = (int)$_POST['id'];
     $merge_id = (int)$_POST['merge_id'];
@@ -16,9 +16,9 @@
     dbExec($db, "UPDATE `todo_tags` SET `tag_id`=? WHERE `tag_id`=?", array($merge_id, $id));
     $affectedRows = dbExec($db, "DELETE FROM `tags` WHERE id=?", array($id))->affected_rows;
     if ($affectedRows < 1) {
-        echo "No rows affected!";
+        echo TodoLang::_("NO_ROWS_AFFECTED");
     } else if ($affectedRows > 1) {
-        echo "More than one tag affected!";
+        echo TodoLang::_("MORE_THAN_ONE_TAG_AFFECTED");
     } else {
         echo $affectedRows;
     }
