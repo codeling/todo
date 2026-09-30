@@ -10,24 +10,24 @@
     $tags = explode(",", postParam('tags'));
     // checks (empty dates are allowed: start defaults to today, due stays empty):
     if ($due != '' && !checkDateStr($due)) {
-        echo 'Invalid due date!';
+        echo TodoLang::_("INVALID_DUE_DATE");
         die;
     }
     if ($start != '' && !checkDateStr($start)) {
-        echo 'Invalid start date!';
+        echo TodoLang::_("INVALID_START_DATE");
         die;
     }
     if ($due != '' && $start != '' && convertStrToDate($due) < convertStrToDate($start))
     {
-        echo 'Due date is earlier than start date!';
+        echo TodoLang::_("DUE_BEFORE_START");
         die;
     }
     if ($todo == '') {
-        echo 'Die Beschreibung darf nicht leer sein!';
+        echo TodoLang::_("TODO_MAY_NOT_BE_EMPTY");
         die;
     }
     $list_id = (int)postParam('list_id');
-    // TODO: check if given list_id belongs to logged in user!
+    requireOwnList($db, $list_id);
     $sql = "INSERT INTO todo ".
             "(creationDate, description, dueDate, startDate, effort, notes, list_id) ".
         "VALUES ".

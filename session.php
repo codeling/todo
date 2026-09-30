@@ -32,7 +32,8 @@ function requirePostWithCsrf() {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         http_response_code(405);
         header('Allow: POST');
-        echo "Method not allowed!";
+        require_once(__DIR__."/lang.php");
+        echo TodoLang::_("METHOD_NOT_ALLOWED");
         exit;
     }
     todoStartSession(true);
@@ -40,7 +41,8 @@ function requirePostWithCsrf() {
     if (empty($_SESSION['csrf']) || !is_string($token) ||
         !hash_equals($_SESSION['csrf'], $token)) {
         http_response_code(403);
-        echo "Invalid or missing CSRF token, please reload the page!";
+        require_once(__DIR__."/lang.php");
+        echo TodoLang::_("INVALID_CSRF_TOKEN");
         exit;
     }
 }
