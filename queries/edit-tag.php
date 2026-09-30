@@ -1,9 +1,10 @@
 <?php
+    require(__DIR__."/../session.php");
+    requirePostWithCsrf();
     require("db.php");
-    $id   = (int)$_REQUEST['id'];
-    $name = $db->real_escape_string(htmlentities($_REQUEST['tag_name'], ENT_QUOTES, "UTF-8"));
-    dbQueryOrDie($db, "UPDATE `tags` SET `name`='$name' WHERE id=$id");
-    $affectedRows = $db->affected_rows;
+    $id   = (int)$_POST['id'];
+    $name = encodeInput($_POST['tag_name']);
+    $affectedRows = dbExec($db, "UPDATE `tags` SET `name`=? WHERE id=?", array($name, $id))->affected_rows;
     if ($affectedRows < 1) {
         echo TodoLang::_("NO_ROWS_AFFECTED");
     } else if ($affectedRows > 1) {

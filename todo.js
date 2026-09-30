@@ -215,7 +215,7 @@ function emptyTrash() {
     var stuff = new Object();
     stuff.list_id = reloadData.list_id;
     $.ajax( {
-        type: 'GET',
+        type: 'POST',
         url: 'queries/empty-trash.php',
         data: stuff,
         success: function(returnValue) {
@@ -377,6 +377,20 @@ function html_entity_decode(str) {
     var txtEl = document.createElement('textarea');
     txtEl.innerHTML = str;
     return txtEl.value;
+}
+
+function escapeHtml(str) {
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+
+// for inserting text from the server (stored HTML-encoded) or from user input
+// (not encoded yet) into HTML: decode once, then encode, so both end up correct and safe
+function textToHtml(str) {
+    if (str == null) {
+        return '';
+    }
+    return escapeHtml(html_entity_decode(str));
 }
 
 function toggleRecurrenceAnchor(e)
@@ -549,7 +563,7 @@ function renderTable() {
 
 function renderList(listItem)
 {
-    var liItem = $.parseHTML('<li>' + listItem.name + '</li>');
+    var liItem = $('<li></li>').text(html_entity_decode(listItem.name)).data('list_id', listItem.id);
     $('#lists ul').append(liItem);
 }
 
@@ -559,19 +573,14 @@ function renderLists() {
         renderList(lists[i]);
     }
     $('#lists ul li').on('click', function(event) { 
-        for (var i=0; i<lists.length; ++i) {
-             if (lists[i].name == $(this).text()) {
-                 reloadData.list_id = lists[i].id;
-                 reload();
-                 reloadTagList();
-                 break;
-             }
-        }
+        reloadData.list_id = $(this).data('list_id');
+        reload();
+        reloadTagList();
     });
 
     $('#modify_list').empty();
     for (var i=0; i<lists.length; ++i) {
-        $('#modify_list').append('<option value='+lists[i].id+'>'+lists[i].name+'</option>');
+        $('#modify_list').append($('<option></option>').val(lists[i].id).text(html_entity_decode(lists[i].name)));
     }
 }
 
@@ -898,11 +907,11 @@ function getTodoTitleHtml(it, lineNr, tagbasename, spanCssClass, baseElem, check
             ((it.completed==1)?'checked="true" ':'')+'/></span>';
 	}
     line += '<span class="todo_lineNr">'+(lineNr+1)+'.</span> '+
-            '<span>'+it.todo+'</span>'+
-            (hasNote ? '<span class="note" title="'+it.notes+'"></span>':'')+
+            '<span>'+textToHtml(it.todo)+'</span>'+
+            (hasNote ? '<span class="note" title="'+textToHtml(it.notes)+'"></span>':'')+
             (isRecurring ? '<input type="button" class="reactivateButton" id="reactivate'+it.id+'" />':'');
     if (hasTags) {
-        line += ' <input id="'+tagbasename+it.id+'" class="todo_item_tags" readonly value="'+it.tags+'">';
+        line += ' <input id="'+tagbasename+it.id+'" class="todo_item_tags" readonly value="'+textToHtml(it.tags)+'">';
     }
     if (extraHtml) {
         line += extraHtml;
@@ -984,18 +993,11 @@ function modifyItem(id) {
     });
 }
 
-function decodeHtml(val)
-{
-   var div = document.createElement('div');
-   div.innerHTML = val;
-   return div.firstChild.nodeValue;
-}
-
 function openTagDialog(tagname)
 {
     $('#tag_name').val(tagname);
     var result = $.grep(tagList,
-        function(e) { return decodeHtml(e.name) === tagname; });
+        function(e) { return html_entity_decode(e.name) === tagname; });
     $('#tag_count').val(result[0].tagCount);
     $('#tag_id').val(result[0].id);
     $('#tag_dialog').dialog( {
@@ -1029,7 +1031,7 @@ function fillTagList(choices)
         tagify = new Tagify($('#taglist input')[0], { readonly: true } );
     }
     for (var i=0; i<choices.length; i++) {
-        tagify.addTags([ decodeHtml(choices[i].name) ]);
+        tagify.addTags([ html_entity_decode(choices[i].name) ]);
     }
 }
 
@@ -1059,7 +1061,7 @@ $(document).ready(function() {
         tagobject.id = $('#tag_id').val();
         tagobject.tag_name = $('#tag_name').val();
         $.ajax( {
-            type: 'GET',
+            type: 'POST',
             url: 'queries/edit-tag.php',
             data: tagobject,
             success: function(returnValue) {
@@ -1087,7 +1089,7 @@ $(document).ready(function() {
         var tagidobject = new Object();
         tagidobject.id = $('#tag_id').val();
         $.ajax( {
-            type: 'GET',
+            type: 'POST',
             url: 'queries/delete-tag.php',
             data: tagidobject,
             success: function(returnValue) {
@@ -1112,7 +1114,7 @@ $(document).ready(function() {
         tagobject.id = $('#tag_id').val();
         merge_tagname = $('#merge_tag_edit')[0].__tagify.value.map((tag) => tag.value)[0];
         var result = $.grep(tagList,
-            function(e) { return decodeHtml(e.name) === merge_tagname; });
+            function(e) { return html_entity_decode(e.name) === merge_tagname; });
         if (result.length == 0 || result.length > 1)
         {
             alert("Found no tag or more than one tag with that name, aborting merge!");
@@ -1120,7 +1122,7 @@ $(document).ready(function() {
         }
         tagobject.merge_id = result[0].id;
         $.ajax( {
-            type: 'GET',
+            type: 'POST',
             url: 'queries/merge-tag.php',
             data: tagobject,
             success: function(returnValue) {

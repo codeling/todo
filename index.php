@@ -1,20 +1,21 @@
-<?php include "todo-core.php"; ?>
+<?php include "todo-core.php"; $csrfToken = csrfToken(); ?>
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8">
+    <meta name="csrf-token" content="<?php echo htmlspecialchars($csrfToken); ?>">
     <title><?php echo(TodoConstants::AppName); ?></title>
     <!-- JQuery & JQuery UI -->
-    <script src="jquery/jquery-3.7.1.min.js"></script>
-    <script src="jquery/jquery-ui-1.13.2.min.js"></script>
+    <script src="<?php echo(assetUrl("vendor/jquery/jquery.min.js")); ?>"></script>
+    <script src="<?php echo(assetUrl("vendor/jquery-ui/jquery-ui.min.js")); ?>"></script>
     <script src="log.js.php"></script>
     <script src="<?php echo(assetUrl("todo.js")); ?>"></script>
     <script src="<?php echo(assetUrl("init.js")); ?>"></script>
-    <script src="<?php echo(assetUrl("tagify.js")); ?>"></script>
+    <script src="<?php echo(assetUrl("vendor/tagify/tagify.js")); ?>"></script>
     <script src="lang-js.php"></script>
-    <link rel="stylesheet" type="text/css" href="<?php echo(assetUrl("tagify.css")); ?>" />
+    <link rel="stylesheet" type="text/css" href="<?php echo(assetUrl("vendor/tagify/tagify.css")); ?>" />
     <link rel="stylesheet" type="text/css" href="<?php echo(assetUrl("todo.css")); ?>" />
-    <link rel="stylesheet" type="text/css" href="jquery/jquery-ui-1.13.2.min.css"/>
+    <link rel="stylesheet" type="text/css" href="<?php echo(assetUrl("vendor/jquery-ui/jquery-ui.min.css")); ?>"/>
     <link rel="icon" href="/todo.svg" type="image/svg+xml">
     <meta name="viewport" content="width=device-width, initial-scale=1">
   </head>
@@ -28,11 +29,11 @@
             <input type="hidden" id="filter_tags" name="filter_tags" />
             <input id="filter_tag_edit" />
           </div>
-          <div id="emptytrashlink"><a href="javascript:emptyTrash()"><?php echo(TodoLang::_("EMPTY_TRASH"));?></a></div>
+          <div id="emptytrashlink"><a href="#" id="emptyTrash"><?php echo(TodoLang::_("EMPTY_TRASH"));?></a></div>
           <div id="statistiklink"><a href="statistik.php"><?php echo(TodoLang::_("SHOW_STATISTICS"));?></a></div>
         </div>
         <div id="progress"><span id="progress_done">&nbsp;</span><span id="progress_todo">&nbsp;</span></div>
-        <form method="POST" onsubmit="return false;" id="inputform">
+        <form method="POST" id="inputform">
           <input type="hidden" name="user_id" id="user_id" value="<?php echo $curUserID; ?>" />
           <table id="todoTable">
             <thead>
@@ -46,7 +47,7 @@
               <td><input type="text" id="enter_todo" name="enter_todo" maxlength="255" /></td>
               <td class="start"><input type="date" id="enter_start" name="enter_start" /></td>
               <td class="due"><input type="date" id="enter_due" name="enter_due" /></td>
-              <td class="actions" colspan="2"><input type="button" class="addButton" name="save" alt="<?php echo(TodoLang::_("SAVE"));?>" onclick="enter()" /></td>
+              <td class="actions" colspan="2"><input type="button" class="addButton" name="save" id="enter_save" alt="<?php echo(TodoLang::_("SAVE"));?>" /></td>
             </tr>
             </thead>
             <tbody>
@@ -59,7 +60,7 @@
             <a href="#" id="loadMoreCompleted"><?php echo(TodoLang::_("LOAD_MORE_COMPLETED"));?></a>
         </div>
         <div id="modify_dialog">
-          <form method="POST" onsubmit="return false;" id="modifyform">
+          <form method="POST" id="modifyform">
             <input type="hidden" id="modify_id" name="modify_id" />
             <div class="modify_line" id="modify_info"></div>
             <div class="modify_line">
@@ -116,7 +117,7 @@
       </div>
       <div id="sidebar">
         <div id="smallLog"><?php echo(TodoLang::_("STARTING_LOG"));?></div>
-        <div id="logLink"><a href="javascript:toggleLog()"><?php echo(TodoLang::_("SHOW_LOG"));?></a></div>
+        <div id="logLink"><a href="#" id="showLog"><?php echo(TodoLang::_("SHOW_LOG"));?></a></div>
         <div id="lists">
           <ul></ul>
         </div>

@@ -133,12 +133,6 @@
     <link rel="icon" href="todo.svg" type="image/svg+xml">
   </head>
   <body>
-    <?php
-    // optional site navigation, outside of this repository:
-    if (file_exists(__DIR__."/../common/navigation.php")) {
-        require(__DIR__."/../common/navigation.php");
-    }
-    ?>
     <div id="todo_content">
       <div class="linkblock"><a href="index.php"><?php echo(TodoLang::_("TO_TODO"));?></a></div>
       <h1><?php echo(TodoLang::_("STATISTICS")); ?></h1>

@@ -10,7 +10,7 @@ function updateLog(element, maxCount) {
     var start = Math.max(0, logItems.length-maxCount);
     var end   = Math.min(start+maxCount, logItems.length);
     for (var i=start; i<end; ++i) {
-        logOutput += '' + i + ': ' + logItems[i];
+        logOutput += '' + i + ': ' + escapeHtml(logItems[i]);
         if (i<end-1) {
             logOutput += '<br />';
         }

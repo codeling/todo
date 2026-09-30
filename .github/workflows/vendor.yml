@@ -1,0 +1,21 @@
+name: vendor
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  vendor-up-to-date:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci --ignore-scripts
+      - run: npm audit --omit=dev
+      - run: npm run vendor
+      - name: vendor/ matches package-lock.json
+        run: |
+          if ! git diff --exit-code -- vendor; then
+            echo "vendor/ is outdated, run 'npm ci && npm run vendor' and commit vendor/"
+            exit 1
+          fi

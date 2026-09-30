@@ -36,12 +36,33 @@ var tagList;
 
 $(document).ready(function() {
 
-    $.ajaxSetup({cache: false });
+    $.ajaxSetup({
+        cache: false,
+        // required by the server for all modifying requests:
+        headers: { 'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content') }
+    });
+
+    // no inline event handlers, they are blocked by the Content-Security-Policy
+    $('#inputform, #modifyform').on('submit', function(e) {
+        e.preventDefault();
+    });
+    $('#enter_save').on('click', enter);
+    $('#emptyTrash').on('click', function(e) {
+        e.preventDefault();
+        emptyTrash();
+    });
+    $('#showLog').on('click', function(e) {
+        e.preventDefault();
+        toggleLog();
+    });
 
     $("#smallLog").on('click', function() {
         updateLog('#log_dialog', logItems.length);
-        $('#log_dialog').html($('#log_dialog').html()+
-                '<br /><a href="javascript:toggleLog()">'+$T('LOG_ONOFF')+'</a>');
+        $('#log_dialog').append('<br />',
+            $('<a href="#"></a>').text($T('LOG_ONOFF')).on('click', function(e) {
+                e.preventDefault();
+                toggleLog();
+            }));
         $('#log_dialog').dialog({
             modal: true,
             minHeight: 150,

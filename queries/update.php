@@ -1,45 +1,73 @@
 <?php
+    require(__DIR__."/../session.php");
+    requirePostWithCsrf();
     require("db.php");
     require("date.php");
     require("tags.php");
-    $id       = (int)$_REQUEST['id'];
-    $todo     = $db->real_escape_string(htmlentities($_REQUEST['todo'], ENT_QUOTES, "UTF-8"));
-    $due      = $db->real_escape_string(htmlentities($_REQUEST['due'], ENT_QUOTES, "UTF-8"));
-    $start    = $db->real_escape_string(htmlentities($_REQUEST['start'], ENT_QUOTES, "UTF-8"));
-    $effort   = (int)$_REQUEST['effort'];
-    $notes    = $db->real_escape_string(htmlentities($_REQUEST['notes'], ENT_QUOTES, "UTF-8"));
-    $tags     = explode(",", $_REQUEST['tags']);
-    $version  = (int)$_REQUEST['version'];
-    $recurrenceMode = (int)$_REQUEST['recurrenceMode'];
-    $recurrenceAnchor = (int)$_REQUEST['recurrenceAnchor'];
-    $list_id  = (int)$_REQUEST['list_id'];
+    $id       = (int)postParam('id');
+    $todo     = encodeInput(postParam('todo'));
+    $due      = postParam('due');
+    $start    = postParam('start');
+    $effort   = (int)postParam('effort');
+    $notes    = encodeInput(postParam('notes'));
+    $tags     = explode(",", postParam('tags'));
+    $version  = (int)postParam('version');
+    $recurrenceMode = (int)postParam('recurrenceMode');
+    $recurrenceAnchor = (int)postParam('recurrenceAnchor');
+    $list_id  = (int)postParam('list_id');
     requireOwnTodo($db, $id);
     requireOwnList($db, $list_id);
     if (strcmp($todo, '') == 0) {
         echo TodoLang::_("TODO_MAY_NOT_BE_EMPTY");
         die;
     }
-     if (!checkDateStr($due)) {
-        $due = '';
+    // empty dates are allowed:
+    if ($due != '' && !checkDateStr($due)) {
+        echo TodoLang::_("INVALID_DUE_DATE");
+        die;
     }
-    $due   = (strcmp($due,   '') == 0) ? "NULL" : "'$due'";
-    $notes = (strcmp($notes, '') == 0) ? "NULL" : "'".$notes."'";
-    $start = (strcmp($start, '') == 0) ? "NULL" : "'$start'";
-    $todo  = "'".$todo."'";
+    if ($start != '' && !checkDateStr($start)) {
+        echo TodoLang::_("INVALID_START_DATE");
+        die;
+    }
+    if ($due != '' && $start != '' && convertStrToDate($due) < convertStrToDate($start))
+    {
+        echo TodoLang::_("DUE_BEFORE_START");
+        die;
+    }
+    if ($effort < 0 || $effort > 9999) {
+        echo TodoLang::_("INVALID_EFFORT");
+        die;
+    }
+    // recurrence interval in days, at most 10 years:
+    if ($recurrenceMode < 0 || $recurrenceMode > 3650) {
+        echo TodoLang::_("INVALID_RECURRENCE_MODE");
+        die;
+    }
+    if ($recurrenceAnchor != 0 && $recurrenceAnchor != 1) {
+        echo TodoLang::_("INVALID_RECURRENCE_ANCHOR");
+        die;
+    }
     $sql = "UPDATE todo ".
-            "SET description=$todo, ".
-                "dueDate=$due, ".
-                "startDate=$start, ".
-                "effort=$effort, ".
-                "notes=$notes, ".
-                "version=".($version+1).", ".
-                "recurrenceMode=".$recurrenceMode.", ".
-                "recurrenceAnchor=".$recurrenceAnchor.", ".
-                "list_id=$list_id ".
-            "WHERE id=$id AND version=$version";
-    dbQueryOrDie($db, $sql);
+            "SET description=?, ".
+                "dueDate=?, ".
+                "startDate=?, ".
+                "effort=?, ".
+                "notes=?, ".
+                "version=?, ".
+                "recurrenceMode=?, ".
+                "recurrenceAnchor=?, ".
+                "list_id=? ".
+            "WHERE id=? AND version=?";
+    $stmt = dbExec($db, $sql, array($todo,
+        ($due == '') ? NULL : $due,
+        ($start == '') ? NULL : $start,
+        $effort,
+        ($notes == '') ? NULL : $notes,
+        $version+1, $recurrenceMode, $recurrenceAnchor, $list_id,
+        $id, $version));
 
-    $affectedRows = $db->affected_rows;
+    $affectedRows = $stmt->affected_rows;
     if ($affectedRows < 1) {
         echo TodoLang::_("VERSION_CONFLICT");
     } else if ($affectedRows > 1) {

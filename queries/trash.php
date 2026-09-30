@@ -1,11 +1,14 @@
 <?php
+    require(__DIR__."/../session.php");
+    requirePostWithCsrf();
     require("db.php");
-    $id = (int)$_REQUEST['id'];
+    $id = (int)$_POST['id'];
     requireOwnTodo($db, $id);
-    $trash = (int)$_REQUEST['trash'];
-    $version = (int)$_REQUEST['version'];
-    dbQueryOrDie($db, "UPDATE todo SET deleted=$trash WHERE id=$id AND version=$version");
-    $affectedRows = $db->affected_rows;
+    $trash = ((int)$_POST['trash'] == 1) ? 1 : 0;
+    $version = (int)$_POST['version'];
+    $stmt = dbExec($db, "UPDATE todo SET deleted=? WHERE id=? AND version=?",
+        array($trash, $id, $version));
+    $affectedRows = $stmt->affected_rows;
     if ($affectedRows < 1) {
         echo TodoLang::_("VERSION_CONFLICT");
     } else if ($affectedRows > 1) {

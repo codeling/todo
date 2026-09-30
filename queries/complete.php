@@ -1,12 +1,15 @@
 <?php
+    require(__DIR__."/../session.php");
+    requirePostWithCsrf();
     require("db.php");
-    $id = (int)$_REQUEST['id'];
+    $id = (int)$_POST['id'];
     requireOwnTodo($db, $id);
-    $completed = (int)$_REQUEST['completed'];
-    $version   = (int)$_REQUEST['version'];
-    $complDate  = ($completed == 1) ? "UTC_TIMESTAMP()": "NULL";
-    dbQueryOrDie($db, "UPDATE todo SET completed=$completed, completionDate=$complDate, version=$version+1 WHERE id=$id AND version=$version");
-    $affectedRows = $db->affected_rows;
+    $completed = ((int)$_POST['completed'] == 1) ? 1 : 0;
+    $version   = (int)$_POST['version'];
+    $stmt = dbExec($db, "UPDATE todo SET completed=?, ".
+        "completionDate=IF(?=1, UTC_TIMESTAMP(), NULL), version=?+1 WHERE id=? AND version=?",
+        array($completed, $completed, $version, $id, $version));
+    $affectedRows = $stmt->affected_rows;
     if ($affectedRows < 1) {
         echo TodoLang::_("VERSION_CONFLICT");
     } else if ($affectedRows > 1) {

@@ -1,0 +1,7 @@
+version: 2
+updates:
+  # after merging an update, run 'npm ci && npm run vendor' and commit vendor/
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"

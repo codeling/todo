@@ -420,3 +420,9 @@ ul.ui-autocomplete {
 .ui-dialog {
 	max-width: calc(100vw - 20px);
 }
+
+/* keep the almost invisible dialog overlay of the previously vendored jQuery UI theme
+   (the npm base theme uses opacity .3); more specific since jquery-ui.min.css loads later */
+body .ui-widget-overlay {
+    opacity: .003;
+}

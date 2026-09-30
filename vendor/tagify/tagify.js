@@ -1,9 +1,3 @@
-/**
- * Skipped minification because the original files appears to be already minified.
- * Original file: /npm/@yaireo/tagify@4.31.3/dist/tagify.js
- *
- * Do NOT use SRI with dynamically generated files! More information: https://www.jsdelivr.com/using-sri-with-dynamic-files
- */
 /*
 Tagify v4.31.3 - tags input component
 By: Yair Even-Or <vsync.design@gmail.com>
