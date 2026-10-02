@@ -1,0 +1,60 @@
+name: tests
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  php-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+      - run: find . -name '*.php' -not -path './node_modules/*' -not -path './vendor/*' -print0 | xargs -0 -n1 php -l
+
+  integration:
+    runs-on: ubuntu-latest
+    services:
+      mariadb:
+        image: mariadb:10.11
+        env:
+          MARIADB_ROOT_PASSWORD: root
+          MARIADB_DATABASE: todo
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+    env:
+      TODO_URL: http://127.0.0.1:8000
+      TODO_MYSQL: mysql -h127.0.0.1 -uroot -proot todo
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mysqli
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Set up database and configuration
+        run: |
+          mysql -h127.0.0.1 -uroot -proot todo < sql/install.sql
+          printf '<?php\n$db_host = "127.0.0.1"; $db_user = "root"; $db_password = "root"; $db_database = "todo";\n$language = "en-US";\n' > config.php
+      - name: Start PHP server
+        run: |
+          php -S 127.0.0.1:8000 > php-server.log 2>&1 &
+          for i in $(seq 1 20); do curl -sf http://127.0.0.1:8000/index.php > /dev/null && break; sleep 1; done
+      - run: npm ci --ignore-scripts
+      - run: npx playwright install --with-deps chromium
+      - run: npm test
+      - name: PHP server log
+        if: always()
+        run: cat php-server.log
+
+  apache-access:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y apache2 apache2-utils
+      - run: sudo sh tests/apache-access.sh
