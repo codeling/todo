@@ -726,7 +726,8 @@ function addItem(stuff) {
     $.ajax( {
         type: 'POST',
         url: 'queries/enter.php',
-        data: stuff,
+        // Todo is no plain object, jQuery 4 would not serialize it:
+        data: $.param(stuff),
         success: function(returnValue) {
             if (isNaN(returnValue)) {
                 log($T('ERROR_WHILE_CREATING')+returnValue);
@@ -765,7 +766,8 @@ function storeItemRemote(stuff, onsucc) {
     $.ajax({
         type: 'POST',
         url: 'queries/update.php',
-        data: stuff,
+        // Todo is no plain object, jQuery 4 would not serialize it:
+        data: $.param(stuff),
         success: function(returnValue) {
             if (isNaN(returnValue)) {
                 log($T('ERROR_WHILE_MODIFYING')+returnValue);
