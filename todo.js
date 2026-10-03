@@ -14,7 +14,7 @@ var listsData = {user_id: 0};
 
 function Todo(id, todo, due, start, effort,
         completed, notes, tags, deleted,
-        version, recurrenceMode, recurrenceAnchor,
+        version, recurrenceMode, recurrenceInterval, recurrenceAnchor,
         completionDate, creationDate, list_id) {
     this.id        = parseInt(id);
     this.todo      = todo;
@@ -27,6 +27,7 @@ function Todo(id, todo, due, start, effort,
     this.deleted   = parseInt(deleted);
     this.version   = parseInt(version);
     this.recurrenceMode = parseInt(recurrenceMode);
+    this.recurrenceInterval = parseInt(recurrenceInterval);
     this.recurrenceAnchor = parseInt(recurrenceAnchor);
     this.completionDate = completionDate;
     this.creationDate = creationDate;
@@ -38,7 +39,7 @@ function copyTodo(item)
     return new Todo(
         item.id, item.todo, item.due, item.start, item.effort,
         item.completed, item.notes, item.tags, item.deleted,
-        item.version, item.recurrenceMode, item.recurrenceAnchor,
+        item.version, item.recurrenceMode, item.recurrenceInterval, item.recurrenceAnchor,
         item.completionDate, item.creationDate, item.list_id
     );
 }
@@ -163,6 +164,7 @@ function modifyLocally(item) {
     itemList[index].tags     = item.tags;
     itemList[index].version  = item.version;
     itemList[index].recurrenceMode = item.recurrenceMode;
+    itemList[index].recurrenceInterval = item.recurrenceInterval;
     itemList[index].recurrenceAnchor = item.recurrenceAnchor;
     renderTable();
 }
@@ -399,10 +401,12 @@ function toggleRecurrenceAnchor(e)
     if (val == 0)
     {
         $('.recurrence_dependent').hide();
+        $('#modify_recurrenceInterval').hide();
     }
     else
     {
         $('.recurrence_dependent').show();
+        $('#modify_recurrenceInterval').show();
     }
 }
 
@@ -441,6 +445,7 @@ function fillModifyForm(id) {
     $('#modify_recurrenceMode option:selected').prop('selected', false);
     $('#modify_recurrenceMode option[value="'+item.recurrenceMode+'"]').prop('selected', true);
 
+    $('#modify_recurrenceInterval').val(item.recurrenceInterval);
     $('#modify_recurrenceAnchor option:selected').prop('selected', false);
     $('#modify_recurrenceAnchor option[value="'+item.recurrenceAnchor+'"]').prop('selected', true);
 
@@ -547,9 +552,14 @@ function setListener(id) {
 }
 
 
-function getRecurrenceString(recurrenceMode)
+function getRecurrenceString(recurrenceMode, recurrenceInterval)
 {
-    return $('#modify_recurrenceMode option[value="'+recurrenceMode+'"]').text();
+    var unit = $('#modify_recurrenceMode option[value="'+recurrenceMode+'"]').text();
+    if (recurrenceMode == 0)
+    {
+        return unit;
+    }
+    return $T('RECURRENCE_EVERY')+' '+recurrenceInterval+' '+unit;
 }
 
 
@@ -686,6 +696,7 @@ function reload() {
             itemList[i].completed = parseInt(itemList[i].completed);
             itemList[i].version   = parseInt(itemList[i].version);
             itemList[i].recurrenceMode = parseInt(itemList[i].recurrenceMode);
+            itemList[i].recurrenceInterval = parseInt(itemList[i].recurrenceInterval);
             itemList[i].recurrenceAnchor = parseInt(itemList[i].recurrenceAnchor);
         }
         renderTable();
@@ -812,6 +823,7 @@ function storeItem() {
         0,  // deleted items cannot be modified
         itemList[idx].version,
         $('#modify_recurrenceMode').val(),
+        $('#modify_recurrenceInterval').val(),
         $('#modify_recurrenceAnchor').val(),
         itemList[idx].completionDate,
         itemList[idx].creationDate,
@@ -856,7 +868,7 @@ function enter() {
         due = null;
     }
     var stuff = new Todo(-1, todo, due, start, 1 /* effort */ ,
-            0, '', tags, 0, 1, 0 /* recurrenceMode */, 0 /* recurrenceAnchor */,
+            0, '', tags, 0, 1, 0 /* recurrenceMode */, 1 /* recurrenceInterval */, 0 /* recurrenceAnchor */,
             null, formatDate(getUTCDate(), true),
             reloadData.list_id);
     addItem(stuff);
@@ -898,7 +910,7 @@ function getTodoTitleHtml(it, lineNr, tagbasename, spanCssClass, baseElem, check
     var hasTags = it.tags != null && it.tags != '';
     var createDate = parseDate(it.creationDate);
     // label of the recurrence option (DOM text), goes into an HTML attribute:
-    var repetition = escapeHtml(getRecurrenceString(it.recurrenceMode));
+    var repetition = escapeHtml(getRecurrenceString(it.recurrenceMode, it.recurrenceInterval));
     var complDate = parseDate(it.completionDate);
     line =   '<'+baseElem+' class="'+spanCssClass+'" title="'+$T('CREATED')+': '+formatDate(createDate, true)+
             '; '+$T('RECURRENCE')+': '+repetition+

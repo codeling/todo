@@ -157,6 +157,14 @@ ul.ui-autocomplete {
     width: 300px;
     box-sizing: border-box;
 }
+#modify_recurrenceInterval {
+    width: 70px;
+    box-sizing: border-box;
+    margin-right: 6px;
+}
+#modify_recurrenceMode {
+    width: 224px;
+}
 .tagify {
     --tag-hide-transition: 0s;
     --readonly-striped: 0;
@@ -382,6 +390,12 @@ ul.ui-autocomplete {
 	.modify_line > select, .modify_line > input[type='text'], .modify_line > input[type='date'], .modify_line > textarea, .modify_line > .tagify,
 	#tag_dialog .tagify {
 		width: 100%;
+	}
+	#modify_recurrenceInterval {
+		width: 80px;
+	}
+	#modify_recurrenceMode {
+		width: calc(100% - 90px);
 	}
 	/* larger touch targets */
 	.addButton, .editButton, .deleteButton, .undeleteButton, .todayButton, .refreshButton, .reactivateButton, .mergeButton {

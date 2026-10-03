@@ -4,7 +4,7 @@ const { sql, sqlRows, resetDb, session, post, get } = require('./lib');
 
 const todoFields = (over) => Object.assign({
     todo: 'item', due: '', start: '', effort: 1, notes: '', tags: '',
-    recurrenceMode: 0, recurrenceAnchor: 0, list_id: 0
+    recurrenceMode: 0, recurrenceInterval: 1, recurrenceAnchor: 0, list_id: 0
 }, over);
 
 test.beforeEach(resetDb);
@@ -42,7 +42,7 @@ test('reactivating a recurring entry copies stored values verbatim (no second-or
     const payload = ', NULL, 0, NULL, (SELECT CONCAT(user(), 0x20, version())), 1, 7, 1, 0)# ';
     const id = (await post('enter.php', { todo: 'x\\', due: '', start: '', tags: 't', list_id: 0 }, sess)).text;
     assert.equal((await post('update.php', todoFields({ id, version: 1, todo: 'x\\', notes: payload,
-        recurrenceMode: 7, recurrenceAnchor: 1, tags: 't' }), sess)).text, '1');
+        recurrenceMode: 1, recurrenceInterval: 7, recurrenceAnchor: 1, tags: 't' }), sess)).text, '1');
     assert.equal((await post('complete.php', { id, completed: 1, version: 2 }, sess)).text, '1');
     assert.equal((await post('reactivate-one.php', { id }, sess)).text, 'Reactivated entry...');
     const rows = sqlRows('SELECT description, notes, completed FROM todo ORDER BY id');
@@ -55,7 +55,7 @@ test('due recurring entries are reactivated when loading the list', async () => 
     const sess = await session();
     const id = (await post('enter.php', { todo: 'weekly', due: '2026-01-10', start: '2026-01-08', tags: 'w', list_id: 0 }, sess)).text;
     await post('update.php', todoFields({ id, version: 1, todo: 'weekly', due: '2026-01-10', start: '2026-01-08',
-        recurrenceMode: 7, recurrenceAnchor: 1, tags: 'w' }), sess);
+        recurrenceMode: 2, recurrenceInterval: 1, recurrenceAnchor: 1, tags: 'w' }), sess);
     await post('complete.php', { id, completed: 1, version: 2 }, sess);
     const res = await get('query-todos.php?list_id=0&age=10000&incomplete=true');
     const items = JSON.parse(res.text);
@@ -64,6 +64,21 @@ test('due recurring entries are reactivated when loading the list', async () => 
     assert.equal(copy.due, '2026-01-17 00:00:00');
     assert.equal(copy.start, '2026-01-15 00:00:00');
     assert.equal(copy.tags, 'w');
+});
+
+test('recurrence supports arbitrary intervals in days, weeks, months and years', async () => {
+    const sess = await session();
+    const cases = [[1, 10, '2026-01-20'], [2, 3, '2026-01-31'], [3, 2, '2026-03-10'], [4, 10, '2036-01-10']];
+    for (const [mode, interval, expectedDue] of cases) {
+        sql('DELETE FROM recurringCopied; DELETE FROM todo_tags; DELETE FROM todo');
+        const id = (await post('enter.php', { todo: 'r', due: '2026-01-10', start: '2026-01-10', tags: '', list_id: 0 }, sess)).text;
+        assert.equal((await post('update.php', todoFields({ id, version: 1, todo: 'r', due: '2026-01-10',
+            start: '2026-01-10', recurrenceMode: mode, recurrenceInterval: interval, recurrenceAnchor: 1 }), sess)).text, '1');
+        await post('complete.php', { id, completed: 1, version: 2 }, sess);
+        assert.equal((await post('reactivate-one.php', { id }, sess)).text, 'Reactivated entry...');
+        assert.deepEqual(sqlRows('SELECT DATE(dueDate), recurrenceMode, recurrenceInterval FROM todo WHERE completed=0'),
+            [[expectedDue, String(mode), String(interval)]]);
+    }
 });
 
 test('lists and todos of other users can neither be read nor changed', async () => {
@@ -99,6 +114,9 @@ test('invalid input is rejected', async () => {
         [{ due: '2026-01-01', start: '2026-01-05' }, 'Due date is earlier than start date!'],
         [{ effort: 10000 }, 'Invalid effort!'],
         [{ recurrenceMode: -5 }, 'Invalid recurrence mode!'],
+        [{ recurrenceMode: 5 }, 'Invalid recurrence mode!'],
+        [{ recurrenceMode: 2, recurrenceInterval: 0 }, 'Invalid recurrence interval!'],
+        [{ recurrenceMode: 2, recurrenceInterval: 1000 }, 'Invalid recurrence interval!'],
         [{ recurrenceAnchor: 2 }, 'Invalid recurrence anchor!'],
     ];
     for (const [over, msg] of bad) {

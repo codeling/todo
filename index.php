@@ -77,21 +77,12 @@
               <input type="text" id="modify_effort" name="modify_effort" maxlength="4" /><?php echo(TodoLang::_("EFFORT_REMARK"));?>
             </div><div class="modify_line">
               <span class="modify_desc"><?php echo(TodoLang::_("RECURRENCE"));?>:</span>
-              <select name="modify_recurrenceMode" id="modify_recurrenceMode">
+              <input type="number" id="modify_recurrenceInterval" name="modify_recurrenceInterval" min="1" max="999" value="1" title="<?php echo(TodoLang::_("RECURRENCE_EVERY"));?>" /><select name="modify_recurrenceMode" id="modify_recurrenceMode">
                 <option value="0"><?php echo(TodoLang::_("DONT_REPEAT"));?></option>
-                <option value="3"><?php echo(TodoLang::_("REPEAT_EVERY_THREE_DAYS"));?></option>
-                <option value="7"><?php echo(TodoLang::_("REPEAT_WEEKLY"));?></option>
-                <option value="14"><?php echo(TodoLang::_("REPEAT_BIWEEKLY"));?></option>
-                <option value="30"><?php echo(TodoLang::_("REPEAT_MONTHLY"));?></option>
-                <option value="60"><?php echo(TodoLang::_("REPEAT_BIMONTHLY"));?></option>
-                <option value="91"><?php echo(TodoLang::_("REPEAT_QUARTERLY"));?></option>
-                <option value="121"><?php echo(TodoLang::_("REPEAT_THIRDOFYEARLY"));?></option>
-                <option value="182"><?php echo(TodoLang::_("REPEAT_HALFYEARLY"));?></option>
-                <option value="365"><?php echo(TodoLang::_("REPEAT_YEARLY"));?></option>
-                <option value="730"><?php echo(TodoLang::_("REPEAT_BIYEARLY"));?></option>
-                <option value="1095"><?php echo(TodoLang::_("REPEAT_THREEYEARLY"));?></option>
-                <option value="1460"><?php echo(TodoLang::_("REPEAT_FOURYEARLY"));?></option>
-                <option value="1805"><?php echo(TodoLang::_("REPEAT_FIVEYEARLY"));?></option>
+                <option value="1"><?php echo(TodoLang::_("REPEAT_UNIT_DAYS"));?></option>
+                <option value="2"><?php echo(TodoLang::_("REPEAT_UNIT_WEEKS"));?></option>
+                <option value="3"><?php echo(TodoLang::_("REPEAT_UNIT_MONTHS"));?></option>
+                <option value="4"><?php echo(TodoLang::_("REPEAT_UNIT_YEARS"));?></option>
               </select>
             </div><div class="modify_line recurrence_dependent">
               <span class="modify_desc"><?php echo(TodoLang::_("RECURRENCE_ANCHOR"));?>:</span>
