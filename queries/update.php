@@ -4,6 +4,7 @@
     require("db.php");
     require("date.php");
     require("tags.php");
+    require("recurrence.php");
     $id       = (int)postParam('id');
     $todo     = encodeInput(postParam('todo'));
     $due      = postParam('due');
@@ -13,6 +14,7 @@
     $tags     = explode(",", postParam('tags'));
     $version  = (int)postParam('version');
     $recurrenceMode = (int)postParam('recurrenceMode');
+    $recurrenceInterval = (int)postParam('recurrenceInterval');
     $recurrenceAnchor = (int)postParam('recurrenceAnchor');
     $list_id  = (int)postParam('list_id');
     requireOwnTodo($db, $id);
@@ -39,9 +41,12 @@
         echo TodoLang::_("INVALID_EFFORT");
         die;
     }
-    // recurrence interval in days, at most 10 years:
-    if ($recurrenceMode < 0 || $recurrenceMode > 3650) {
+    if (!isset(RECURRENCE_UNITS[$recurrenceMode]) && $recurrenceMode != 0) {
         echo TodoLang::_("INVALID_RECURRENCE_MODE");
+        die;
+    }
+    if ($recurrenceInterval < 1 || $recurrenceInterval > MAX_RECURRENCE_INTERVAL) {
+        echo TodoLang::_("INVALID_RECURRENCE_INTERVAL");
         die;
     }
     if ($recurrenceAnchor != 0 && $recurrenceAnchor != 1) {
@@ -56,6 +61,7 @@
                 "notes=?, ".
                 "version=?, ".
                 "recurrenceMode=?, ".
+                "recurrenceInterval=?, ".
                 "recurrenceAnchor=?, ".
                 "list_id=? ".
             "WHERE id=? AND version=?";
@@ -64,7 +70,7 @@
         ($start == '') ? NULL : $start,
         $effort,
         ($notes == '') ? NULL : $notes,
-        $version+1, $recurrenceMode, $recurrenceAnchor, $list_id,
+        $version+1, $recurrenceMode, $recurrenceInterval, $recurrenceAnchor, $list_id,
         $id, $version));
 
     $affectedRows = $stmt->affected_rows;

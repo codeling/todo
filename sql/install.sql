@@ -10,6 +10,7 @@ CREATE TABLE `todo` (
 	`notes` varchar(10000) DEFAULT '',
 	`version` int(11) NOT NULL DEFAULT 1,
 	`recurrenceMode` int(11) NOT NULL DEFAULT 0,
+	`recurrenceInterval` int(11) NOT NULL DEFAULT 1,
 	`recurrenceAnchor` int(1) NOT NULL DEFAULT 0,
 	`deleted` tinyint(1) NOT NULL DEFAULT 0,
 	`list_id` int(11) NOT NULL DEFAULT '0',
@@ -47,7 +48,7 @@ CREATE TABLE `settings` (
 	PRIMARY KEY(`key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-INSERT INTO `settings` (`key`, `value`) VALUES ("db.version", "11");
+INSERT INTO `settings` (`key`, `value`) VALUES ("db.version", "12");
 
 -- default list of the default user (todo.list_id defaults to 0):
 SET SESSION sql_mode = CONCAT(@@sql_mode, ',NO_AUTO_VALUE_ON_ZERO');
