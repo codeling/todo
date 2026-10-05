@@ -6,6 +6,15 @@ $creationDate = dbQueryOrDie($db, "SELECT UTC_TIMESTAMP()")->fetch_array()[0];
 $qResult = dbQueryOrDie($db, "SELECT id FROM reviving");
 while ($toReactivate = $qResult->fetch_object())
 {
+    $db->begin_transaction();
+    // claim the entry first: if several requests run at the same time,
+    // only one of them gets to copy it
+    $claimed = dbExec($db, "INSERT IGNORE INTO recurringCopied (todo_id, copiedDate) VALUES (?, ?)",
+        array($toReactivate->id, $creationDate))->affected_rows;
+    if ($claimed < 1) {
+        $db->rollback();
+        continue;
+    }
     // new due date: recurrence interval after completion (anchor 0) or after due date (anchor 1);
     // start date keeps its distance to the due date (or equals the due date if there is none)
     $nextDue = recurrenceNextSql("IF(recurrenceAnchor=0, completionDate, dueDate)");
@@ -26,7 +35,5 @@ while ($toReactivate = $qResult->fetch_object())
     dbExec($db, "INSERT INTO todo_tags(todo_id, tag_id) ".
             "SELECT ?, tag_id FROM todo_tags WHERE todo_id=?",
         array($newId, $toReactivate->id));
-
-    dbExec($db, "INSERT INTO recurringCopied (todo_id, copiedDate) VALUES (?, ?)",
-        array($toReactivate->id, $creationDate));
+    $db->commit();
 }

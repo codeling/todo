@@ -17,6 +17,11 @@
 # its own. Only deploy it behind HTTP
 # authentication and over HTTPS, see
 # .htaccess (Apache) or nginx.conf.sample.
+# Requests the web server did not authenticate
+# (no REMOTE_USER) are rejected, so a missing
+# or ignored web server configuration does not
+# leave your data open. Keep this file outside
+# of the web root if your setup allows it.
 #
 ########################################
 # database connection settings:
@@ -37,3 +42,10 @@ $language    = "en-US";
 # note: the file with the name $language.ini from lang
 # folder will be used to translate all strings
 
+########################################
+# authentication check:
+# only set this to false if the application is
+# protected in some other way than by HTTP
+# authentication of the web server (e.g. network
+# access control), and never on a public server.
+# $require_http_auth = false;

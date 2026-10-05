@@ -40,7 +40,7 @@ jobs:
       - name: Set up database and configuration
         run: |
           mysql -h127.0.0.1 -uroot -proot todo < sql/install.sql
-          printf '<?php\n$db_host = "127.0.0.1"; $db_user = "root"; $db_password = "root"; $db_database = "todo";\n$language = "en-US";\n' > config.php
+          printf '<?php\n$db_host = "127.0.0.1"; $db_user = "root"; $db_password = "root"; $db_database = "todo";\n$language = "en-US";\n$require_http_auth = false;\n' > config.php
       - name: Start PHP server
         run: |
           php -S 127.0.0.1:8000 > php-server.log 2>&1 &

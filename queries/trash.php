@@ -2,10 +2,10 @@
     require(__DIR__."/../session.php");
     requirePostWithCsrf();
     require("db.php");
-    $id = (int)$_POST['id'];
+    $id = (int)postParam('id');
     requireOwnTodo($db, $id);
-    $trash = ((int)$_POST['trash'] == 1) ? 1 : 0;
-    $version = (int)$_POST['version'];
+    $trash = ((int)postParam('trash') == 1) ? 1 : 0;
+    $version = (int)postParam('version');
     $stmt = dbExec($db, "UPDATE todo SET deleted=? WHERE id=? AND version=?",
         array($trash, $id, $version));
     $affectedRows = $stmt->affected_rows;

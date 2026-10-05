@@ -5,7 +5,9 @@ function todoStartSession($readOnly) {
     if (session_status() === PHP_SESSION_ACTIVE) {
         return;
     }
-    $https = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+    // also behind a proxy which terminates TLS:
+    $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ||
+        (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
     session_name("todo_session");
     session_set_cookie_params(array(
         'lifetime' => 0,

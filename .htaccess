@@ -6,20 +6,29 @@ AuthType Basic
 AuthName "Todo"
 # create with: htpasswd -c /path/outside/webroot/.htpasswd <user>
 AuthUserFile /path/outside/webroot/.htpasswd
-Require valid-user
+# HTTPS is checked first, so that browsers are never asked for the password
+# over plain HTTP (X-Forwarded-Proto: for a proxy which terminates TLS)
+<RequireAll>
+    Require expr "%{HTTPS} == 'on' || %{HTTP:X-Forwarded-Proto} == 'https'"
+    Require valid-user
+</RequireAll>
 
 # never serve internal files directly
 RedirectMatch 404 ^.*/(sql|scripts|tests|node_modules|lang|\.git|\.github)(/|$)
+# (FilesMatch also applies to requests with a trailing path like db.php/x, unlike
+# a match on the request URI)
 <FilesMatch "(^\.|~$|\.(sql|sh|ini|bak|swp|orig|md|yml|lock|sample)$|^config.*\.php$|^package(-lock)?\.json$|^session\.php$|^todo-core\.php$|^lang\.php$)">
     Require all denied
 </FilesMatch>
 # helper scripts which are only included by the query endpoints
-<If "%{REQUEST_URI} =~ m#/queries/(db|date|tags|todo-list-query|reactivate|reactivate-temp)\.php$#">
+<FilesMatch "^(db|date|tags|todo-list-query|reactivate|reactivate-temp|recurrence)\.php$">
     Require all denied
-</If>
+</FilesMatch>
 
 <IfModule mod_headers.c>
     Header always set X-Content-Type-Options "nosniff"
     Header always set X-Frame-Options "DENY"
     Header always set Referrer-Policy "same-origin"
+    # ignored by browsers over plain HTTP
+    Header always set Strict-Transport-Security "max-age=31536000"
 </IfModule>

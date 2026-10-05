@@ -2,6 +2,10 @@
 # The application has no login of its own: protect it with HTTP authentication,
 # and only serve it over HTTPS.
 location /todo/ {
+    # only HTTPS, so that the password is never sent in cleartext
+    # (remove this if TLS is terminated in front of nginx)
+    if ($scheme != "https") { return 301 https://$host$request_uri; }
+
     # create with: htpasswd -c /etc/nginx/todo.htpasswd <user>
     auth_basic "Todo";
     auth_basic_user_file /etc/nginx/todo.htpasswd;
@@ -9,16 +13,19 @@ location /todo/ {
     add_header X-Content-Type-Options "nosniff" always;
     add_header X-Frame-Options "DENY" always;
     add_header Referrer-Policy "same-origin" always;
+    add_header Strict-Transport-Security "max-age=31536000" always;
 
     # never serve internal files directly
     location ~ ^/todo/(sql|scripts|tests|node_modules|lang|\.git|\.github)/ { return 404; }
     location ~ (/\.|~$|\.(sql|sh|ini|bak|swp|orig|md|yml|lock|sample)$|/config[^/]*\.php$|/package(-lock)?\.json$) { return 404; }
     location ~ ^/todo/(session|todo-core|lang)\.php$ { return 404; }
-    location ~ ^/todo/queries/(db|date|tags|todo-list-query|reactivate|reactivate-temp)\.php$ { return 404; }
+    location ~ ^/todo/queries/(db|date|tags|todo-list-query|reactivate|reactivate-temp|recurrence)\.php$ { return 404; }
 
     location ~ \.php$ {
         include fastcgi_params;
         fastcgi_param SCRIPT_FILENAME $request_filename;
+        # the application rejects requests without an authenticated user
+        fastcgi_param REMOTE_USER $remote_user;
         fastcgi_pass unix:/run/php/php-fpm.sock;
     }
 }

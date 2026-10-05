@@ -2,10 +2,10 @@
     require(__DIR__."/../session.php");
     requirePostWithCsrf();
     require("db.php");
-    $id = (int)$_POST['id'];
+    $id = (int)postParam('id');
     requireOwnTodo($db, $id);
-    $completed = ((int)$_POST['completed'] == 1) ? 1 : 0;
-    $version   = (int)$_POST['version'];
+    $completed = ((int)postParam('completed') == 1) ? 1 : 0;
+    $version   = (int)postParam('version');
     $stmt = dbExec($db, "UPDATE todo SET completed=?, ".
         "completionDate=IF(?=1, UTC_TIMESTAMP(), NULL), version=?+1 WHERE id=? AND version=?",
         array($completed, $completed, $version, $id, $version));

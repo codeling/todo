@@ -46,6 +46,12 @@ function dbQueryOrDie($db, $sql) {
     return $db->query($sql);
 }
 
+// answer with JSON (not as text/html, the default)
+function sendJson($json) {
+    header('Content-Type: application/json; charset=utf-8');
+    echo $json;
+}
+
 function jsonQueryResults($db, $sql, $params = array())
 {
     $qResult = dbExec($db, $sql, $params)->get_result();
@@ -74,6 +80,21 @@ function requireOwnTodo($db, $todo_id) {
     $qResult = dbExec($db, "SELECT 1 FROM todo t JOIN list l ON t.list_id=l.id ".
         "WHERE t.id=? AND l.user_id=?", array((int)$todo_id, (int)$curUserID))->get_result();
     if ($qResult->num_rows < 1) {
+        echo TodoLang::_("ACCESS_DENIED");
+        exit;
+    }
+}
+
+// stop with an error message unless the given tag is used by todos of the current
+// user and by no todos of other users: tags are shared by name, so changing or
+// deleting a tag which is also used by others would change their data
+function requireOwnTag($db, $tag_id) {
+    global $curUserID;
+    $qResult = dbExec($db, "SELECT COALESCE(SUM(l.user_id=?), 0) AS own, COALESCE(SUM(l.user_id<>?), 0) AS others ".
+        "FROM todo_tags r JOIN todo t ON t.id=r.todo_id JOIN list l ON l.id=t.list_id WHERE r.tag_id=?",
+        array((int)$curUserID, (int)$curUserID, (int)$tag_id))->get_result();
+    $row = $qResult->fetch_object();
+    if ((int)$row->own < 1 || (int)$row->others > 0) {
         echo TodoLang::_("ACCESS_DENIED");
         exit;
     }
