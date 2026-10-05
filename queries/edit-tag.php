@@ -2,8 +2,13 @@
     require(__DIR__."/../session.php");
     requirePostWithCsrf();
     require("db.php");
-    $id   = (int)$_POST['id'];
-    $name = encodeInput($_POST['tag_name']);
+    $id   = (int)postParam('id');
+    $name = encodeInput(trim(postParam('tag_name')));
+    if ($name == '') {
+        echo TodoLang::_("INVALID_PARAMETERS");
+        die;
+    }
+    requireOwnTag($db, $id);
     $affectedRows = dbExec($db, "UPDATE `tags` SET `name`=? WHERE id=?", array($name, $id))->affected_rows;
     if ($affectedRows < 1) {
         echo TodoLang::_("NO_ROWS_AFFECTED");

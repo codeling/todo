@@ -1,6 +1,5 @@
 <?php
     require("db.php");
-    require("reactivate.php");
     require("todo-list-query.php");
 
     $list_id = (int)$_GET["list_id"];
@@ -10,4 +9,4 @@
     $sql = todoListQuery($incomplete);
     $result = jsonQueryResults($db, $sql, array($list_id, $age));
     $db->close();
-    echo $result;
+    sendJson($result);

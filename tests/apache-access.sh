@@ -44,9 +44,10 @@ sleep 1
 URL=http://127.0.0.1:$PORT/todo
 FAIL=0
 # path, expected status without credentials, expected status with credentials
+# (X-Forwarded-Proto: https, as sent by a proxy which terminates TLS, as the test server only speaks HTTP)
 check() {
-    noauth=$(curl -s -o /dev/null -w '%{http_code}' "$URL/$1")
-    auth=$(curl -s -u alice:secret -o /dev/null -w '%{http_code}' "$URL/$1")
+    noauth=$(curl -s -H 'X-Forwarded-Proto: https' -o /dev/null -w '%{http_code}' "$URL/$1")
+    auth=$(curl -s -H 'X-Forwarded-Proto: https' -u alice:secret -o /dev/null -w '%{http_code}' "$URL/$1")
     if [ "$noauth" = "$2" ] && [ "$auth" = "$3" ]; then
         echo "ok   $1 ($noauth/$auth)"
     else
@@ -60,13 +61,21 @@ check vendor/jquery/jquery.min.js 401 200
 check todo.css 401 200
 for denied in sql/install.sql lang/en-US.ini config.php config.sample.php package.json \
         package-lock.json scripts/vendor.sh session.php todo-core.php lang.php queries/db.php \
-        queries/tags.php queries/reactivate-temp.php .htaccess nginx.conf.sample; do
+        queries/tags.php queries/reactivate-temp.php queries/reactivate.php queries/recurrence.php \
+        queries/db.php/x queries/reactivate.php/x queries/reactivate-temp.php/x session.php/x config.php/x \
+        .htaccess nginx.conf.sample; do
     check "$denied" 403 403
 done
 for hidden in .git/HEAD node_modules/jquery/dist/jquery.js tests/lib.js; do
     check "$hidden" 401 404
 done
-headers=$(curl -s -u alice:secret -D - -o /dev/null "$URL/todo.css")
+# plain HTTP: no password prompt (403, not 401), with or without credentials
+for creds in "" "-u alice:secret"; do
+    code=$(curl -s $creds -o /dev/null -w '%{http_code}' "$URL/index.php")
+    if [ "$code" = 403 ]; then echo "ok   plain HTTP index.php ($code) $creds"; else echo "FAIL plain HTTP index.php: got $code, expected 403 ($creds)"; FAIL=1; fi
+done
+headers=$(curl -s -H 'X-Forwarded-Proto: https' -u alice:secret -D - -o /dev/null "$URL/todo.css")
 echo "$headers" | grep -qi '^X-Frame-Options: DENY' || { echo "FAIL missing X-Frame-Options"; FAIL=1; }
 echo "$headers" | grep -qi '^X-Content-Type-Options: nosniff' || { echo "FAIL missing nosniff"; FAIL=1; }
+echo "$headers" | grep -qi '^Strict-Transport-Security: ' || { echo "FAIL missing Strict-Transport-Security"; FAIL=1; }
 exit $FAIL

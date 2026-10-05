@@ -14,4 +14,4 @@ while ($stuff = $qResult->fetch_object())
     $allResults[] = $stuff;
 }
 $db->close();
-echo json_encode($allResults);
+sendJson(json_encode($allResults));

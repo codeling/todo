@@ -678,9 +678,34 @@ function toggleWorking(show) {
 
 function reload() {
     log($T('LOADING_TODO_LIST'));
+    // recurring entries which are due are copied first; that modifies data,
+    // so it is a POST request (with CSRF token) and not part of loading the list
+    $.ajax({
+        url: 'queries/reactivate-due.php',
+        type: 'POST'
+    }).always(loadTodos);
+
+    $.ajax({
+        url: 'queries/query-lists.php',
+        type: 'GET',
+        dataType: 'text',
+        data: listsData
+    }).done( function(responseText) {
+        try {
+            lists = JSON.parse(responseText);
+        } catch (e) {
+            alert($T('SERVER_DELIVERED_INVALID_DATA')+': "'+responseText+
+                '";'+$T('JSON_PARSER_MESSAGE')+' : '+e);
+        }
+        renderLists();
+    });
+}
+
+function loadTodos() {
     $.ajax({
         url: 'queries/query-todos.php',
         type: 'GET',
+        dataType: 'text',
         data: reloadData
     }).done(function(responseText) {
         try {
@@ -702,20 +727,6 @@ function reload() {
         renderTable();
         updateProgress();
         log($T('LOADING_FINISHED'));
-    });
-
-    $.ajax({
-        url: 'queries/query-lists.php',
-        type: 'GET',
-        data: listsData
-    }).done( function(responseText) {
-        try {
-            lists = JSON.parse(responseText);
-        } catch (e) {
-            alert($T('SERVER_DELIVERED_INVALID_DATA')+': "'+responseText+
-                '";'+$T('JSON_PARSER_MESSAGE')+' : '+e);
-        }
-        renderLists();
     });
 }
 
@@ -1023,7 +1034,8 @@ function openTagDialog(tagname)
     });
     var tagify = $('#merge_tag_edit')[0].__tagify;
     tagify.removeAllTags();
-    tagify.settings.whitelist = tagList.map( (x) => x.name );
+    // a tag cannot be merged into itself:
+    tagify.settings.whitelist = tagList.filter( (x) => x.id != result[0].id ).map( (x) => x.name );
     $('#tag_todo_table').empty();
     var filtered = getTodoWithTag(new Array(tagname));
     filtered.sort(ItemSort);
