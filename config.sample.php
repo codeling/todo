@@ -43,7 +43,13 @@ $language    = "en-US";
 # folder will be used to translate all strings
 
 ########################################
-# authentication check:
+# HTTPS and authentication checks (see basic-auth/README.md):
+# requests which did not arrive over HTTPS are rejected.
+# only set this to false for local development or tests,
+# never on a public server:
+# $require_https = false;
+#
+# requests the web server did not authenticate are rejected.
 # only set this to false if the application is
 # protected in some other way than by HTTP
 # authentication of the web server (e.g. network

@@ -1,13 +1,13 @@
 <?php
 // session is only used to hold the CSRF token
+require_once(__DIR__."/basic-auth/basic-auth.php");
 
 function todoStartSession($readOnly) {
     if (session_status() === PHP_SESSION_ACTIVE) {
         return;
     }
     // also behind a proxy which terminates TLS:
-    $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ||
-        (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+    $https = basicAuthIsHttps();
     session_name("todo_session");
     session_set_cookie_params(array(
         'lifetime' => 0,
