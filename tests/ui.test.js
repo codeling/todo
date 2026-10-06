@@ -88,3 +88,31 @@ test('main workflows work (and do not violate the Content-Security-Policy)', asy
     assert.deepEqual(page.errors, []);
     await page.close();
 });
+
+test('a tag named like JSON is shown as a plain tag, it cannot inject HTML', async () => {
+    resetDb();
+    // names with a comma can not be created any more (rename is rejected), but may exist from earlier versions
+    const attr = '[{"value":"x","onmouseover=window.__xss=1 a":"1"}]';
+    const meta = '[{"value":"y","\\"><meta http-equiv=refresh content=\\"0;url=http://127.0.0.1:9/\\"> a":"1"}]';
+    const enc = (s) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    // one todo for each: the tag list of a todo is the single tag name, so it is valid JSON
+    for (const name of [attr, meta]) {
+        sql("INSERT INTO todo (creationDate, description, startDate, list_id) VALUES (UTC_TIMESTAMP(), 'tagged', UTC_DATE(), 0); " +
+            "SET @t=LAST_INSERT_ID(); " +
+            `INSERT INTO tags (name) VALUES ('${enc(name)}'); INSERT INTO todo_tags VALUES (@t, LAST_INSERT_ID())`);
+    }
+    const page = await openPage();
+    await page.waitForSelector('#todoTable tbody tr .tagify__tag');
+    // (the list of tags is comma separated, so the commas of these names split them into pieces)
+    const values = await page.locator('#todoTable tbody tr .tagify__tag').evaluateAll(
+        (tags) => tags.map((t) => t.__tagifyTagData.value));
+    assert.ok(values.length > 0 && values.every((v) => typeof v === 'string'), JSON.stringify(values));
+    assert.ok(values.some((v) => v.includes('onmouseover=window.__xss=1')), JSON.stringify(values));
+    // not a single attribute or element came from the JSON
+    assert.equal(await page.locator('tag[onmouseover], tag[a], meta[http-equiv]').count(), 0);
+    assert.equal(await page.evaluate(() => window.__xss), undefined);
+    assert.equal(new URL(page.url()).pathname, '/index.php');
+    assert.deepEqual(page.errors, []);
+    await page.close();
+});
+

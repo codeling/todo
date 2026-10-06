@@ -10,7 +10,6 @@ var reloadData = {
     list_id: 0,
     incomplete: false
 };
-var listsData = {user_id: 0};
 
 function Todo(id, todo, due, start, effort,
         completed, notes, tags, deleted,
@@ -688,8 +687,7 @@ function reload() {
     $.ajax({
         url: 'queries/query-lists.php',
         type: 'GET',
-        dataType: 'text',
-        data: listsData
+        dataType: 'text'
     }).done( function(responseText) {
         try {
             lists = JSON.parse(responseText);
@@ -915,6 +913,19 @@ function clearTable()
     $("#todoTable tbody").empty();
 }
 
+// Shows the tags (comma separated, HTML-encoded) of a todo in an empty input field.
+// They are added one by one and not as the value of the input: Tagify parses a value which
+// looks like JSON and writes the keys of the objects into the tag element as attribute
+// names, without escaping them, so a tag named like that could inject HTML.
+function showReadOnlyTags(inputElem, tagsStr) {
+    var tagify = new Tagify(inputElem, { readOnly: true });
+    tagify.addTags(tagsStr.split(',').map(function(tag) {
+        return html_entity_decode(tag).trim();
+    }).filter(function(tag) {
+        return tag != '';
+    }));
+}
+
 function getTodoTitleHtml(it, lineNr, tagbasename, spanCssClass, baseElem, checkbox, extraHtml) {
     var isRecurring = it.recurrenceMode != 0;
     var hasNote = it.notes != null && it.notes != '';
@@ -937,7 +948,7 @@ function getTodoTitleHtml(it, lineNr, tagbasename, spanCssClass, baseElem, check
             (hasNote ? '<span class="note" title="'+textToHtml(it.notes)+'"></span>':'')+
             (isRecurring ? '<input type="button" class="reactivateButton" id="reactivate'+it.id+'" />':'');
     if (hasTags) {
-        line += ' <input id="'+tagbasename+it.id+'" class="todo_item_tags" readonly value="'+textToHtml(it.tags)+'">';
+        line += ' <input id="'+tagbasename+it.id+'" class="todo_item_tags" readonly>';
     }
     if (extraHtml) {
         line += extraHtml;
@@ -991,7 +1002,7 @@ function renderItem(it, lineNr) {
     $('#todoTable tbody').append(line);
     var elem = $('#'+tagbasename+it.id);
     if (it.tags != null && it.tags != '') {
-        new Tagify(elem[0], { readOnly: true } );
+        showReadOnlyTags(elem[0], it.tags);
     }
     if (window.matchMedia('(hover: hover)').matches) {
         // debug output; not on touch devices, where a double tap would trigger it
@@ -1043,8 +1054,8 @@ function openTagDialog(tagname)
     for (var i=0; i<filtered.length; i++) {
         var line = getTodoTitleHtml(filtered[i], i, tagbase, 'todo', 'div', false);
         $('#tag_todo_table').append(line);
-        var elem = $('#'+tagbase+filtered[i].id); // .tagit({readOnly: true});
-        new Tagify(elem[0], { readOnly: true } );
+        var elem = $('#'+tagbase+filtered[i].id);
+        showReadOnlyTags(elem[0], filtered[i].tags);
     }
 }
 

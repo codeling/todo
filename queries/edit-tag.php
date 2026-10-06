@@ -1,11 +1,14 @@
 <?php
-    require(__DIR__."/../session.php");
+    // authenticates first, a CSRF check is no replacement for that
+    require(__DIR__."/../todo-core.php");
     requirePostWithCsrf();
     require("db.php");
+    require("tags.php");
     $id   = (int)postParam('id');
     $name = encodeInput(trim(postParam('tag_name')));
-    if ($name == '') {
-        echo TodoLang::_("INVALID_PARAMETERS");
+    // no comma: tags are passed around as comma separated lists (see tags.php)
+    if (!isValidTagName($name)) {
+        echo TodoLang::_("INVALID_TAG_NAME");
         die;
     }
     requireOwnTag($db, $id);

@@ -21,7 +21,11 @@
 # (no REMOTE_USER) are rejected, so a missing
 # or ignored web server configuration does not
 # leave your data open. Keep this file outside
-# of the web root if your setup allows it.
+# of the web root if your setup allows it: set
+# the environment variable TODO_CONFIG to its
+# path (SetEnv in Apache, env[TODO_CONFIG] in
+# the php-fpm pool, fastcgi_param in nginx).
+# See README.md for more on deployment.
 #
 ########################################
 # database connection settings:
@@ -49,3 +53,12 @@ $language    = "en-US";
 # authentication of the web server (e.g. network
 # access control), and never on a public server.
 # $require_http_auth = false;
+
+########################################
+# TLS-terminating proxy:
+# only set this to true if the web server can only
+# be reached through a proxy which terminates TLS and
+# always overwrites the X-Forwarded-Proto header. Then
+# the session cookie gets the "Secure" attribute.
+# Otherwise clients could send the header themselves.
+# $trust_forwarded_proto = true;

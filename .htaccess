@@ -4,14 +4,20 @@
 
 AuthType Basic
 AuthName "Todo"
-# create with: htpasswd -c /path/outside/webroot/.htpasswd <user>
+# create with: htpasswd -B -C 12 -c /path/outside/webroot/.htpasswd <user>
+# (-B: bcrypt; the default, MD5, is much easier to guess offline)
 AuthUserFile /path/outside/webroot/.htpasswd
 # HTTPS is checked first, so that browsers are never asked for the password
-# over plain HTTP (X-Forwarded-Proto: for a proxy which terminates TLS)
+# over plain HTTP.
+# The request header X-Forwarded-Proto is NOT believed here: any client can send it.
+# Behind a proxy which terminates TLS, set the HTTPS variable in the virtual host
+# for requests from that proxy only, e.g. (adapt the address of the proxy):
+#   SetEnvIfExpr "%{REMOTE_ADDR} -ipmatch '10.0.0.5' && %{HTTP:X-Forwarded-Proto} == 'https'" HTTPS=on
 <RequireAll>
-    Require expr "%{HTTPS} == 'on' || %{HTTP:X-Forwarded-Proto} == 'https'"
+    Require expr "%{HTTPS} == 'on' || %{ENV:HTTPS} == 'on'"
     Require valid-user
 </RequireAll>
+# There is no limit for wrong passwords: use fail2ban, mod_evasive or similar (see README.md).
 
 # never serve internal files directly
 RedirectMatch 404 ^.*/(sql|scripts|tests|node_modules|lang|\.git|\.github)(/|$)
