@@ -1,6 +1,6 @@
 # nginx example for serving the application from /todo/
 # The application has no login of its own: protect it with HTTP authentication,
-# and only serve it over HTTPS.
+# and only serve it over HTTPS (generic version: basic-auth/nginx.conf.sample).
 location /todo/ {
     # only HTTPS, so that the password is never sent in cleartext
     # (remove this if TLS is terminated in front of nginx)
@@ -24,6 +24,7 @@ location /todo/ {
     location ~ ^/todo/(sql|scripts|tests|node_modules|lang|\.git|\.github)/ { return 404; }
     location ~ (/\.|~$|\.(sql|sh|ini|bak|swp|orig|md|yml|lock|sample)$|/config[^/]*\.php$|/package(-lock)?\.json$) { return 404; }
     location ~ ^/todo/(session|todo-core|lang)\.php$ { return 404; }
+    location ~ ^/todo/basic-auth/ { return 404; }
     location ~ ^/todo/queries/(db|date|tags|todo-list-query|reactivate|reactivate-temp|recurrence)\.php$ { return 404; }
 
     location ~ \.php$ {

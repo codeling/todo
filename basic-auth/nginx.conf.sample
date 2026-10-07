@@ -1,0 +1,31 @@
+# nginx: HTTP Basic authentication over HTTPS only, for an app served from /app/.
+# basic-auth.php is the safety net behind it: it rejects requests which did not
+# arrive over HTTPS or were not authenticated (REMOTE_USER below).
+location /app/ {
+    # only HTTPS, so that the password is never sent in cleartext
+    # (if TLS is terminated in front of nginx, replace this by a check that the
+    # request came from that proxy, and pass "fastcgi_param HTTPS on;" below
+    # for its requests, see README.md)
+    if ($scheme != "https") { return 301 https://$host$request_uri; }
+
+    # create with: htpasswd -B -C 12 -c /etc/nginx/app.htpasswd <user>
+    # (-B: bcrypt; the default, MD5, is much easier to guess offline)
+    auth_basic "Restricted";
+    auth_basic_user_file /etc/nginx/app.htpasswd;
+    # There is no limit for wrong passwords. Slow guessing down with, in the http block:
+    #   limit_req_zone $binary_remote_addr zone=app_auth:10m rate=5r/s;
+    # and here: limit_req zone=app_auth burst=20 nodelay;
+
+    add_header Strict-Transport-Security "max-age=31536000" always;
+
+    # don't serve the library itself, nor its docs and samples
+    location ~ ^/app/basic-auth/ { return 404; }
+
+    location ~ \.php$ {
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $request_filename;
+        # basic-auth.php rejects requests without an authenticated user
+        fastcgi_param REMOTE_USER $remote_user;
+        fastcgi_pass unix:/run/php/php-fpm.sock;
+    }
+}

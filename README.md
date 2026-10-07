@@ -11,7 +11,9 @@ A small PHP / MariaDB (MySQL) to-do list with lists, tags, recurring entries and
 ## Security: deployment
 
 The application has **no login of its own**. It relies on the web server's HTTP authentication
-(`REMOTE_USER`) and rejects every request without it. This is the last line of defence only,
+(`REMOTE_USER`) and rejects every request without it, as well as every request not made over
+HTTPS (`$require_https`). This is done by the drop-in library in `basic-auth/`, which can be
+reused in other small apps (see `basic-auth/README.md`). It is the last line of defence only,
 set up the rest properly:
 
 * **HTTPS only.** Basic authentication sends the password with every request.
