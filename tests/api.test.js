@@ -164,11 +164,14 @@ test('merging tags moves the entries and keeps each only once', async () => {
     assert.deepEqual(assignments(), ['one:b', 'two:b']);
 });
 
+const invalidTagName = 'Invalid tag name (it may not be empty, contain a comma or be longer than 255 characters)!';
+const invalidTags = 'Invalid tags (at most 50 tags, none longer than 255 characters)!';
+
 test('tag endpoints validate their parameters', async () => {
     const sess = await session();
     const tag = await taggedTodos(sess, 'keep', '');
-    assert.equal((await post('edit-tag.php', { id: tag.keep }, sess)).text, 'Invalid parameters!');
-    assert.equal((await post('edit-tag.php', { id: tag.keep, tag_name: '  ' }, sess)).text, 'Invalid parameters!');
+    assert.equal((await post('edit-tag.php', { id: tag.keep }, sess)).text, invalidTagName);
+    assert.equal((await post('edit-tag.php', { id: tag.keep, tag_name: '  ' }, sess)).text, invalidTagName);
     assert.equal((await post('merge-tag.php', { id: tag.keep }, sess)).text, 'Invalid parameters!');
     assert.equal(sql('SELECT name FROM tags').trim(), 'keep');
     assert.equal((await post('edit-tag.php', { id: tag.keep, tag_name: ' <b> ' }, sess)).text, '1');
@@ -245,4 +248,48 @@ test('pages send security headers', async () => {
     assert.match(res.headers.get('content-security-policy'), /frame-ancestors 'none'/);
     assert.equal(res.headers.get('x-content-type-options'), 'nosniff');
     assert.match(res.headers.get('set-cookie'), /HttpOnly; SameSite=Strict/i);
+    // the page holds the CSRF token and all data: no caching; and no PHP version
+    assert.equal(res.headers.get('cache-control'), 'private, no-store');
+    assert.equal(res.headers.get('x-powered-by'), null);
+    const data = await fetch(BASE + '/queries/query-todos.php?list_id=0');
+    assert.equal(data.headers.get('cache-control'), 'private, no-store');
+});
+
+test('a tag cannot be renamed to a name with a comma or a too long name', async () => {
+    const sess = await session();
+    const tag = await taggedTodos(sess, 'keep', '');
+    // a comma would split the tag in lists of tags (and, as a JSON array, was once shown as HTML)
+    const json = '[{"value":"x","onmouseover=1 a":"1"}]';
+    for (const name of ['a,b', json, 'x'.repeat(256)]) {
+        assert.equal((await post('edit-tag.php', { id: tag.keep, tag_name: name }, sess)).text, invalidTagName, name);
+    }
+    assert.equal(sql('SELECT name FROM tags').trim(), 'keep');
+    assert.equal((await post('edit-tag.php', { id: tag.keep, tag_name: 'x'.repeat(255) }, sess)).text, '1');
+});
+
+test('the number and length of tags is limited', async () => {
+    const sess = await session();
+    const tags = (n) => Array.from({ length: n }, (_, i) => 't' + i).join(',');
+    // too many tags / a too long tag: nothing is written at all
+    assert.equal((await post('enter.php', { todo: 'a', due: '', start: '', tags: tags(51), list_id: 0 }, sess)).text, invalidTags);
+    assert.equal((await post('enter.php', { todo: 'a', due: '', start: '', tags: 'x'.repeat(256), list_id: 0 }, sess)).text, invalidTags);
+    assert.equal(sql('SELECT COUNT(*) FROM todo').trim(), '0');
+    assert.equal(sql('SELECT COUNT(*) FROM tags').trim(), '0');
+    // 50 are fine; duplicates and empty tags do not count
+    const id = (await post('enter.php', { todo: 'a', due: '', start: '', tags: tags(50) + ',,t0, t1', list_id: 0 }, sess)).text;
+    assert.match(id, /^\d+$/);
+    assert.equal(sql('SELECT COUNT(*) FROM todo_tags').trim(), '50');
+    // an update with too many tags changes nothing, and keeps the version
+    assert.equal((await post('update.php', todoFields({ id, version: 1, todo: 'changed', tags: tags(51) }), sess)).text, invalidTags);
+    assert.deepEqual(sqlRows(`SELECT description, version FROM todo WHERE id=${id}`), [['a', '1']]);
+    assert.equal(sql('SELECT COUNT(*) FROM todo_tags').trim(), '50');
+});
+
+test('a missing list_id does not produce PHP warnings in the response', async () => {
+    for (const path of ['query-todos.php', 'query-tags.php']) {
+        const res = await get(path);
+        assert.equal(res.status, 200, path);
+        assert.doesNotMatch(res.text, /Warning|Notice|Undefined/, path);
+        JSON.parse(res.text);
+    }
 });

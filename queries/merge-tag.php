@@ -1,5 +1,6 @@
 <?php
-    require(__DIR__."/../session.php");
+    // authenticates first, a CSRF check is no replacement for that
+    require(__DIR__."/../todo-core.php");
     requirePostWithCsrf();
     require("db.php");
     $id   = (int)postParam('id');

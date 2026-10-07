@@ -34,7 +34,6 @@
         </div>
         <div id="progress"><span id="progress_done">&nbsp;</span><span id="progress_todo">&nbsp;</span></div>
         <form method="POST" id="inputform">
-          <input type="hidden" name="user_id" id="user_id" value="<?php echo $curUserID; ?>" />
           <table id="todoTable">
             <thead>
             <tr>

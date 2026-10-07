@@ -1,5 +1,6 @@
 <?php
-    require(__DIR__."/../session.php");
+    // authenticates first, a CSRF check is no replacement for that
+    require(__DIR__."/../todo-core.php");
     requirePostWithCsrf();
     require("db.php");
     require("date.php");
@@ -7,7 +8,7 @@
     $todo     = encodeInput(postParam('todo'));
     $due      = postParam('due');
     $start    = postParam('start');
-    $tags = explode(",", postParam('tags'));
+    $tags     = parseTags(postParam('tags'));
     // checks (empty dates are allowed: start defaults to today, due stays empty):
     if ($due != '' && !checkDateStr($due)) {
         echo TodoLang::_("INVALID_DUE_DATE");
@@ -24,6 +25,10 @@
     }
     if ($todo == '') {
         echo TodoLang::_("TODO_MAY_NOT_BE_EMPTY");
+        die;
+    }
+    if ($tags === null) {
+        echo TodoLang::_("INVALID_TAGS");
         die;
     }
     $list_id = (int)postParam('list_id');

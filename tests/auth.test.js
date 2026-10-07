@@ -47,7 +47,7 @@ test.after(() => {
     fs.rmSync(dir, { recursive: true, force: true });
 });
 
-const pages = ['index.php', 'statistik.php', 'log.js.php', 'queries/query-lists.php', 'queries/query-todos.php?list_id=0'];
+const pages = ['index.php', 'statistik.php', 'log.js.php', 'lang-js.php', 'queries/query-lists.php', 'queries/query-todos.php?list_id=0'];
 
 test('requests the web server did not authenticate are rejected', async () => {
     const srv = await startServer(dir, []);
@@ -84,3 +84,60 @@ test('the check can be switched off explicitly in config.php', async () => {
         fs.rmSync(off, { recursive: true, force: true });
     }
 });
+
+test('requests which are not authenticated get neither a session nor the PHP version', async () => {
+    const srv = await startServer(dir, []);
+    servers.push(srv);
+    for (const [page, method] of [['index.php', 'GET'], ['queries/trash.php', 'POST'], ['lang-js.php', 'GET']]) {
+        const res = await fetch(srv.base + '/' + page, { method });
+        assert.equal(res.status, 403, page);
+        assert.equal(res.headers.get('set-cookie'), null, page);
+        assert.equal(res.headers.get('x-powered-by'), null, page);
+    }
+});
+
+test('a request without session cookie does not start a session', async () => {
+    const srv = await startServer(dir, [path.join(dir, 'router-auth.php')]);
+    servers.push(srv);
+    const res = await fetch(srv.base + '/queries/trash.php', { method: 'POST' });
+    assert.equal(res.status, 403);
+    assert.equal(res.headers.get('set-cookie'), null);
+});
+
+test('X-Forwarded-Proto is only believed if configured', async () => {
+    const proto = { 'X-Forwarded-Proto': 'https' };
+    const plain = await startServer(dir, [path.join(dir, 'router-auth.php')]);
+    servers.push(plain);
+    assert.doesNotMatch((await fetch(plain.base + '/index.php', { headers: proto })).headers.get('set-cookie'), /secure/i);
+    const trusting = fs.mkdtempSync(path.join(os.tmpdir(), 'todo-auth-proxy-'));
+    try {
+        fs.cpSync(dir, trusting, { recursive: true });
+        fs.appendFileSync(path.join(trusting, 'config.php'), '$trust_forwarded_proto = true;\n');
+        const srv = await startServer(trusting, [path.join(trusting, 'router-auth.php')]);
+        servers.push(srv);
+        assert.match((await fetch(srv.base + '/index.php', { headers: proto })).headers.get('set-cookie'), /; secure/i);
+        assert.doesNotMatch((await fetch(srv.base + '/index.php')).headers.get('set-cookie'), /secure/i);
+    } finally {
+        servers.forEach((s) => s.proc.kill());
+        fs.rmSync(trusting, { recursive: true, force: true });
+    }
+});
+
+test('config.php can be kept elsewhere (TODO_CONFIG)', async () => {
+    const moved = fs.mkdtempSync(path.join(os.tmpdir(), 'todo-auth-cfg-'));
+    const outside = fs.mkdtempSync(path.join(os.tmpdir(), 'todo-cfg-'));
+    try {
+        fs.cpSync(dir, moved, { recursive: true });
+        fs.renameSync(path.join(moved, 'config.php'), path.join(outside, 'config.php'));
+        process.env.TODO_CONFIG = path.join(outside, 'config.php');
+        const srv = await startServer(moved, [path.join(moved, 'router-auth.php')]);
+        servers.push(srv);
+        assert.equal((await fetch(srv.base + '/index.php')).status, 200);
+    } finally {
+        delete process.env.TODO_CONFIG;
+        servers.forEach((s) => s.proc.kill());
+        fs.rmSync(moved, { recursive: true, force: true });
+        fs.rmSync(outside, { recursive: true, force: true });
+    }
+});
+

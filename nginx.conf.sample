@@ -6,9 +6,14 @@ location /todo/ {
     # (remove this if TLS is terminated in front of nginx)
     if ($scheme != "https") { return 301 https://$host$request_uri; }
 
-    # create with: htpasswd -c /etc/nginx/todo.htpasswd <user>
+    # create with: htpasswd -B -C 12 -c /etc/nginx/todo.htpasswd <user>
+    # (-B: bcrypt; the default, MD5, is much easier to guess offline)
     auth_basic "Todo";
     auth_basic_user_file /etc/nginx/todo.htpasswd;
+    # There is no limit for wrong passwords. Slow guessing down with, in the http block:
+    #   limit_req_zone $binary_remote_addr zone=todo_auth:10m rate=5r/s;
+    # and here: limit_req zone=todo_auth burst=20 nodelay;
+    # (or use fail2ban, see README.md)
 
     add_header X-Content-Type-Options "nosniff" always;
     add_header X-Frame-Options "DENY" always;
