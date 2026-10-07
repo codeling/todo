@@ -6,7 +6,7 @@ jobs:
   php-lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
@@ -29,7 +29,7 @@ jobs:
       TODO_URL: http://127.0.0.1:8000
       TODO_MYSQL: mysql -h127.0.0.1 -uroot -proot todo
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
@@ -55,6 +55,6 @@ jobs:
   apache-access:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - run: sudo apt-get update && sudo apt-get install -y apache2 apache2-utils
       - run: sudo sh tests/apache-access.sh
