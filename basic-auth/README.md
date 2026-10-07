@@ -36,7 +36,7 @@ Two parts that belong together:
 |-------------------------|----------------|---------|
 | `require_https`         | `true`         | reject requests which did not arrive over HTTPS |
 | `require_auth`          | `true`         | reject requests without an authenticated user |
-| `trust_forwarded_proto` | `true`         | accept `X-Forwarded-Proto: https` as HTTPS (proxy which terminates TLS) |
+| `trust_forwarded_proto` | `false`        | accept `X-Forwarded-Proto: https` as HTTPS, see below |
 | `hsts`                  | `true`         | send `Strict-Transport-Security` on HTTPS requests |
 | `log_prefix`            | `'basic-auth'` | prefix of the error log messages |
 | `messages`              | English texts  | `array('https' => ..., 'auth' => ...)`, shown to the client as plain text |
@@ -53,8 +53,13 @@ in the app's config file.
 - Only `REMOTE_USER` (or `REDIRECT_REMOTE_USER`, set after an internal redirect) counts as
   authenticated. The web server sets it after checking the credentials; a client cannot
   forge it with an `Authorization` header. The guard itself does not check passwords.
-- `trust_forwarded_proto` only affects the HTTPS check. Set it to `false` if the app can be
-  reached without a proxy you control in front, and make the proxy set `HTTPS` instead,
-  e.g. with `fastcgi_param HTTPS on;` for requests it terminated TLS for.
+- Behind a proxy which terminates TLS, the app sees plain HTTP. Preferably let the web server
+  set `HTTPS` for the requests of that proxy only (`SetEnvIfExpr` in Apache, see
+  `htaccess.sample`; `fastcgi_param HTTPS on;` in nginx). Alternatively set
+  `trust_forwarded_proto` to `true`, but only if the app can be reached solely through a proxy
+  which always overwrites `X-Forwarded-Proto`: any client can send that header itself. It only
+  affects the HTTPS check, never the authentication.
+- Rejected requests are written to the error log at most once per minute, so scanners cannot
+  fill it.
 - Don't make this directory reachable from the web: the samples already deny it.
 - Not covered: users and authorization within the app, rate limiting of password guesses.

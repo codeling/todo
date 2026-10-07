@@ -15,6 +15,11 @@ function assetUrl($file) {
 // TODO: get that from the current user account
 $curUserID = TodoConstants::DefaultUserID;
 
+// PHP warnings and notices (which contain file paths) go to the log, not into the response
+ini_set('display_errors', '0');
+header_remove('X-Powered-By');
+// pages and data of the application (and the CSRF token) must not be kept by browsers or proxies
+header("Cache-Control: private, no-store");
 // inline styles are still used (statistics bars, jQuery UI), inline scripts are not
 header("Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-inline'; ".
     "img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'");
@@ -28,6 +33,7 @@ header("Referrer-Policy: same-origin");
 basicAuthRequire(array(
     'require_https' => !(isset($require_https) && $require_https === false),
     'require_auth' => !(isset($require_http_auth) && $require_http_auth === false),
+    'trust_forwarded_proto' => todoTrustsForwardedProto(),
     'log_prefix' => 'todo',
     'messages' => array(
         'https' => TodoLang::_("HTTPS_REQUIRED"),

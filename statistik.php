@@ -1,7 +1,6 @@
 <?php
 
     require_once("todo-core.php");
-    $prefix = "";
     require_once("queries/db.php");
 
     function printPeriodicStat($periodName, $maxHeight, $valCount,

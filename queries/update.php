@@ -1,5 +1,6 @@
 <?php
-    require(__DIR__."/../session.php");
+    // authenticates first, a CSRF check is no replacement for that
+    require(__DIR__."/../todo-core.php");
     requirePostWithCsrf();
     require("db.php");
     require("date.php");
@@ -11,7 +12,7 @@
     $start    = postParam('start');
     $effort   = (int)postParam('effort');
     $notes    = encodeInput(postParam('notes'));
-    $tags     = explode(",", postParam('tags'));
+    $tags     = parseTags(postParam('tags'));
     $version  = (int)postParam('version');
     $recurrenceMode = (int)postParam('recurrenceMode');
     $recurrenceInterval = (int)postParam('recurrenceInterval');
@@ -21,6 +22,10 @@
     requireOwnList($db, $list_id);
     if (strcmp($todo, '') == 0) {
         echo TodoLang::_("TODO_MAY_NOT_BE_EMPTY");
+        die;
+    }
+    if ($tags === null) {
+        echo TodoLang::_("INVALID_TAGS");
         die;
     }
     // empty dates are allowed:

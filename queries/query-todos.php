@@ -2,7 +2,7 @@
     require("db.php");
     require("todo-list-query.php");
 
-    $list_id = (int)$_GET["list_id"];
+    $list_id = (int)(isset($_GET["list_id"]) ? $_GET["list_id"] : 0);
     requireOwnList($db, $list_id);
     $incomplete = isset($_GET["incomplete"])? $_GET["incomplete"] === 'true': false;
     $age = isset($_GET["age"])? (int)$_GET["age"]: 0;

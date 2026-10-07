@@ -34,7 +34,7 @@ test.before(async () => {
         "return false;\n");
     fs.writeFileSync(path.join(dir, 'app.php'),
         "<?php\nrequire_once __DIR__ . '/basic-auth/basic-auth.php';\n" +
-        "$user = basicAuthRequire(isset($_GET['trust']) ? array('trust_forwarded_proto' => false) : array());\n" +
+        "$user = basicAuthRequire(isset($_GET['trust']) ? array('trust_forwarded_proto' => true) : array());\n" +
         "echo 'hello ' . $user;\n");
     fs.writeFileSync(path.join(dir, 'custom.php'),
         "<?php\nrequire_once __DIR__ . '/basic-auth/basic-auth.php';\n" +
@@ -96,15 +96,15 @@ test('REDIRECT_REMOTE_USER counts as authenticated', async () => {
     assert.equal(await res.text(), 'hello alice');
 });
 
-test('X-Forwarded-Proto: https counts as HTTPS unless trust_forwarded_proto is off', async () => {
+test('X-Forwarded-Proto: https is only believed if trust_forwarded_proto is on', async () => {
     const headers = { 'X-Forwarded-Proto': 'https', 'X-Test-User': 'alice' };
-    assert.equal((await get('/app.php', headers)).status, 200);
-    assert.equal((await get('/app.php', { ...headers, 'X-Forwarded-Proto': 'HTTPS ' })).status, 200);
-    assert.equal((await get('/app.php', { ...headers, 'X-Forwarded-Proto': 'http' })).status, 403);
-    assert.equal((await get('/app.php?trust=0', headers)).status, 403);
+    assert.equal((await get('/app.php', headers)).status, 403);
+    assert.equal((await get('/app.php?trust=1', headers)).status, 200);
+    assert.equal((await get('/app.php?trust=1', { ...headers, 'X-Forwarded-Proto': 'HTTPS ' })).status, 200);
+    assert.equal((await get('/app.php?trust=1', { ...headers, 'X-Forwarded-Proto': 'http' })).status, 403);
+    assert.equal((await get('/app.php?trust=1', { 'X-Test-User': 'alice' })).status, 403);
 });
 
-// custom.php requires HTTPS only with ?https, authentication only with ?auth
 test('options switch the checks off', async () => {
     const res = await get('/custom.php');
     assert.equal(res.status, 200);

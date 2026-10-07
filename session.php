@@ -2,16 +2,35 @@
 // session is only used to hold the CSRF token
 require_once(__DIR__."/basic-auth/basic-auth.php");
 
+// whether the request came in over HTTPS; X-Forwarded-Proto is set by the client
+// unless a proxy overwrites it, so it is only believed if $trust_forwarded_proto
+// is set in config.php (only do that if the web server can only be reached through
+// the proxy which terminates TLS)
+function todoTrustsForwardedProto() {
+    global $trust_forwarded_proto;
+    return isset($trust_forwarded_proto) && $trust_forwarded_proto === true;
+}
+
+function todoIsHttps() {
+    return basicAuthIsHttps(todoTrustsForwardedProto());
+}
+
 function todoStartSession($readOnly) {
     if (session_status() === PHP_SESSION_ACTIVE) {
         return;
     }
-    // also behind a proxy which terminates TLS:
-    $https = basicAuthIsHttps();
     session_name("todo_session");
+    // a request without session cookie cannot carry a valid token: don't create a session for it
+    if ($readOnly && !isset($_COOKIE[session_name()])) {
+        return;
+    }
+    // never accept a session ID which the server did not create
+    ini_set('session.use_strict_mode', '1');
+    // keep the Cache-Control header of todo-core.php, PHP would replace it when the session starts
+    session_cache_limiter('');
     session_set_cookie_params(array(
         'lifetime' => 0,
-        'secure' => $https,
+        'secure' => todoIsHttps(),
         'httponly' => true,
         'samesite' => 'Strict'
     ));

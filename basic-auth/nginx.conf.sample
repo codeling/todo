@@ -3,13 +3,18 @@
 # arrive over HTTPS or were not authenticated (REMOTE_USER below).
 location /app/ {
     # only HTTPS, so that the password is never sent in cleartext
-    # (remove this if TLS is terminated in front of nginx and set
-    # X-Forwarded-Proto there, see README.md)
+    # (if TLS is terminated in front of nginx, replace this by a check that the
+    # request came from that proxy, and pass "fastcgi_param HTTPS on;" below
+    # for its requests, see README.md)
     if ($scheme != "https") { return 301 https://$host$request_uri; }
 
-    # create with: htpasswd -c /etc/nginx/app.htpasswd <user>
+    # create with: htpasswd -B -C 12 -c /etc/nginx/app.htpasswd <user>
+    # (-B: bcrypt; the default, MD5, is much easier to guess offline)
     auth_basic "Restricted";
     auth_basic_user_file /etc/nginx/app.htpasswd;
+    # There is no limit for wrong passwords. Slow guessing down with, in the http block:
+    #   limit_req_zone $binary_remote_addr zone=app_auth:10m rate=5r/s;
+    # and here: limit_req zone=app_auth burst=20 nodelay;
 
     add_header Strict-Transport-Security "max-age=31536000" always;
 

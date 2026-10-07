@@ -1,6 +1,6 @@
 <?php
 require("db.php");
-$list_id=(int)$_GET["list_id"];
+$list_id=(int)(isset($_GET["list_id"]) ? $_GET["list_id"] : 0);
 requireOwnList($db, $list_id);
 $sql = "SELECT id, name, COUNT(todo_id) AS tagCount FROM tags t ".
     "LEFT JOIN todo_tags r ON t.id=r.tag_id ".
