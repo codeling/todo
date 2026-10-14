@@ -120,7 +120,7 @@ test('emoji and other 4-byte characters can be stored, in all text fields and ta
     const list = JSON.parse((await get('query-todos.php?list_id=0&incomplete=true')).text);
     assert.equal(list[0].todo, 'buy 🎂 cake 𝔘');
     assert.equal(list[0].notes, 'notes 😀');
-    assert.equal(list[0].tags, '🍕,🎂,😀'); // ordered by code point
+    assert.deepEqual(list[0].tags, ['🍕', '🎂', '😀']); // ordered by code point
     // different emoji are different tags, the same emoji is the same tag:
     assert.equal(sql('SELECT COUNT(*) FROM tags').trim(), '4');
     assert.equal((await post('edit-tag.php', { id: sqlRows("SELECT id FROM tags WHERE name='🍕'")[0][0], tag_name: '🎂' }, sess)).text,

@@ -103,7 +103,6 @@ test('a tag named like JSON is shown as a plain tag, it cannot inject HTML', asy
     }
     const page = await openPage();
     await page.waitForSelector('#todoTable tbody tr .tagify__tag');
-    // (the list of tags is comma separated, so the commas of these names split them into pieces)
     const values = await page.locator('#todoTable tbody tr .tagify__tag').evaluateAll(
         (tags) => tags.map((t) => t.__tagifyTagData.value));
     assert.ok(values.length > 0 && values.every((v) => typeof v === 'string'), JSON.stringify(values));

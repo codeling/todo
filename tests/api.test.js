@@ -69,7 +69,7 @@ test('due recurring entries are reactivated by reactivate-due.php', async () => 
     assert.equal(copy.todo, 'weekly');
     assert.equal(copy.due, '2026-01-17 00:00:00');
     assert.equal(copy.start, '2026-01-15 00:00:00');
-    assert.equal(copy.tags, 'w');
+    assert.deepEqual(copy.tags, ['w']);
 });
 
 test('loading the list does not modify any data', async () => {
@@ -292,4 +292,20 @@ test('a missing list_id does not produce PHP warnings in the response', async ()
         assert.doesNotMatch(res.text, /Warning|Notice|Undefined/, path);
         JSON.parse(res.text);
     }
+});
+
+test('the tags of an entry are a JSON array: complete, ordered, and names with commas stay whole', async () => {
+    const sess = await session();
+    // 50 tags of 250 characters: far more than group_concat_max_len (1024), which cut the old list
+    const names = [...Array(50).keys()].map((i) => String(100 + i) + 'x'.repeat(247));
+    const id = (await post('enter.php', { todo: 'many', due: '', start: '', tags: names.join(','), list_id: 0 }, sess)).text;
+    assert.match(id, /^\d+$/);
+    sql("INSERT INTO todo (id, creationDate, description, startDate, list_id) VALUES (900, UTC_TIMESTAMP(), 'none', UTC_DATE(), 0), " +
+        "(901, UTC_TIMESTAMP(), 'comma', UTC_DATE(), 0); INSERT INTO tags (id, name) VALUES (900, 'a,b'), (901, 'c'); " +
+        "INSERT INTO todo_tags VALUES (901, 900), (901, 901)");
+    const items = JSON.parse((await get('query-todos.php?list_id=0&incomplete=true')).text);
+    assert.equal(items.length, 3);
+    assert.deepEqual(items.find((i) => i.todo === 'many').tags, names);
+    assert.deepEqual(items.find((i) => i.todo === 'none').tags, []);
+    assert.deepEqual(items.find((i) => i.todo === 'comma').tags, ['a,b', 'c']);
 });
