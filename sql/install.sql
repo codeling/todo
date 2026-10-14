@@ -13,8 +13,8 @@ CREATE TABLE `todo` (
 	`effort` smallint unsigned NOT NULL DEFAULT 1,
 	`completed` tinyint NOT NULL DEFAULT 0,
 	`completionDate` datetime DEFAULT NULL,
-	`dueDate` datetime DEFAULT NULL,
-	`startDate` datetime DEFAULT NULL,
+	`dueDate` date DEFAULT NULL,
+	`startDate` date DEFAULT NULL,
 	`notes` varchar(10000) DEFAULT '',
 	`version` int NOT NULL DEFAULT 1,
 	`recurrenceMode` tinyint NOT NULL DEFAULT 0,
@@ -66,7 +66,7 @@ CREATE TABLE `settings` (
 	PRIMARY KEY(`key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;
 
-INSERT INTO `settings` (`key`, `value`) VALUES ("db.version", "14");
+INSERT INTO `settings` (`key`, `value`) VALUES ("db.version", "15");
 
 -- default list of the default user (todo.list_id defaults to 0):
 SET SESSION sql_mode = CONCAT(@@sql_mode, ',NO_AUTO_VALUE_ON_ZERO');

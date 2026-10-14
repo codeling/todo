@@ -22,6 +22,8 @@ mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 $db = new mysqli($db_host, $db_user, $db_password, $db_database);
 // do not depend on the server default (latin1 on older MySQL versions):
 $db->set_charset('utf8mb4');
+// all dates are UTC (UTC_TIMESTAMP(), UTC_DATE()); this makes CURDATE() and NOW() UTC too
+$db->query("SET time_zone = '+00:00'");
 
 // limits of the database columns todo.description and todo.notes
 const MAX_TODO_LENGTH = 255;

@@ -30,6 +30,9 @@ range. It lists the queries to find such entries. Its constraints need MariaDB 1
 collation `utf8mb4_unicode_520_ci`; it rebuilds the tables, so run it when nobody uses the application,
 and merges tags which the new collation considers equal (like `straße` and `STRASSE`).
 
+`update-015.sql` turns the start and due dates into `DATE` columns (a time of day of older entries
+is dropped); the application now also sets the time zone of its database connection to UTC.
+
 `sql/install.sql` creates the layout of the latest version. The older update scripts only work on a
 database of the version they were written for (there is no complete chain from the first version).
 

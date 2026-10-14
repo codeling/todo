@@ -6,9 +6,10 @@ const MAX_RECURRENCE_INTERVAL = 999;
 // SQL expression: $baseExpr plus the recurrence interval of the todo row
 function recurrenceNextSql($baseExpr)
 {
-    $sql = "CASE recurrenceMode ";
+    // a day (start and due date are dates; the base may be a date and time)
+    $sql = "DATE(CASE recurrenceMode ";
     foreach (RECURRENCE_UNITS as $mode => $unit) {
         $sql .= "WHEN ".$mode." THEN DATE_ADD(".$baseExpr.", INTERVAL recurrenceInterval ".$unit.") ";
     }
-    return $sql."END";
+    return $sql."END)";
 }

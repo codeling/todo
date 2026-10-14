@@ -167,14 +167,15 @@ test.describe('update-013.sql and update-014.sql', () => {
             createDb(DB_OLD, sqlFile('tests', 'fixtures', 'install-v12.sql') +
                 (withListFk ? 'ALTER TABLE todo ADD FOREIGN KEY todo_list_list_id (list_id) REFERENCES list (id) ' +
                     'ON DELETE CASCADE ON UPDATE CASCADE;' : '') + OLD_DATA);
-            sql(`USE ${DB_OLD}; ${sqlFile('sql', 'update-013.sql')}`);
-            sql(`USE ${DB_OLD}; ${sqlFile('sql', 'update-014.sql')}`);
+            for (const update of ['013', '014', '015']) {
+                sql(`USE ${DB_OLD}; ${sqlFile('sql', `update-${update}.sql`)}`);
+            }
             // duplicates merged into the tag with the lowest id, their entries moved, orphans removed:
             assert.deepEqual(sqlRows(`SELECT id, name FROM ${DB_OLD}.tags ORDER BY id`), [['1', 'Work'], ['3', 'home'], ['5', 'unused']]);
             assert.deepEqual(sqlRows(`SELECT todo_id, tag_id FROM ${DB_OLD}.todo_tags ORDER BY 1, 2`), [['1', '1'], ['2', '1'], ['2', '3']]);
             assert.deepEqual(sqlRows(`SELECT todo_id FROM ${DB_OLD}.recurringCopied`), [['1']]);
             assert.equal(sql(`SELECT COUNT(*) FROM ${DB_OLD}.todo`).trim(), '2');
-            assert.equal(sql(`SELECT value FROM ${DB_OLD}.settings WHERE \`key\`='db.version'`).trim(), '14');
+            assert.equal(sql(`SELECT value FROM ${DB_OLD}.settings WHERE \`key\`='db.version'`).trim(), '15');
             assert.equal(schemaOf(DB_OLD), schemaOf(DB_FRESH));
         });
     }
@@ -198,5 +199,15 @@ test.describe('update-013.sql and update-014.sql', () => {
         assert.equal(sql(`SELECT description FROM ${DB_OLD}.todo`).trim(), 'äö');
         sql(`USE ${DB_OLD}; INSERT INTO tags (name) VALUES ('🎂'), ('🍕')`);
         assert.equal(schemaOf(DB_OLD).includes('utf8mb3'), false);
+    });
+
+    test('update-015.sql turns the dates into days', () => {
+        createDb(DB_OLD, sqlFile('tests', 'fixtures', 'install-v14.sql') + `
+            INSERT INTO todo (id, creationDate, description, startDate, dueDate, list_id)
+                VALUES (1, UTC_TIMESTAMP(), 'a', '2026-01-05 00:00:00', '2026-01-10 13:45:00', 0), (2, UTC_TIMESTAMP(), 'b', NULL, NULL, 0);`);
+        sql(`USE ${DB_OLD}; ${sqlFile('sql', 'update-015.sql')}`);
+        assert.deepEqual(sqlRows(`SELECT id, startDate, dueDate FROM ${DB_OLD}.todo ORDER BY id`),
+            [['1', '2026-01-05', '2026-01-10'], ['2', null, null]]);
+        assert.equal(sql(`SELECT value FROM ${DB_OLD}.settings WHERE \`key\`='db.version'`).trim(), '15');
     });
 });

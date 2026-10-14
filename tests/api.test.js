@@ -67,8 +67,8 @@ test('due recurring entries are reactivated by reactivate-due.php', async () => 
     const items = JSON.parse((await get('query-todos.php?list_id=0&age=10000&incomplete=true')).text);
     const copy = items.find((i) => i.completed == 0);
     assert.equal(copy.todo, 'weekly');
-    assert.equal(copy.due, '2026-01-17 00:00:00');
-    assert.equal(copy.start, '2026-01-15 00:00:00');
+    assert.equal(copy.due, '2026-01-17');
+    assert.equal(copy.start, '2026-01-15');
     assert.deepEqual(copy.tags, ['w']);
 });
 
