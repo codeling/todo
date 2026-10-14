@@ -20,8 +20,17 @@
     $list_id  = (int)postParam('list_id');
     requireOwnTodo($db, $id);
     requireOwnList($db, $list_id);
+    // limits of the database columns, counted after HTML-encoding (what is stored):
+    if (charLength($todo) > MAX_TODO_LENGTH) {
+        echo TodoLang::_("TODO_TOO_LONG");
+        die;
+    }
     if (strcmp($todo, '') == 0) {
         echo TodoLang::_("TODO_MAY_NOT_BE_EMPTY");
+        die;
+    }
+    if (charLength($notes) > MAX_NOTES_LENGTH) {
+        echo TodoLang::_("NOTES_TOO_LONG");
         die;
     }
     if ($tags === null) {

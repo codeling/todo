@@ -25,7 +25,7 @@
         }
         else if ($groupName === 'MONTH')
         {
-            $sql =  "SELECT YEAR(a.Date), MONTH(a.Date), COUNT(t.id) ".
+            $sql =  "SELECT YEAR(a.Date), MONTH(a.Date), COALESCE(SUM(t.cnt), 0) ".
                 "FROM (select curdate() - INTERVAL (DAY(curdate())-15+30*a) DAY as Date ".
                 "FROM (select 0 as a union all select 1 union all select 2 union all select 3 ".
                 "union all select 4 union all select 5 union all select 6 union all select 7 ".
@@ -34,9 +34,12 @@
                 "union all select 16 union all select 17 union all select 18 union all select 19 ".
                 "union all select 20 union all select 21 union all select 22 union all select 23 ".
                 "union all select 24) as x) as a ".
-                "left join `todo` t ON MONTH(a.Date) = MONTH(DATE(".$checkedDate.")) ".
-                "AND deleted = 0 AND $ownTodo ".
-                "and YEAR(a.Date) = YEAR(DATE(".$checkedDate.")) ".
+                // the entries are counted per month first (a range scan of the index of the date
+                // column, 800 days cover all 25 months), then joined with the months:
+                "left join (SELECT YEAR(t.".$checkedDate.") AS y, MONTH(t.".$checkedDate.") AS m, COUNT(*) AS cnt ".
+                    "FROM `todo` t WHERE t.".$checkedDate." >= curdate() - INTERVAL 800 DAY ".
+                    "AND deleted = 0 AND $ownTodo GROUP BY y, m) t ".
+                "ON t.y = YEAR(a.Date) AND t.m = MONTH(a.Date) ".
                 "GROUP BY YEAR(a.Date), MONTH(a.Date) ".
                 "ORDER BY YEAR(a.Date), MONTH(a.Date)";
         }
@@ -47,7 +50,7 @@
                 .")";
             // sql script to generate all dates in range taken from
             // http://stackoverflow.com/questions/2157282/generate-days-from-date-range
-            $sql = "SELECT YEAR(a.Date), $groupNameExpr, COUNT(t.id) ".
+            $sql = "SELECT YEAR(a.Date), $groupNameExpr, COALESCE(SUM(t.cnt), 0) ".
                 "FROM (SELECT curdate() - INTERVAL (a.a + (10 * b.a) + (100 * c.a)) DAY as Date ".
                     "FROM (select 0 as a union all select 1 union all select 2 union all select 3 union all ".
                         "select 4 union all select 5 union all select 6 union all select 7 union all ".
@@ -59,7 +62,11 @@
                           "select 4 union all select 5 union all select 6 union all select 7 union all ".
                           "select 8 union all select 9) as c ".
                 ") a".
-                " LEFT JOIN `todo` t ON a.Date = DATE($checkedDate) AND t.deleted=0 AND $ownTodo ".
+                // the entries are counted per day first (a range scan of the index of the date column,
+                // one day more than needed at the start because of time zones), then joined with the days:
+                " LEFT JOIN (SELECT DATE($checkedDate) AS d, COUNT(*) AS cnt FROM `todo` t ".
+                    "WHERE $checkedDate >= (UTC_TIMESTAMP() - INTERVAL $valCount $periodName - INTERVAL 1 DAY) ".
+                    "AND t.deleted=0 AND $ownTodo GROUP BY d) t ON a.Date = t.d ".
                 "WHERE a.Date BETWEEN (UTC_TIMESTAMP() - INTERVAL $valCount $periodName) ".
                     "AND (UTC_TIMESTAMP() + INTERVAL 1 DAY) ".
                 "GROUP BY YEAR(a.Date), $groupNameExpr ".

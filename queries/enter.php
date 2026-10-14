@@ -23,6 +23,11 @@
         echo TodoLang::_("DUE_BEFORE_START");
         die;
     }
+    // limits of the database columns, counted after HTML-encoding (what is stored):
+    if (charLength($todo) > MAX_TODO_LENGTH) {
+        echo TodoLang::_("TODO_TOO_LONG");
+        die;
+    }
     if ($todo == '') {
         echo TodoLang::_("TODO_MAY_NOT_BE_EMPTY");
         die;

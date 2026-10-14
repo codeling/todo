@@ -8,6 +8,27 @@ A small PHP / MariaDB (MySQL) to-do list with lists, tags, recurring entries and
 2. Copy `config.sample.php` to `config.php` and adapt it.
 3. Serve the directory with PHP (mysqli) behind **HTTP authentication and HTTPS**, see below.
 
+## Upgrading and backups
+
+Back up the database before every upgrade (and regularly):
+
+```sh
+mysqldump --single-transaction todo > todo-$(date +%F).sql
+# restore into an empty database:
+mysql todo < todo-2026-01-31.sql
+```
+
+The version of the database layout is stored in the table `settings` (`db.version`). To upgrade,
+check it and apply the `sql/update-NNN.sql` files which are newer, in order, with an administrative
+database account. Read the comments at the top of each file first: `update-013.sql` merges tags
+whose names differ only in case, removes `recurringCopied` rows of deleted entries, and stops
+(without deleting anything) if an entry belongs to a list which does not exist, or a value is out of
+range. It lists the queries to find such entries. Its constraints need MariaDB 10.2.1 or MySQL 8.0.16
+(older servers accept but do not enforce `CHECK`).
+
+`sql/install.sql` creates the layout of the latest version. The older update scripts only work on a
+database of the version they were written for (there is no complete chain from the first version).
+
 ## Security: deployment
 
 The application has **no login of its own**. It relies on the web server's HTTP authentication

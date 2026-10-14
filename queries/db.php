@@ -20,6 +20,17 @@ set_exception_handler(function($e) {
 // make mysqli throw on errors (default since PHP 8.1, explicit for older versions):
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 $db = new mysqli($db_host, $db_user, $db_password, $db_database);
+// do not depend on the server default (latin1 on older MySQL versions):
+$db->set_charset('utf8mb4');
+
+// limits of the database columns todo.description and todo.notes
+const MAX_TODO_LENGTH = 255;
+const MAX_NOTES_LENGTH = 10000;
+
+// number of characters (not bytes), as the database counts the length of a varchar
+function charLength($str) {
+    return preg_match_all('/./su', $str);
+}
 
 // values are stored HTML-encoded (the client relies on it):
 function encodeInput($str) {
