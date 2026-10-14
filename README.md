@@ -10,7 +10,7 @@ A small PHP / MariaDB (MySQL) to-do list with lists, tags, recurring entries and
 
 ## Upgrading and backups
 
-Back up the database before every upgrade (and regularly):
+Back up the database before every upgrade, and regularly:
 
 ```sh
 mysqldump --single-transaction todo > todo-$(date +%F).sql
@@ -18,23 +18,38 @@ mysqldump --single-transaction todo > todo-$(date +%F).sql
 mysql todo < todo-2026-01-31.sql
 ```
 
-The version of the database layout is stored in the table `settings` (`db.version`). To upgrade,
-check it and apply the `sql/update-NNN.sql` files which are newer, in order, with an administrative
-database account. Read the comments at the top of each file first: `update-013.sql` merges tags
-whose names differ only in case, removes `recurringCopied` rows of deleted entries, and stops
-(without deleting anything) if an entry belongs to a list which does not exist, or a value is out of
-range. It lists the queries to find such entries. Its constraints need MariaDB 10.2.1 or MySQL 8.0.16
-(older servers accept but do not enforce `CHECK`).
+The version of the database layout is stored in the table `settings` (`db.version`). After
+updating the program, upgrade the database with the migration runner:
 
-`update-014.sql` converts all tables to `utf8mb4` (emoji and other 4-byte characters) with the
-collation `utf8mb4_unicode_520_ci`; it rebuilds the tables, so run it when nobody uses the application,
-and merges tags which the new collation considers equal (like `straße` and `STRASSE`).
+```sh
+php scripts/migrate.php --status      # shows the version and the pending migrations
+php scripts/migrate.php               # asks for confirmation, then applies them in order
+```
 
-`update-015.sql` turns the start and due dates into `DATE` columns (a time of day of older entries
-is dropped); the application now also sets the time zone of its database connection to UTC.
+It reads the connection settings of `config.php` (or `TODO_CONFIG`). The database user of the
+application usually may not change the schema; set `TODO_MIGRATE_USER` and
+`TODO_MIGRATE_PASSWORD` to an administrative account. The migrations are the numbered files in
+`sql/migrations/`; read the comments at the top of a file before you run it, they describe what it
+changes and which data would stop it. Schema changes cannot be rolled back: if a migration fails,
+the statements before the failing one stay applied. Fix the data it complains about and run the
+rest of the file by hand, or restore the backup and start again. What the migrations do so far:
 
-`sql/install.sql` creates the layout of the latest version. The older update scripts only work on a
-database of the version they were written for (there is no complete chain from the first version).
+* `013`: tags whose names differ only in case are merged, `recurringCopied` rows of deleted entries
+  are removed, and the constraints (unique tag names, foreign keys, ranges of the values) and indexes
+  are added. It stops without deleting anything if an entry belongs to a list which does not exist or
+  a value is out of range. The `CHECK` constraints need MariaDB 10.2.1 or MySQL 8.0.16 (older servers
+  accept but do not enforce them).
+* `014`: all tables are converted to `utf8mb4` (emoji and other 4-byte characters) with the collation
+  `utf8mb4_unicode_520_ci`. It rebuilds the tables, so run it when nobody uses the application. Tags
+  which the new collation considers equal (like `straße` and `STRASSE`) are merged.
+* `015`: the start and due dates become `DATE` columns (a time of day of older entries is dropped).
+
+`sql/install.sql` creates a new database with the layout of the latest version (and `db.version`);
+`sql/uninstall.sql` removes it. The scripts of the first versions are in `sql/legacy/`; they cannot be
+replayed (see the note there), databases older than version 12 have to be upgraded by hand.
+The tests check that a database upgraded from version 12 has exactly the schema of a new installation.
+
+A database on another host should be reached over TLS: see `$db_ssl` in `config.sample.php`.
 
 ## Security: deployment
 

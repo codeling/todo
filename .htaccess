@@ -27,7 +27,7 @@ RedirectMatch 404 ^.*/(sql|scripts|tests|node_modules|lang|\.git|\.github)(/|$)
     Require all denied
 </FilesMatch>
 # helper scripts which are only included by the query endpoints
-<FilesMatch "^(db|date|tags|todo-list-query|reactivate|reactivate-temp|recurrence)\.php$">
+<FilesMatch "^(db|date|tags|todo-list-query|reactivate|reactivate-temp|recurrence|db-connect)\.php$">
     Require all denied
 </FilesMatch>
 

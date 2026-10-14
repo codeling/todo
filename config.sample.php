@@ -39,6 +39,16 @@ $db_password = "";
 # the database name
 $db_database = "todo";
 
+# TLS for the connection: only needed if the database is on
+# another host (not on this machine). true uses the defaults
+# of the client library, or list the files and options:
+# $db_ssl = true;
+# $db_ssl = array(
+#     'ca' => '/etc/ssl/certs/db-ca.pem',  # certificate authority of the server
+#     # 'cert' => '...', 'key' => '...',   # client certificate, if the server asks for it
+#     # 'verify_server_cert' => false,     # default true; false is not secure!
+# );
+
 ########################################
 # language settings:
 # the preferred language:
