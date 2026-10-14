@@ -1,0 +1,30 @@
+# Apache: HTTP Basic authentication over HTTPS only, for the directory of the app.
+# Copy to the app's .htaccess (requires AllowOverride AuthConfig Limit, mod_authz_core).
+# basic-auth.php is the safety net behind it, in case this file is ignored.
+
+AuthType Basic
+AuthName "Restricted"
+# create with: htpasswd -B -C 12 -c /path/outside/webroot/.htpasswd <user>
+# (-B: bcrypt; the default, MD5, is much easier to guess offline)
+AuthUserFile /path/outside/webroot/.htpasswd
+# HTTPS is checked first, so that browsers are never asked for the password
+# over plain HTTP.
+# The request header X-Forwarded-Proto is NOT believed here: any client can send it.
+# Behind a proxy which terminates TLS, set the HTTPS variable in the virtual host
+# for requests from that proxy only, e.g. (adapt the address of the proxy):
+#   SetEnvIfExpr "%{REMOTE_ADDR} -ipmatch '10.0.0.5' && %{HTTP:X-Forwarded-Proto} == 'https'" HTTPS=on
+<RequireAll>
+    Require expr "%{HTTPS} == 'on' || %{ENV:HTTPS} == 'on'"
+    Require valid-user
+</RequireAll>
+# There is no limit for wrong passwords: use fail2ban, mod_evasive or similar.
+
+# don't serve the library itself, nor its docs and samples
+<FilesMatch "^(basic-auth\.php|README\.md|.*\.sample)$">
+    Require all denied
+</FilesMatch>
+
+<IfModule mod_headers.c>
+    # ignored by browsers over plain HTTP
+    Header always set Strict-Transport-Security "max-age=31536000"
+</IfModule>

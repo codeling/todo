@@ -47,7 +47,13 @@ $language    = "en-US";
 # folder will be used to translate all strings
 
 ########################################
-# authentication check:
+# HTTPS and authentication checks (see basic-auth/README.md):
+# requests which did not arrive over HTTPS are rejected.
+# only set this to false for local development or tests,
+# never on a public server:
+# $require_https = false;
+#
+# requests the web server did not authenticate are rejected.
 # only set this to false if the application is
 # protected in some other way than by HTTP
 # authentication of the web server (e.g. network
@@ -59,6 +65,7 @@ $language    = "en-US";
 # only set this to true if the web server can only
 # be reached through a proxy which terminates TLS and
 # always overwrites the X-Forwarded-Proto header. Then
-# the session cookie gets the "Secure" attribute.
+# it counts as HTTPS (see $require_https above) and the
+# session cookie gets the "Secure" attribute.
 # Otherwise clients could send the header themselves.
 # $trust_forwarded_proto = true;

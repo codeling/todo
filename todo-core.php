@@ -6,6 +6,7 @@ class TodoConstants {
 }
 require_once(__DIR__."/lang.php");
 require_once(__DIR__."/session.php");
+require_once(__DIR__."/basic-auth/basic-auth.php");
 // URL of a local static file, with its modification time appended, so that
 // browsers load the new version after an update instead of a cached one
 function assetUrl($file) {
@@ -13,39 +14,6 @@ function assetUrl($file) {
 }
 // TODO: get that from the current user account
 $curUserID = TodoConstants::DefaultUserID;
-
-// error_log, but not more than once per minute: unauthenticated requests
-// (e.g. scanners, if the web server's authentication is not set up) must not fill the log
-function logOncePerMinute($message) {
-    $marker = sys_get_temp_dir()."/todo-log-".md5(__DIR__);
-    $last = @filemtime($marker);
-    if ($last !== false && time() - $last < 60) {
-        return;
-    }
-    @touch($marker);
-    error_log($message);
-}
-
-// The application has no login of its own, it relies on HTTP authentication of
-// the web server. Refuse to run if the web server did not authenticate the
-// request, so that a missing or ignored .htaccess / nginx setting does not
-// leave all data open. Only REMOTE_USER is trusted: the web server sets it after
-// checking the credentials, a client cannot forge it with the Authorization header.
-function requireHttpAuth() {
-    global $require_http_auth;
-    if (isset($require_http_auth) && $require_http_auth === false) {
-        return;
-    }
-    foreach (array('REMOTE_USER', 'REDIRECT_REMOTE_USER') as $key) {
-        if (!empty($_SERVER[$key])) {
-            return;
-        }
-    }
-    logOncePerMinute("todo: request without authenticated user rejected, see \$require_http_auth in config.sample.php");
-    http_response_code(403);
-    echo TodoLang::_("AUTH_REQUIRED");
-    exit;
-}
 
 // PHP warnings and notices (which contain file paths) go to the log, not into the response
 ini_set('display_errors', '0');
@@ -59,4 +27,16 @@ header("X-Content-Type-Options: nosniff");
 header("X-Frame-Options: DENY");
 header("Referrer-Policy: same-origin");
 
-requireHttpAuth();
+// The application has no login of its own, it relies on HTTP authentication of the web
+// server over HTTPS. Refuse to run if the request did not meet that, so that a missing
+// or ignored .htaccess / nginx setting does not leave all data open.
+basicAuthRequire(array(
+    'require_https' => !(isset($require_https) && $require_https === false),
+    'require_auth' => !(isset($require_http_auth) && $require_http_auth === false),
+    'trust_forwarded_proto' => todoTrustsForwardedProto(),
+    'log_prefix' => 'todo',
+    'messages' => array(
+        'https' => TodoLang::_("HTTPS_REQUIRED"),
+        'auth' => TodoLang::_("AUTH_REQUIRED"),
+    ),
+));

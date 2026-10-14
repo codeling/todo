@@ -1,17 +1,18 @@
 <?php
 // session is only used to hold the CSRF token
+require_once(__DIR__."/basic-auth/basic-auth.php");
 
 // whether the request came in over HTTPS; X-Forwarded-Proto is set by the client
 // unless a proxy overwrites it, so it is only believed if $trust_forwarded_proto
 // is set in config.php (only do that if the web server can only be reached through
 // the proxy which terminates TLS)
-function todoIsHttps() {
+function todoTrustsForwardedProto() {
     global $trust_forwarded_proto;
-    if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
-        return true;
-    }
-    return isset($trust_forwarded_proto) && $trust_forwarded_proto === true &&
-        isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https';
+    return isset($trust_forwarded_proto) && $trust_forwarded_proto === true;
+}
+
+function todoIsHttps() {
+    return basicAuthIsHttps(todoTrustsForwardedProto());
 }
 
 function todoStartSession($readOnly) {

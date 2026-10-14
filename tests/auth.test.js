@@ -6,7 +6,9 @@ const net = require('node:net');
 const path = require('node:path');
 const { spawn } = require('node:child_process');
 
-// The application relies on the web server's HTTP authentication and refuses to run without it.
+// The application relies on the web server's HTTP authentication over HTTPS and refuses to run
+// without it. The PHP test servers only speak HTTP, so the configuration trusts the header of a
+// TLS proxy and most requests carry it.
 // These tests start their own PHP servers on a copy of the application: the guard rejects
 // requests before the database is used, so no database is needed here.
 const ROOT = path.join(__dirname, '..');
@@ -38,7 +40,7 @@ test.before(() => {
     dir = fs.mkdtempSync(path.join(os.tmpdir(), 'todo-auth-'));
     fs.cpSync(ROOT, dir, { recursive: true, filter: (src) => !/[\\/](node_modules|\.git)([\\/]|$)/.test(src) });
     fs.writeFileSync(path.join(dir, 'config.php'),
-        '<?php\n$db_host = "127.0.0.1"; $db_user = "x"; $db_password = "x"; $db_database = "x";\n$language = "en-US";\n');
+        '<?php\n$db_host = "127.0.0.1"; $db_user = "x"; $db_password = "x"; $db_database = "x";\n$language = "en-US";\n$trust_forwarded_proto = true;\n');
     // like a web server after checking the credentials:
     fs.writeFileSync(path.join(dir, 'router-auth.php'), "<?php\n$_SERVER['REMOTE_USER'] = 'alice';\nreturn false;\n");
 });
@@ -47,35 +49,62 @@ test.after(() => {
     fs.rmSync(dir, { recursive: true, force: true });
 });
 
+const HTTPS = { 'X-Forwarded-Proto': 'https' };
 const pages = ['index.php', 'statistik.php', 'log.js.php', 'lang-js.php', 'queries/query-lists.php', 'queries/query-todos.php?list_id=0'];
 
 test('requests the web server did not authenticate are rejected', async () => {
     const srv = await startServer(dir, []);
     servers.push(srv);
     for (const page of pages) {
-        for (const headers of [{}, { Authorization: 'Basic ' + Buffer.from('alice:secret').toString('base64') }]) {
+        for (const headers of [HTTPS, { ...HTTPS, Authorization: 'Basic ' + Buffer.from('alice:secret').toString('base64') }]) {
             const res = await fetch(srv.base + '/' + page, { headers });
             assert.equal(res.status, 403, page);
             assert.match(await res.text(), /HTTP authentication/, page);
         }
     }
-    const post = await fetch(srv.base + '/queries/trash.php', { method: 'POST' });
+    const post = await fetch(srv.base + '/queries/trash.php', { method: 'POST', headers: HTTPS });
     assert.equal(post.status, 403);
+});
+
+test('requests over plain HTTP are rejected, even if authenticated', async () => {
+    const srv = await startServer(dir, [path.join(dir, 'router-auth.php')]);
+    servers.push(srv);
+    for (const page of pages) {
+        const res = await fetch(srv.base + '/' + page);
+        assert.equal(res.status, 403, page);
+        assert.match(await res.text(), /only available over HTTPS/, page);
+    }
+});
+
+test('a client claiming TLS is not believed unless configured', async () => {
+    const untrusting = fs.mkdtempSync(path.join(os.tmpdir(), 'todo-auth-untrusting-'));
+    try {
+        fs.cpSync(dir, untrusting, { recursive: true });
+        fs.appendFileSync(path.join(untrusting, 'config.php'), '$trust_forwarded_proto = false;\n');
+        const srv = await startServer(untrusting, [path.join(untrusting, 'router-auth.php')]);
+        servers.push(srv);
+        const res = await fetch(srv.base + '/index.php', { headers: HTTPS });
+        assert.equal(res.status, 403);
+        assert.match(await res.text(), /only available over HTTPS/);
+    } finally {
+        servers.forEach((s) => s.proc.kill());
+        fs.rmSync(untrusting, { recursive: true, force: true });
+    }
 });
 
 test('requests authenticated by the web server (REMOTE_USER) are served', async () => {
     const srv = await startServer(dir, [path.join(dir, 'router-auth.php')]);
     servers.push(srv);
-    const res = await fetch(srv.base + '/index.php');
+    const res = await fetch(srv.base + '/index.php', { headers: HTTPS });
     assert.equal(res.status, 200);
     assert.match(await res.text(), /name="csrf-token"/);
 });
 
-test('the check can be switched off explicitly in config.php', async () => {
+test('the checks can be switched off explicitly in config.php', async () => {
     const off = fs.mkdtempSync(path.join(os.tmpdir(), 'todo-auth-off-'));
     try {
         fs.cpSync(dir, off, { recursive: true });
-        fs.appendFileSync(path.join(off, 'config.php'), '$require_http_auth = false;\n');
+        fs.appendFileSync(path.join(off, 'config.php'), '$require_http_auth = false;\n$require_https = false;\n');
         const srv = await startServer(off, []);
         servers.push(srv);
         assert.equal((await fetch(srv.base + '/index.php')).status, 200);
@@ -89,7 +118,7 @@ test('requests which are not authenticated get neither a session nor the PHP ver
     const srv = await startServer(dir, []);
     servers.push(srv);
     for (const [page, method] of [['index.php', 'GET'], ['queries/trash.php', 'POST'], ['lang-js.php', 'GET']]) {
-        const res = await fetch(srv.base + '/' + page, { method });
+        const res = await fetch(srv.base + '/' + page, { method, headers: HTTPS });
         assert.equal(res.status, 403, page);
         assert.equal(res.headers.get('set-cookie'), null, page);
         assert.equal(res.headers.get('x-powered-by'), null, page);
@@ -99,20 +128,25 @@ test('requests which are not authenticated get neither a session nor the PHP ver
 test('a request without session cookie does not start a session', async () => {
     const srv = await startServer(dir, [path.join(dir, 'router-auth.php')]);
     servers.push(srv);
-    const res = await fetch(srv.base + '/queries/trash.php', { method: 'POST' });
+    const res = await fetch(srv.base + '/queries/trash.php', { method: 'POST', headers: HTTPS });
     assert.equal(res.status, 403);
+    assert.equal(await res.text(), 'Invalid or missing CSRF token, please reload the page!');
     assert.equal(res.headers.get('set-cookie'), null);
 });
 
 test('X-Forwarded-Proto is only believed if configured', async () => {
-    const proto = { 'X-Forwarded-Proto': 'https' };
-    const plain = await startServer(dir, [path.join(dir, 'router-auth.php')]);
-    servers.push(plain);
-    assert.doesNotMatch((await fetch(plain.base + '/index.php', { headers: proto })).headers.get('set-cookie'), /secure/i);
+    // concerns the cookie, so the HTTPS requirement is switched off here
+    const proto = HTTPS;
+    const plain = fs.mkdtempSync(path.join(os.tmpdir(), 'todo-auth-plain-'));
     const trusting = fs.mkdtempSync(path.join(os.tmpdir(), 'todo-auth-proxy-'));
     try {
+        fs.cpSync(dir, plain, { recursive: true });
+        fs.appendFileSync(path.join(plain, 'config.php'), '$trust_forwarded_proto = false;\n$require_https = false;\n');
+        const plainSrv = await startServer(plain, [path.join(plain, 'router-auth.php')]);
+        servers.push(plainSrv);
+        assert.doesNotMatch((await fetch(plainSrv.base + '/index.php', { headers: proto })).headers.get('set-cookie'), /secure/i);
         fs.cpSync(dir, trusting, { recursive: true });
-        fs.appendFileSync(path.join(trusting, 'config.php'), '$trust_forwarded_proto = true;\n');
+        fs.appendFileSync(path.join(trusting, 'config.php'), '$require_https = false;\n');
         const srv = await startServer(trusting, [path.join(trusting, 'router-auth.php')]);
         servers.push(srv);
         assert.match((await fetch(srv.base + '/index.php', { headers: proto })).headers.get('set-cookie'), /; secure/i);
@@ -120,6 +154,7 @@ test('X-Forwarded-Proto is only believed if configured', async () => {
     } finally {
         servers.forEach((s) => s.proc.kill());
         fs.rmSync(trusting, { recursive: true, force: true });
+        fs.rmSync(plain, { recursive: true, force: true });
     }
 });
 
@@ -132,7 +167,7 @@ test('config.php can be kept elsewhere (TODO_CONFIG)', async () => {
         process.env.TODO_CONFIG = path.join(outside, 'config.php');
         const srv = await startServer(moved, [path.join(moved, 'router-auth.php')]);
         servers.push(srv);
-        assert.equal((await fetch(srv.base + '/index.php')).status, 200);
+        assert.equal((await fetch(srv.base + '/index.php', { headers: HTTPS })).status, 200);
     } finally {
         delete process.env.TODO_CONFIG;
         servers.forEach((s) => s.proc.kill());

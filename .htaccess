@@ -1,6 +1,6 @@
 # Apache configuration (requires AllowOverride AuthConfig FileInfo Limit)
 # The application has no login of its own: protect it with HTTP authentication,
-# and only serve it over HTTPS.
+# and only serve it over HTTPS (generic version: basic-auth/htaccess.sample).
 
 AuthType Basic
 AuthName "Todo"
@@ -23,7 +23,7 @@ AuthUserFile /path/outside/webroot/.htpasswd
 RedirectMatch 404 ^.*/(sql|scripts|tests|node_modules|lang|\.git|\.github)(/|$)
 # (FilesMatch also applies to requests with a trailing path like db.php/x, unlike
 # a match on the request URI)
-<FilesMatch "(^\.|~$|\.(sql|sh|ini|bak|swp|orig|md|yml|lock|sample)$|^config.*\.php$|^package(-lock)?\.json$|^session\.php$|^todo-core\.php$|^lang\.php$)">
+<FilesMatch "(^\.|~$|\.(sql|sh|ini|bak|swp|orig|md|yml|lock|sample)$|^config.*\.php$|^package(-lock)?\.json$|^session\.php$|^todo-core\.php$|^lang\.php$|^basic-auth\.php$)">
     Require all denied
 </FilesMatch>
 # helper scripts which are only included by the query endpoints
