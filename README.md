@@ -26,6 +26,10 @@ whose names differ only in case, removes `recurringCopied` rows of deleted entri
 range. It lists the queries to find such entries. Its constraints need MariaDB 10.2.1 or MySQL 8.0.16
 (older servers accept but do not enforce `CHECK`).
 
+`update-014.sql` converts all tables to `utf8mb4` (emoji and other 4-byte characters) with the
+collation `utf8mb4_unicode_520_ci`; it rebuilds the tables, so run it when nobody uses the application,
+and merges tags which the new collation considers equal (like `straße` and `STRASSE`).
+
 `sql/install.sql` creates the layout of the latest version. The older update scripts only work on a
 database of the version they were written for (there is no complete chain from the first version).
 
