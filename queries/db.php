@@ -19,9 +19,8 @@ set_exception_handler(function($e) {
 
 // make mysqli throw on errors (default since PHP 8.1, explicit for older versions):
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-$db = new mysqli($db_host, $db_user, $db_password, $db_database);
-// do not depend on the server default (latin1 on older MySQL versions):
-$db->set_charset('utf8mb4');
+require_once(__DIR__."/db-connect.php");
+$db = todoDbConnect($db_host, $db_user, $db_password, $db_database, isset($db_ssl) ? $db_ssl : null);
 
 // limits of the database columns todo.description and todo.notes
 const MAX_TODO_LENGTH = 255;

@@ -26,7 +26,7 @@
         else if ($groupName === 'MONTH')
         {
             $sql =  "SELECT YEAR(a.Date), MONTH(a.Date), COALESCE(SUM(t.cnt), 0) ".
-                "FROM (select curdate() - INTERVAL (DAY(curdate())-15+30*a) DAY as Date ".
+                "FROM (select UTC_DATE() - INTERVAL (DAY(UTC_DATE())-15+30*a) DAY as Date ".
                 "FROM (select 0 as a union all select 1 union all select 2 union all select 3 ".
                 "union all select 4 union all select 5 union all select 6 union all select 7 ".
                 "union all select 8 union all select 9 union all select 10 union all select 11 ".
@@ -37,7 +37,7 @@
                 // the entries are counted per month first (a range scan of the index of the date
                 // column, 800 days cover all 25 months), then joined with the months:
                 "left join (SELECT YEAR(t.".$checkedDate.") AS y, MONTH(t.".$checkedDate.") AS m, COUNT(*) AS cnt ".
-                    "FROM `todo` t WHERE t.".$checkedDate." >= curdate() - INTERVAL 800 DAY ".
+                    "FROM `todo` t WHERE t.".$checkedDate." >= UTC_DATE() - INTERVAL 800 DAY ".
                     "AND deleted = 0 AND $ownTodo GROUP BY y, m) t ".
                 "ON t.y = YEAR(a.Date) AND t.m = MONTH(a.Date) ".
                 "GROUP BY YEAR(a.Date), MONTH(a.Date) ".
@@ -51,7 +51,7 @@
             // sql script to generate all dates in range taken from
             // http://stackoverflow.com/questions/2157282/generate-days-from-date-range
             $sql = "SELECT YEAR(a.Date), $groupNameExpr, COALESCE(SUM(t.cnt), 0) ".
-                "FROM (SELECT curdate() - INTERVAL (a.a + (10 * b.a) + (100 * c.a)) DAY as Date ".
+                "FROM (SELECT UTC_DATE() - INTERVAL (a.a + (10 * b.a) + (100 * c.a)) DAY as Date ".
                     "FROM (select 0 as a union all select 1 union all select 2 union all select 3 union all ".
                         "select 4 union all select 5 union all select 6 union all select 7 union all ".
                         "select 8 union all select 9) as a ".

@@ -4,7 +4,8 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { sql, sqlRows, resetDb, session, post } = require('./lib');
+const { spawnSync } = require('node:child_process');
+const { sql, sqlRows, resetDb, session, post, get } = require('./lib');
 
 const sqlFile = (...parts) => fs.readFileSync(path.join(__dirname, '..', ...parts), 'utf8');
 
@@ -110,7 +111,42 @@ test('over-long input is rejected with a message (counted after HTML-encoding)',
     assert.equal((await update({ version: 2, notes: '&'.repeat(2000) })).text, '1');
 });
 
-// the upgrade script: runs it on a copy of the schema of version 12 (tests/fixtures/install-v12.sql),
+test('emoji and other 4-byte characters can be stored, in all text fields and tags', async () => {
+    const sess = await session();
+    const id = (await post('enter.php', { todo: 'buy 🎂 cake', due: '', start: '', tags: '🎂, 🍕, Ünï', list_id: 0 }, sess)).text;
+    assert.match(id, /^\d+$/);
+    const update = await post('update.php', { id, version: 1, todo: 'buy 🎂 cake 𝔘', due: '', start: '', effort: 1,
+        notes: 'notes 😀', tags: '🎂, 🍕, 😀', recurrenceMode: 0, recurrenceInterval: 1, recurrenceAnchor: 0, list_id: 0 }, sess);
+    assert.equal(update.text, '1');
+    const list = JSON.parse((await get('query-todos.php?list_id=0&incomplete=true')).text);
+    assert.equal(list[0].todo, 'buy 🎂 cake 𝔘');
+    assert.equal(list[0].notes, 'notes 😀');
+    assert.deepEqual(list[0].tags, ['🍕', '🎂', '😀']); // ordered by code point
+    // different emoji are different tags, the same emoji is the same tag:
+    assert.equal(sql('SELECT COUNT(*) FROM tags').trim(), '4');
+    assert.equal((await post('edit-tag.php', { id: sqlRows("SELECT id FROM tags WHERE name='🍕'")[0][0], tag_name: '🎂' }, sess)).text,
+        'A tag with this name already exists!');
+});
+
+test('the length limits count characters, not bytes', async () => {
+    const sess = await session();
+    const fields = (todo) => ({ todo, due: '', start: '', tags: '', list_id: 0 });
+    assert.match((await post('enter.php', fields('🎂'.repeat(255)), sess)).text, /^\d+$/);
+    assert.match((await post('enter.php', fields('🎂'.repeat(256)), sess)).text, /^Todo is too long/);
+    assert.match((await post('enter.php', Object.assign(fields('a'), { tags: '🎂'.repeat(255) }), sess)).text, /^\d+$/);
+    assert.equal((await post('enter.php', Object.assign(fields('a'), { tags: '🎂'.repeat(256) }), sess)).text,
+        'Invalid tags (at most 50 tags, none longer than 255 characters)!');
+});
+
+// the migration runner (scripts/migrate.php) on a database with the given name
+function migrate(db, ...args) {
+    const res = spawnSync('php', [path.join(__dirname, '..', 'scripts', 'migrate.php'), `--database=${db}`, ...args], { encoding: 'utf8' });
+    return { status: res.status, out: res.stdout, err: res.stderr };
+}
+const migrationFiles = fs.readdirSync(path.join(__dirname, '..', 'sql', 'migrations')).sort();
+const migrationFile = (number) => path.join('sql', 'migrations', migrationFiles.find((f) => f.startsWith(number)));
+
+// the upgrade scripts: run on a copy of the schema of version 12 (tests/fixtures/install-v12.sql),
 // with and without the foreign key which update-009.sql added, and with data to repair
 const DB_OLD = 'todo_migration_old';
 const DB_FRESH = 'todo_migration_fresh';
@@ -131,7 +167,7 @@ const OLD_DATA = `
     INSERT INTO todo_tags VALUES (1, 1), (1, 2), (2, 2), (2, 3), (2, 4);
     INSERT INTO recurringCopied VALUES (1, UTC_TIMESTAMP()), (99, UTC_TIMESTAMP());`;
 
-test.describe('update-013.sql', () => {
+test.describe('migrations', () => {
     test.before(() => createDb(DB_FRESH, sqlFile('sql', 'install.sql')));
     test.after(() => sql(`DROP DATABASE IF EXISTS ${DB_OLD}; DROP DATABASE IF EXISTS ${DB_FRESH}`));
 
@@ -140,23 +176,81 @@ test.describe('update-013.sql', () => {
             createDb(DB_OLD, sqlFile('tests', 'fixtures', 'install-v12.sql') +
                 (withListFk ? 'ALTER TABLE todo ADD FOREIGN KEY todo_list_list_id (list_id) REFERENCES list (id) ' +
                     'ON DELETE CASCADE ON UPDATE CASCADE;' : '') + OLD_DATA);
-            sql(`USE ${DB_OLD}; ${sqlFile('sql', 'update-013.sql')}`);
-            sql(`USE ${DB_OLD}`);
+            const res = migrate(DB_OLD, '--yes');
+            assert.equal(res.status, 0, res.err);
+            assert.match(res.out, /done, database version: 15/);
             // duplicates merged into the tag with the lowest id, their entries moved, orphans removed:
             assert.deepEqual(sqlRows(`SELECT id, name FROM ${DB_OLD}.tags ORDER BY id`), [['1', 'Work'], ['3', 'home'], ['5', 'unused']]);
             assert.deepEqual(sqlRows(`SELECT todo_id, tag_id FROM ${DB_OLD}.todo_tags ORDER BY 1, 2`), [['1', '1'], ['2', '1'], ['2', '3']]);
             assert.deepEqual(sqlRows(`SELECT todo_id FROM ${DB_OLD}.recurringCopied`), [['1']]);
             assert.equal(sql(`SELECT COUNT(*) FROM ${DB_OLD}.todo`).trim(), '2');
-            assert.equal(sql(`SELECT value FROM ${DB_OLD}.settings WHERE \`key\`='db.version'`).trim(), '13');
+            assert.equal(sql(`SELECT value FROM ${DB_OLD}.settings WHERE \`key\`='db.version'`).trim(), '15');
             assert.equal(schemaOf(DB_OLD), schemaOf(DB_FRESH));
         });
     }
 
-    test('stops without changing the entries if one belongs to a list which does not exist', () => {
+    test('the runner stops without changing the entries if one belongs to a list which does not exist', () => {
         createDb(DB_OLD, sqlFile('tests', 'fixtures', 'install-v12.sql') + OLD_DATA +
             "INSERT INTO todo (id, creationDate, description, list_id) VALUES (3, UTC_TIMESTAMP(), 'orphan', 77);");
-        assert.match(sqlError(`USE ${DB_OLD}; ${sqlFile('sql', 'update-013.sql')}`), /foreign key constraint fails/i);
+        const res = migrate(DB_OLD, '--yes');
+        assert.equal(res.status, 1);
+        assert.match(res.err, /foreign key constraint fails/i);
+        assert.match(res.err, /013-integrity-and-indexes\.sql stopped at this error/);
         assert.equal(sql(`SELECT COUNT(*) FROM ${DB_OLD}.todo`).trim(), '3');
         assert.equal(sql(`SELECT value FROM ${DB_OLD}.settings WHERE \`key\`='db.version'`).trim(), '12');
     });
+
+    test('014 merges tags which only the new collation considers equal, and keeps emoji', () => {
+        createDb(DB_OLD, sqlFile('tests', 'fixtures', 'install-v13.sql') + `
+            INSERT INTO todo (id, creationDate, description, list_id) VALUES (1, UTC_TIMESTAMP(), 'äö', 0);
+            INSERT INTO tags (id, name) VALUES (1, 'straße'), (2, 'STRASSE'), (3, 'Work'), (4, 'work2');
+            INSERT INTO todo_tags VALUES (1, 1), (1, 2), (1, 3), (1, 4);`);
+        sql(`USE ${DB_OLD}; ${sqlFile(migrationFile('014'))}`);
+        assert.deepEqual(sqlRows(`SELECT id, name FROM ${DB_OLD}.tags ORDER BY id`), [['1', 'straße'], ['3', 'Work'], ['4', 'work2']]);
+        assert.equal(sql(`SELECT COUNT(*) FROM ${DB_OLD}.todo_tags`).trim(), '3');
+        assert.equal(sql(`SELECT description FROM ${DB_OLD}.todo`).trim(), 'äö');
+        sql(`USE ${DB_OLD}; INSERT INTO tags (name) VALUES ('🎂'), ('🍕')`);
+        assert.equal(schemaOf(DB_OLD).includes('utf8mb3'), false);
+    });
+
+    test('015 turns the dates into days', () => {
+        createDb(DB_OLD, sqlFile('tests', 'fixtures', 'install-v14.sql') + `
+            INSERT INTO todo (id, creationDate, description, startDate, dueDate, list_id)
+                VALUES (1, UTC_TIMESTAMP(), 'a', '2026-01-05 00:00:00', '2026-01-10 13:45:00', 0), (2, UTC_TIMESTAMP(), 'b', NULL, NULL, 0);`);
+        sql(`USE ${DB_OLD}; ${sqlFile(migrationFile('015'))}`);
+        assert.deepEqual(sqlRows(`SELECT id, startDate, dueDate FROM ${DB_OLD}.todo ORDER BY id`),
+            [['1', '2026-01-05', '2026-01-10'], ['2', null, null]]);
+        assert.equal(sql(`SELECT value FROM ${DB_OLD}.settings WHERE \`key\`='db.version'`).trim(), '15');
+    });
+
+    test('the runner shows the pending migrations, and does nothing if the database is up to date', () => {
+        createDb(DB_OLD, sqlFile('tests', 'fixtures', 'install-v14.sql'));
+        let res = migrate(DB_OLD, '--status');
+        assert.equal(res.status, 0, res.err);
+        assert.match(res.out, /database version: 14, latest: 15\npending: 015-date-columns\.sql\n$/);
+        assert.equal(sql(`SELECT value FROM ${DB_OLD}.settings WHERE \`key\`='db.version'`).trim(), '14');
+        assert.equal(migrate(DB_OLD, '--yes').status, 0);
+        res = migrate(DB_OLD, '--yes');
+        assert.equal(res.status, 0, res.err);
+        assert.match(res.out, /nothing to do/);
+    });
+
+    test('the runner refuses databases which are too old or too new, or not initialized', () => {
+        createDb(DB_OLD, sqlFile('tests', 'fixtures', 'install-v12.sql'));
+        sql(`UPDATE ${DB_OLD}.settings SET value='11' WHERE \`key\`='db.version'`);
+        assert.match(migrate(DB_OLD, '--yes').err, /oldest one this script upgrades is 12/);
+        sql(`UPDATE ${DB_OLD}.settings SET value='99' WHERE \`key\`='db.version'`);
+        assert.match(migrate(DB_OLD, '--yes').err, /version 99 but this program only knows version 15/);
+        sql(`DROP DATABASE ${DB_OLD}; CREATE DATABASE ${DB_OLD}`);
+        const res = migrate(DB_OLD, '--yes');
+        assert.equal(res.status, 1);
+        assert.match(res.err, /cannot read db\.version/);
+    });
+});
+
+test('install.sql creates the version of the latest migration, and the migrations are numbered without gaps', () => {
+    const latest = Number(migrationFiles[migrationFiles.length - 1].slice(0, 3));
+    assert.match(sqlFile('sql', 'install.sql'), new RegExp(`\\("db\\.version", "${latest}"\\)`));
+    assert.deepEqual(migrationFiles.map((f) => Number(f.slice(0, 3))),
+        Array.from({ length: migrationFiles.length }, (_, i) => 13 + i));
 });

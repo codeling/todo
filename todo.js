@@ -109,7 +109,7 @@ function ItemSort(item1, item2) {
                item1.completed == item2.completed &&
                item1.start == item2.start &&
                item1.todo == item2.todo &&
-               item1.tags == item2.tags &&
+               item1.tags.join(',') == item2.tags.join(',') &&
                (item1.completed == 0 || item1.completionDate == item2.completionDate) ) {
         return 0;
     } else {
@@ -435,10 +435,9 @@ function fillModifyForm(id) {
     let tagStrs = tagList.map( (x) => x.name );
     $('#modify_tag_edit')[0].__tagify.settings.whitelist = tagStrs;
 
-    var tags = (item.tags == null) ? new Array() : item.tags.split(",");
-    for (var i=0; i<tags.length; i++)
+    for (var i=0; i<item.tags.length; i++)
     {
-        tagify.addTags([ html_entity_decode(tags[i]) ] );
+        tagify.addTags([ html_entity_decode(item.tags[i]) ] );
     }
 
     $('#modify_recurrenceMode option:selected').prop('selected', false);
@@ -606,11 +605,7 @@ function getTodoWithTag(filterTags)
 {
     var result = new Array();
     for (var i=0; i<itemList.length; i++) {
-        if (itemList[i].tags == null) {
-            continue;
-        }
-        var itemTags = itemList[i].tags.split(',');
-        if (arrayContainsAny(filterTags, itemTags)) {
+        if (arrayContainsAny(filterTags, itemList[i].tags)) {
             result.push(itemList[i]);
         }
     }
@@ -741,13 +736,18 @@ function getUTCDate() {
     return now_utc;
 }
 
+// The parameters of a request: Todo is no plain object, jQuery 4 would not serialize it,
+// and the server expects the tags as one comma separated string.
+function todoParams(stuff) {
+    return $.param(Object.assign({}, stuff, { tags: stuff.tags.join(',') }));
+}
+
 function addItem(stuff) {
     addLocally(stuff);
     $.ajax( {
         type: 'POST',
         url: 'queries/enter.php',
-        // Todo is no plain object, jQuery 4 would not serialize it:
-        data: $.param(stuff),
+        data: todoParams(stuff),
         success: function(returnValue) {
             if (isNaN(returnValue)) {
                 log($T('ERROR_WHILE_CREATING')+returnValue);
@@ -786,8 +786,7 @@ function storeItemRemote(stuff, onsucc) {
     $.ajax({
         type: 'POST',
         url: 'queries/update.php',
-        // Todo is no plain object, jQuery 4 would not serialize it:
-        data: $.param(stuff),
+        data: todoParams(stuff),
         success: function(returnValue) {
             if (isNaN(returnValue)) {
                 log($T('ERROR_WHILE_MODIFYING')+returnValue);
@@ -828,7 +827,7 @@ function storeItem() {
         $('#modify_effort').val(),
         0,  // currently not taken into account on server, and not modifiable at server
         $('#modify_notes').val().trim(),
-        $('#modify_tag_edit')[0].__tagify.value.map((tag) => tag.value).join(","),
+        $('#modify_tag_edit')[0].__tagify.value.map((tag) => tag.value),
         0,  // deleted items cannot be modified
         itemList[idx].version,
         $('#modify_recurrenceMode').val(),
@@ -855,9 +854,10 @@ function enter() {
     }
     var todo = $('#enter_todo').val();
     var colon = todo.lastIndexOf(':');
-    var tags = '';
+    var tags = [];
     if (colon != -1) {
-        tags = todo.substr(0, colon);
+        // "a, b: todo" (as typed, empty tags are ignored like on the server)
+        tags = todo.substr(0, colon).split(',').map((tag) => tag.trim()).filter((tag) => tag != '');
         if (todo.charAt(colon+1) == ' ') { colon++; }
         todo = todo.substr(colon+1);
     }
@@ -913,13 +913,13 @@ function clearTable()
     $("#todoTable tbody").empty();
 }
 
-// Shows the tags (comma separated, HTML-encoded) of a todo in an empty input field.
+// Shows the tags (an array of HTML-encoded names) of a todo in an empty input field.
 // They are added one by one and not as the value of the input: Tagify parses a value which
 // looks like JSON and writes the keys of the objects into the tag element as attribute
 // names, without escaping them, so a tag named like that could inject HTML.
-function showReadOnlyTags(inputElem, tagsStr) {
+function showReadOnlyTags(inputElem, tags) {
     var tagify = new Tagify(inputElem, { readOnly: true });
-    tagify.addTags(tagsStr.split(',').map(function(tag) {
+    tagify.addTags(tags.map(function(tag) {
         return html_entity_decode(tag).trim();
     }).filter(function(tag) {
         return tag != '';
@@ -929,7 +929,7 @@ function showReadOnlyTags(inputElem, tagsStr) {
 function getTodoTitleHtml(it, lineNr, tagbasename, spanCssClass, baseElem, checkbox, extraHtml) {
     var isRecurring = it.recurrenceMode != 0;
     var hasNote = it.notes != null && it.notes != '';
-    var hasTags = it.tags != null && it.tags != '';
+    var hasTags = it.tags.length > 0;
     var createDate = parseDate(it.creationDate);
     // label of the recurrence option (DOM text), goes into an HTML attribute:
     var repetition = escapeHtml(getRecurrenceString(it.recurrenceMode, it.recurrenceInterval));
@@ -1001,7 +1001,7 @@ function renderItem(it, lineNr) {
     line += '</td></tr>';
     $('#todoTable tbody').append(line);
     var elem = $('#'+tagbasename+it.id);
-    if (it.tags != null && it.tags != '') {
+    if (it.tags.length > 0) {
         showReadOnlyTags(elem[0], it.tags);
     }
     if (window.matchMedia('(hover: hover)').matches) {

@@ -4,7 +4,7 @@ CREATE TABLE `list` (
 	`user_id` int NOT NULL,
 	PRIMARY KEY (`id`),
 	KEY `list_user_id` (`user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;
 
 CREATE TABLE `todo` (
 	`id` int NOT NULL AUTO_INCREMENT,
@@ -13,8 +13,8 @@ CREATE TABLE `todo` (
 	`effort` smallint unsigned NOT NULL DEFAULT 1,
 	`completed` tinyint NOT NULL DEFAULT 0,
 	`completionDate` datetime DEFAULT NULL,
-	`dueDate` datetime DEFAULT NULL,
-	`startDate` datetime DEFAULT NULL,
+	`dueDate` date DEFAULT NULL,
+	`startDate` date DEFAULT NULL,
 	`notes` varchar(10000) DEFAULT '',
 	`version` int NOT NULL DEFAULT 1,
 	`recurrenceMode` tinyint NOT NULL DEFAULT 0,
@@ -36,7 +36,7 @@ CREATE TABLE `todo` (
 	CONSTRAINT `todo_check_recurrenceMode` CHECK (`recurrenceMode` BETWEEN 0 AND 4),
 	CONSTRAINT `todo_check_recurrenceInterval` CHECK (`recurrenceInterval` BETWEEN 1 AND 999),
 	CONSTRAINT `todo_check_effort` CHECK (`effort` BETWEEN 0 AND 9999)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;
 
 CREATE TABLE `recurringCopied` (
 	`todo_id` int NOT NULL,
@@ -44,7 +44,7 @@ CREATE TABLE `recurringCopied` (
 	PRIMARY KEY (`todo_id`),
 	CONSTRAINT `recurringCopied_todo_id` FOREIGN KEY (`todo_id`)
 		REFERENCES `todo` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;
 
 CREATE TABLE `tags` (
 	`id` int AUTO_INCREMENT NOT NULL,
@@ -52,21 +52,21 @@ CREATE TABLE `tags` (
 	PRIMARY KEY (`id`),
 	-- case-insensitive (collation), like the lookup by name always was:
 	UNIQUE KEY `tags_name` (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;
 
 CREATE TABLE `todo_tags` (
 	`todo_id` int,
 	`tag_id` int,
 	PRIMARY KEY (`todo_id`, `tag_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;
 
 CREATE TABLE `settings` (
 	`key` VARCHAR(32),
 	`value` VARCHAR(255),
 	PRIMARY KEY(`key`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;
 
-INSERT INTO `settings` (`key`, `value`) VALUES ("db.version", "13");
+INSERT INTO `settings` (`key`, `value`) VALUES ("db.version", "15");
 
 -- default list of the default user (todo.list_id defaults to 0):
 SET SESSION sql_mode = CONCAT(@@sql_mode, ',NO_AUTO_VALUE_ON_ZERO');

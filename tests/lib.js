@@ -6,7 +6,7 @@ const BASE = process.env.TODO_URL || 'http://127.0.0.1:8000';
 const MYSQL = (process.env.TODO_MYSQL || 'mysql -h127.0.0.1 -uroot -proot todo').split(' ');
 
 function sql(query) {
-    return execFileSync(MYSQL[0], [...MYSQL.slice(1), '--batch', '--raw', '--skip-column-names', '-e', query],
+    return execFileSync(MYSQL[0], [...MYSQL.slice(1), '--default-character-set=utf8mb4', '--batch', '--raw', '--skip-column-names', '-e', query],
         { encoding: 'utf8' });
 }
 

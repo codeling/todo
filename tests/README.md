@@ -11,9 +11,12 @@ Run by `.github/workflows/tests.yml`. Locally:
 3. `TODO_URL=http://127.0.0.1:8000 TODO_MYSQL="mysql -h127.0.0.1 -uroot -proot todo" npm test`
    (`TODO_MYSQL` is the client command line used to prepare and check the database).
 
-`tests/schema.test.js` tests the constraints of the database and `sql/update-013.sql`: it creates and drops
-the databases `todo_migration_old` and `todo_migration_fresh`, so the database user needs to be
-allowed to do that (`tests/fixtures/install-v12.sql` is the layout before that update).
+`tests/schema.test.js` tests the constraints of the database and the migrations (`scripts/migrate.php`):
+it creates and drops the databases `todo_migration_old` and `todo_migration_fresh`, so the database
+user needs to be allowed to do that. `tests/fixtures/install-v12.sql` etc. are the layouts before
+the migrations; a database migrated from version 12 must have the schema of `sql/install.sql`, so a
+new migration needs a change of `install.sql` (and its `db.version`) too.
+`tests/db-config.test.js` tests the connection settings.
 `tests/performance.test.js` fills the database with 10,000 entries and checks how many rows a
 request reads (the `Handler_read_*` counters, not the time, which is unreliable); a missing index
 shows as a number close to the size of the table. It needs the database to be used by this test only.

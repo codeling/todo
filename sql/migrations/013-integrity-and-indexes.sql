@@ -45,7 +45,7 @@ ALTER TABLE `todo`
 	ADD KEY `todo_creationDate` (`creationDate`);
 
 -- 4. The foreign key todo.list_id -> list.id exists on databases which were upgraded with
--- update-009.sql, but not on the ones created by install.sql (up to version 12). Add it
+-- legacy/update-009.sql, but not on the ones created by install.sql (up to version 12). Add it
 -- only if it is missing (this fails if there are todos of a list which does not exist).
 SET @has_list_fk = (SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS
 	WHERE CONSTRAINT_SCHEMA = DATABASE() AND TABLE_NAME = 'todo'
@@ -56,7 +56,7 @@ PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
--- The index which update-009.sql created for the foreign key is redundant now (a database
+-- The index which legacy/update-009.sql created for the foreign key is redundant now (a database
 -- upgraded with it has it, it is called like the constraint); the server may have dropped it already.
 SET @has_old_idx = (SELECT COUNT(*) FROM information_schema.STATISTICS
 	WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'todo' AND INDEX_NAME = 'todo_list_list_id');
