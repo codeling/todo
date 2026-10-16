@@ -13,8 +13,8 @@ Run by `.github/workflows/tests.yml`. Locally:
 
 `tests/schema.test.js` tests the constraints of the database and the migrations (`scripts/migrate.php`):
 it creates and drops the databases `todo_migration_old` and `todo_migration_fresh`, so the database
-user needs to be allowed to do that. `tests/fixtures/install-v12.sql` etc. are the layouts before
-the migrations; a database migrated from version 12 must have the schema of `sql/install.sql`, so a
+user needs to be allowed to do that. `tests/fixtures/install-v11.sql` etc. are the layouts before
+the migrations; a database migrated from version 11 or 12 must have the schema of `sql/install.sql`, so a
 new migration needs a change of `install.sql` (and its `db.version`) too.
 `tests/db-config.test.js` tests the connection settings.
 `tests/performance.test.js` fills the database with 10,000 entries and checks how many rows a

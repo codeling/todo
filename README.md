@@ -34,6 +34,8 @@ changes and which data would stop it. Schema changes cannot be rolled back: if a
 the statements before the failing one stay applied. Fix the data it complains about and run the
 rest of the file by hand, or restore the backup and start again. What the migrations do so far:
 
+* `012`: `recurrenceMode` (an interval in days) becomes the unit (days, weeks, months, years) and
+  `recurrenceInterval` the number of units.
 * `013`: tags whose names differ only in case are merged, `recurringCopied` rows of deleted entries
   are removed, and the constraints (unique tag names, foreign keys, ranges of the values) and indexes
   are added. It stops without deleting anything if an entry belongs to a list which does not exist or
@@ -46,8 +48,8 @@ rest of the file by hand, or restore the backup and start again. What the migrat
 
 `sql/install.sql` creates a new database with the layout of the latest version (and `db.version`);
 `sql/uninstall.sql` removes it. The scripts of the first versions are in `sql/legacy/`; they cannot be
-replayed (see the note there), databases older than version 12 have to be upgraded by hand.
-The tests check that a database upgraded from version 12 has exactly the schema of a new installation.
+replayed (see the note there), databases older than version 11 have to be upgraded by hand.
+The tests check that a database upgraded from version 11 or 12 has exactly the schema of a new installation.
 
 A database on another host should be reached over TLS: see `$db_ssl` in `config.sample.php`.
 

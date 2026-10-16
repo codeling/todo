@@ -189,6 +189,23 @@ test.describe('migrations', () => {
         });
     }
 
+    test('upgrades from version 11: the recurrence in days becomes unit and interval', () => {
+        const days = [0, 1, 7, 10, 14, 30, 60, 91, 121, 182, 365, 730, 1805];
+        createDb(DB_OLD, sqlFile('tests', 'fixtures', 'install-v11.sql') +
+            'INSERT INTO todo (id, creationDate, description, list_id, recurrenceMode) VALUES ' +
+            days.map((d, i) => `(${i + 1}, UTC_TIMESTAMP(), 'r${d}', 0, ${d})`).join(', ') + ';');
+        assert.equal(sql(`SELECT value FROM ${DB_OLD}.settings WHERE \`key\`='db.version'`).trim(), '11');
+        const res = migrate(DB_OLD, '--yes');
+        assert.equal(res.status, 0, res.err);
+        assert.match(res.out, /applying 012-recurrence-interval\.sql \.\.\. ok/);
+        // [unit (1 days, 2 weeks, 3 months, 4 years), interval] of each:
+        assert.deepEqual(sqlRows(`SELECT recurrenceMode, recurrenceInterval FROM ${DB_OLD}.todo ORDER BY id`), [
+            [0, 1], [1, 1], [2, 1], [1, 10], [2, 2], [3, 1], [3, 2], [3, 3], [3, 4], [3, 6], [4, 1], [4, 2], [4, 5],
+        ].map((row) => row.map(String)));
+        assert.equal(sql(`SELECT value FROM ${DB_OLD}.settings WHERE \`key\`='db.version'`).trim(), '15');
+        assert.equal(schemaOf(DB_OLD), schemaOf(DB_FRESH));
+    });
+
     test('the runner stops without changing the entries if one belongs to a list which does not exist', () => {
         createDb(DB_OLD, sqlFile('tests', 'fixtures', 'install-v12.sql') + OLD_DATA +
             "INSERT INTO todo (id, creationDate, description, list_id) VALUES (3, UTC_TIMESTAMP(), 'orphan', 77);");
@@ -237,8 +254,8 @@ test.describe('migrations', () => {
 
     test('the runner refuses databases which are too old or too new, or not initialized', () => {
         createDb(DB_OLD, sqlFile('tests', 'fixtures', 'install-v12.sql'));
-        sql(`UPDATE ${DB_OLD}.settings SET value='11' WHERE \`key\`='db.version'`);
-        assert.match(migrate(DB_OLD, '--yes').err, /oldest one this script upgrades is 12/);
+        sql(`UPDATE ${DB_OLD}.settings SET value='10' WHERE \`key\`='db.version'`);
+        assert.match(migrate(DB_OLD, '--yes').err, /oldest one this script upgrades is 11/);
         sql(`UPDATE ${DB_OLD}.settings SET value='99' WHERE \`key\`='db.version'`);
         assert.match(migrate(DB_OLD, '--yes').err, /version 99 but this program only knows version 15/);
         sql(`DROP DATABASE ${DB_OLD}; CREATE DATABASE ${DB_OLD}`);
@@ -252,5 +269,5 @@ test('install.sql creates the version of the latest migration, and the migration
     const latest = Number(migrationFiles[migrationFiles.length - 1].slice(0, 3));
     assert.match(sqlFile('sql', 'install.sql'), new RegExp(`\\("db\\.version", "${latest}"\\)`));
     assert.deepEqual(migrationFiles.map((f) => Number(f.slice(0, 3))),
-        Array.from({ length: migrationFiles.length }, (_, i) => 13 + i));
+        Array.from({ length: migrationFiles.length }, (_, i) => 12 + i));
 });
