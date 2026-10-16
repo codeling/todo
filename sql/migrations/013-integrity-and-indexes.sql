@@ -13,6 +13,13 @@
 --       OR recurrenceAnchor NOT IN (0, 1) OR recurrenceMode NOT BETWEEN 0 AND 4
 --       OR recurrenceInterval NOT BETWEEN 1 AND 999 OR effort NOT BETWEEN 0 AND 9999;
 
+-- The old layout has the zero date '0000-00-00 00:00:00' as default of todo.creationDate. A default
+-- MySQL 8 (sql_mode with NO_ZERO_DATE) refuses to change a table with such a default at all
+-- ("Invalid default value for 'creationDate'"), so this script does not use that mode. The
+-- default is removed below; the mode of the session is restored at the end.
+SET @old_sql_mode = @@sql_mode;
+SET SESSION sql_mode = REPLACE(REPLACE(@@sql_mode, 'NO_ZERO_DATE', ''), 'NO_ZERO_IN_DATE', '');
+
 -- 1. Tag names are unique. Tags which differ only by case or trailing spaces are the same
 -- tag for the unique key (and always were for the lookup by name): merge them into the
 -- one with the lowest id; the entries of the others move to it.
@@ -47,10 +54,17 @@ ALTER TABLE `todo`
 -- 4. The foreign key todo.list_id -> list.id exists on databases which were upgraded with
 -- legacy/update-009.sql, but not on the ones created by install.sql (up to version 12). Add it
 -- only if it is missing (this fails if there are todos of a list which does not exist).
-SET @has_list_fk = (SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS
-	WHERE CONSTRAINT_SCHEMA = DATABASE() AND TABLE_NAME = 'todo'
-		AND CONSTRAINT_NAME = 'todo_list_list_id' AND CONSTRAINT_TYPE = 'FOREIGN KEY');
-SET @sql = IF(@has_list_fk > 0, 'SELECT 1',
+-- legacy/update-009.sql did not name the constraint (MySQL calls it todo_ibfk_1, MariaDB
+-- todo_list_list_id): an existing one with another name is replaced, so that all databases get the same.
+SET @list_fk = (SELECT MIN(CONSTRAINT_NAME) FROM information_schema.KEY_COLUMN_USAGE
+	WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'todo' AND COLUMN_NAME = 'list_id'
+		AND REFERENCED_TABLE_NAME = 'list' AND REFERENCED_COLUMN_NAME = 'id');
+SET @sql = IF(@list_fk IS NOT NULL AND @list_fk <> 'todo_list_list_id',
+	CONCAT('ALTER TABLE `todo` DROP FOREIGN KEY `', @list_fk, '`'), 'SELECT 1');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+SET @sql = IF(@list_fk = 'todo_list_list_id', 'SELECT 1',
 	'ALTER TABLE `todo` ADD CONSTRAINT `todo_list_list_id` FOREIGN KEY (`list_id`) REFERENCES `list` (`id`) ON DELETE CASCADE ON UPDATE CASCADE');
 PREPARE stmt FROM @sql;
 EXECUTE stmt;
@@ -87,5 +101,7 @@ ALTER TABLE `todo`
 	ADD CONSTRAINT `todo_check_recurrenceMode` CHECK (`recurrenceMode` BETWEEN 0 AND 4),
 	ADD CONSTRAINT `todo_check_recurrenceInterval` CHECK (`recurrenceInterval` BETWEEN 1 AND 999),
 	ADD CONSTRAINT `todo_check_effort` CHECK (`effort` BETWEEN 0 AND 9999);
+
+SET SESSION sql_mode = @old_sql_mode;
 
 UPDATE `settings` SET `value` = "13" WHERE `key` = "db.version";

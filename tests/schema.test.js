@@ -152,8 +152,12 @@ const DB_OLD = 'todo_migration_old';
 const DB_FRESH = 'todo_migration_fresh';
 const TABLES = ['todo', 'list', 'tags', 'todo_tags', 'recurringCopied', 'settings'];
 
+// (the old layouts have a zero date as default, which a default MySQL 8 refuses to create: databases
+// of that age were created with an older sql_mode, so create them with one; the migrations
+// themselves run with the mode of the server)
 function createDb(name, script) {
-    sql(`DROP DATABASE IF EXISTS ${name}; CREATE DATABASE ${name}; USE ${name}; ${script}`);
+    sql(`DROP DATABASE IF EXISTS ${name}; CREATE DATABASE ${name}; USE ${name}; ` +
+        "SET SESSION sql_mode = REPLACE(REPLACE(@@sql_mode, 'NO_ZERO_DATE', ''), 'NO_ZERO_IN_DATE', ''); " + script);
 }
 
 const schemaOf = (db) => TABLES.map((table) =>

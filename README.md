@@ -50,6 +50,8 @@ rest of the file by hand, or restore the backup and start again. What the migrat
 `sql/uninstall.sql` removes it. The scripts of the first versions are in `sql/legacy/`; they cannot be
 replayed (see the note there), databases older than version 11 have to be upgraded by hand.
 The tests check that a database upgraded from version 11 or 12 has exactly the schema of a new installation.
+They run against MariaDB 10.11 and MySQL 8.0 (with the default `sql_mode`, which refuses the zero date
+that the first versions used as a default: the migrations 012 and 013 work around that).
 
 A database on another host should be reached over TLS: see `$db_ssl` in `config.sample.php`.
 

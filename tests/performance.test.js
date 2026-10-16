@@ -58,9 +58,13 @@ function rowsRead() {
 
 // runs the request and checks how many rows were read meanwhile
 async function assertRowsRead(t, name, limit, request) {
+    // reading the counters reads rows itself (about 850 with MySQL 8, none with MariaDB): the
+    // number of an empty measurement is subtracted
+    const idle = rowsRead();
+    const overhead = rowsRead() - idle;
     const before = rowsRead();
     const res = await request();
-    const read = rowsRead() - before;
+    const read = rowsRead() - before - overhead;
     t.diagnostic(`${name}: ${read} rows read (limit ${limit})`);
     assert.ok(read <= limit, `${name} read ${read} rows, at most ${limit} expected (table size ${TODOS})`);
     return res;
