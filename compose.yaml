@@ -1,0 +1,55 @@
+# Runs the application with a MariaDB database: docker compose up -d   (or podman compose)
+# See "Container" in README.md. Before you start it, create the two secret files:
+#   mkdir secrets && openssl rand -hex 24 > secrets/db_password && printf '%s' 'your password' > secrets/todo_password
+services:
+  todo:
+    # build: .   # to build the image from this checkout instead of pulling it
+    image: ghcr.io/codeling/todo:latest
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      TODO_DB_HOST: db
+      TODO_DB_PASSWORD_FILE: /run/secrets/db_password
+      TODO_USER: alice
+      TODO_PASSWORD_FILE: /run/secrets/todo_password
+      # the proxy in front of the application terminates TLS (see README.md)
+      TODO_TRUST_FORWARDED_PROTO: "true"
+    secrets: [db_password, todo_password]
+    # only reachable from this machine: put the reverse proxy which terminates TLS in front of it.
+    # Only publish it on other addresses if nothing but that proxy can reach it.
+    ports:
+      - "127.0.0.1:8080:8080"
+    restart: unless-stopped
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+
+  db:
+    image: mariadb:10.11
+    environment:
+      MARIADB_DATABASE: todo
+      MARIADB_USER: todo
+      MARIADB_PASSWORD_FILE: /run/secrets/db_password
+      MARIADB_RANDOM_ROOT_PASSWORD: "1"
+    secrets: [db_password]
+    volumes:
+      - db:/var/lib/mysql
+      # creates the tables when the database is created; later upgrades: see README.md
+      - ./sql/install.sql:/docker-entrypoint-initdb.d/install.sql:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+secrets:
+  db_password:
+    file: ./secrets/db_password
+  todo_password:
+    file: ./secrets/todo_password
+
+volumes:
+  db:

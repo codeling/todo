@@ -27,3 +27,7 @@ an authenticated user.
 
 `sh tests/apache-access.sh` checks the access rules of `.htaccess`
 with a temporary Apache instance (run as root, needs `apache2` and `htpasswd`).
+
+`sh tests/container.sh [image]` tests the container image (`Dockerfile`) with a throwaway MariaDB
+container: HTTPS and authentication, hidden files, database connection, `scripts/migrate.php`. It needs
+docker (or `DOCKER=podman`); run by `.github/workflows/container.yml`.
