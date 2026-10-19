@@ -150,14 +150,51 @@ Rootless Podman and SELinux need `:Z` on such mounts, and the files must be read
 the container (`podman unshare chown 33:33 <file>` or `chmod a+r`).
 
 The root file system can be read-only; only `/tmp` has to be writable (it holds the generated
-`config.php` and password file). Apache logs to the output of the container. The data is in the
-database only, back it up as described in *Upgrading and backups*. After pulling a new image, upgrade
-the database with the migration runner before you start it (the database user usually needs more
-privileges than the application does, see above):
+`config.php` and password file). Apache logs to the output of the container.
+
+### Data, backup, import and upgrades
+
+The container itself keeps no data. Everything is in the database; with `compose.yaml` it is in the
+named volume `db` (`/var/lib/mysql` of the `db` service). It survives `docker compose down` and
+`docker compose pull`, but not `docker compose down -v`. Export and import go through SQL dumps, not
+through copies of the files of the volume (those only work with the same MariaDB version). The
+database user of `compose.yaml` has all privileges on the database `todo`, the password of
+`root` is random and not needed. The commands read the password from the secret of the `db` service:
 
 ```sh
-docker compose run --rm -e TODO_MIGRATE_USER=root -e TODO_MIGRATE_PASSWORD=... todo php scripts/migrate.php
+# export (back up before every upgrade, and regularly)
+docker compose exec -T db sh -c 'mariadb-dump --single-transaction -utodo -p"$(cat /run/secrets/db_password)" todo' > todo-$(date +%F).sql
+
+# import: replaces the tables of the dump, e.g. into a new volume
+docker compose exec -T db sh -c 'mariadb -utodo -p"$(cat /run/secrets/db_password)" todo' < todo-2026-01-31.sql
 ```
+
+If you start a container with `docker run` and another database server, use `mysqldump` and `mysql`
+as in *Upgrading and backups*.
+
+**Moving an existing database into the container:**
+
+1. Dump the old database (see *Upgrading and backups*): `mysqldump --single-transaction todo > todo.sql`.
+   The version of the layout must be 12 or newer (``SELECT value FROM settings WHERE `key` = 'db.version'``).
+2. Start the new setup (`docker compose up -d`, as above). A new volume is created, and `sql/install.sql`
+   creates empty tables in it.
+3. Import the dump with the import command above. It replaces the empty tables with the old data.
+4. If the dump comes from an older version of the application than the image, upgrade the database:
+
+   ```sh
+   docker compose run --rm todo php scripts/migrate.php --status
+   docker compose run --rm todo php scripts/migrate.php
+   ```
+
+   (with `compose.yaml` the database user may change the schema; with another database server set
+   `TODO_MIGRATE_USER` and `TODO_MIGRATE_PASSWORD` with `-e`, see *Upgrading and backups*).
+5. Open the application and check the data, then stop the old installation.
+
+The same steps move the data back out: export it and import it into the other database.
+
+**Upgrading the image:** make a backup, `docker compose pull && docker compose up -d`, then run
+`docker compose run --rm todo php scripts/migrate.php` (`--status` shows the pending migrations); the
+application needs the database of its own version, so do this right after the update.
 
 `sh tests/container.sh` tests the image (access rules, database connection, no root user).
 
