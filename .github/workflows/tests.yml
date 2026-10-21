@@ -12,6 +12,18 @@ jobs:
           php-version: '8.3'
       - run: find . -name '*.php' -not -path './node_modules/*' -not -path './vendor/*' -print0 | xargs -0 -n1 php -l
 
+  phpstan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mysqli
+          tools: phpstan:2.1.33
+      # configuration: phpstan.neon
+      - run: phpstan analyse --no-progress --error-format=github
+
   integration:
     name: integration (${{ matrix.db.name }})
     runs-on: ubuntu-latest

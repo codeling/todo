@@ -23,7 +23,7 @@ AuthUserFile /path/outside/webroot/.htpasswd
 RedirectMatch 404 ^.*/(sql|scripts|tests|node_modules|lang|\.git|\.github)(/|$)
 # (FilesMatch also applies to requests with a trailing path like db.php/x, unlike
 # a match on the request URI)
-<FilesMatch "(^\.|~$|\.(sql|sh|ini|bak|swp|orig|md|yml|lock|sample)$|^config.*\.php$|^package(-lock)?\.json$|^session\.php$|^todo-core\.php$|^lang\.php$|^basic-auth\.php$)">
+<FilesMatch "(^\.|~$|\.(sql|sh|ini|bak|swp|orig|md|yml|neon|lock|sample)$|^config.*\.php$|^package(-lock)?\.json$|^session\.php$|^todo-core\.php$|^lang\.php$|^basic-auth\.php$)">
     Require all denied
 </FilesMatch>
 # helper scripts which are only included by the query endpoints
