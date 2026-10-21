@@ -1,0 +1,12 @@
+.git
+.github
+node_modules
+tests
+config.php
+package.json
+package-lock.json
+.npmrc
+.dockerignore
+Dockerfile
+compose.yaml
+php-server.log
