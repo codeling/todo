@@ -1,3 +1,10 @@
+-- The old layout has the zero date '0000-00-00 00:00:00' as default of todo.creationDate. A default
+-- MySQL 8 (sql_mode with NO_ZERO_DATE) refuses to change a table with such a default at all
+-- ("Invalid default value for 'creationDate'"), so this script does not use that mode (013 removes
+-- the default); the mode of the session is restored at the end.
+SET @old_sql_mode = @@sql_mode;
+SET SESSION sql_mode = REPLACE(REPLACE(@@sql_mode, 'NO_ZERO_DATE', ''), 'NO_ZERO_IN_DATE', '');
+
 -- recurrenceMode used to be an interval in days; it is now the unit
 -- (0 = none, 1 = days, 2 = weeks, 3 = months, 4 = years) and recurrenceInterval the count
 ALTER TABLE `todo` ADD `recurrenceInterval` int(11) NOT NULL DEFAULT 1 AFTER `recurrenceMode`;
@@ -20,5 +27,7 @@ UPDATE `todo` SET
 		WHEN `recurrenceMode` = 1805 OR `recurrenceMode` % 365 = 0 THEN 4
 		WHEN `recurrenceMode` % 7 = 0 THEN 2
 		ELSE 1 END;
+
+SET SESSION sql_mode = @old_sql_mode;
 
 UPDATE `settings` SET `value` = "12" WHERE `key` = "db.version";

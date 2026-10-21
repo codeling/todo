@@ -13,17 +13,31 @@ jobs:
       - run: find . -name '*.php' -not -path './node_modules/*' -not -path './vendor/*' -print0 | xargs -0 -n1 php -l
 
   integration:
+    name: integration (${{ matrix.db.name }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        db:
+          - name: MariaDB 10.11
+            image: mariadb:10.11
+            health: healthcheck.sh --connect --innodb_initialized
+          - name: MySQL 8.0
+            image: mysql:8.0
+            health: mysqladmin ping -h127.0.0.1 -uroot -proot --silent
     services:
-      mariadb:
-        image: mariadb:10.11
+      database:
+        image: ${{ matrix.db.image }}
         env:
+          # (each image reads its own variables and ignores the other ones)
           MARIADB_ROOT_PASSWORD: root
           MARIADB_DATABASE: todo
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: todo
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-cmd="${{ matrix.db.health }}"
           --health-interval=5s --health-timeout=5s --health-retries=20
     env:
       TODO_URL: http://127.0.0.1:8000
