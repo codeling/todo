@@ -16,12 +16,12 @@
         $ChartWidth = 800;
         if ($groupName === 'YEAR')
         {
-            $sql = "SELECT COALESCE(YEAR(t.".$checkedDate."), 'not finished'), ".
-                "COALESCE(YEAR(t.".$checkedDate."), 'not finished'), ".
-                "COUNT(t.id) FROM `todo` t ".
-                "WHERE deleted = 0 AND $ownTodo ".
-                "GROUP BY YEAR(t.".$checkedDate.") ".
-                "ORDER BY YEAR(t.".$checkedDate.")";
+            // grouped in a subquery: with ONLY_FULL_GROUP_BY (the default of MySQL) the COALESCE
+            // can not be selected when grouping by the year alone
+            $sql = "SELECT COALESCE(y, 'not finished'), COALESCE(y, 'not finished'), cnt ".
+                "FROM (SELECT YEAR(t.".$checkedDate.") AS y, COUNT(t.id) AS cnt FROM `todo` t ".
+                    "WHERE deleted = 0 AND $ownTodo GROUP BY y) years ".
+                "ORDER BY y";
         }
         else if ($groupName === 'MONTH')
         {
