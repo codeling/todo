@@ -255,6 +255,15 @@ test('pages send security headers', async () => {
     assert.equal(data.headers.get('cache-control'), 'private, no-store');
 });
 
+test('the statistics page works without any entries', async () => {
+    // (the averages used to divide by the number of rows: a DivisionByZeroError)
+    const res = await fetch(BASE + '/statistik.php');
+    assert.equal(res.status, 200);
+    const html = await res.text();
+    assert.doesNotMatch(html, /Database error/);
+    assert.match(html, /<\/html>/);
+});
+
 test('a tag cannot be renamed to a name with a comma or a too long name', async () => {
     const sess = await session();
     const tag = await taggedTodos(sess, 'keep', '');

@@ -92,6 +92,11 @@
         if (count($item) < $valCount) {
             $valCount = count($item);
         }
+        // no rows at all (e.g. no entries yet): an empty chart, not a DivisionByZeroError
+        if ($valCount == 0) {
+            $valCount = 1;
+            $minVal = 0;
+        }
         $avg = ((float)$sum) / $valCount;
         // if too many items retrieved, delete oldest
         if (count($item) > $valCount) {
