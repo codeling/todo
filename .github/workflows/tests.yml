@@ -15,6 +15,7 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
+          coverage: none
           ini-values: error_reporting=-1
       # php -l succeeds despite compile-time deprecations, so they are looked for in its output
       - run: |
@@ -58,6 +59,8 @@ jobs:
         with:
           php-version: ${{ matrix.php }}
           extensions: mysqli
+          # no Xdebug / PCOV (installed by default): PHP warns at startup that they disable JIT
+          coverage: none
           # deprecations and warnings go to php-server.log (shown below), and fail the run
           ini-values: error_reporting=-1, log_errors=On
       - uses: actions/setup-node@v7
