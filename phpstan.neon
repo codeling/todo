@@ -1,0 +1,17 @@
+# static analysis of the PHP code, run by .github/workflows/tests.yml: phpstan analyse
+parameters:
+    level: 5
+    paths:
+        - .
+    excludePaths:
+        - node_modules (?)
+        - vendor
+        - config.php (?)
+    # the pages and queries share variables (like $db) through require(), which PHPStan does not follow
+    checkMaybeUndefinedVariables: false
+    ignoreErrors:
+        # defined in queries/db.php; PHPStan only knows constants of bootstrap files, and db.php
+        # connects to the database when it is loaded
+        -
+            identifier: constant.notFound
+            message: '#^Constant MAX_(TODO|NOTES)_LENGTH not found\.$#'
