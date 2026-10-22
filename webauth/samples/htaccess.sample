@@ -1,6 +1,7 @@
+# SPDX-License-Identifier: MIT
 # Apache: HTTP Basic authentication over HTTPS only, for the directory of the app.
 # Copy to the app's .htaccess (requires AllowOverride AuthConfig Limit, mod_authz_core).
-# basic-auth.php is the safety net behind it, in case this file is ignored.
+# WebAuth\ServerAuth::guard() is the safety net behind it, in case this file is ignored.
 
 AuthType Basic
 AuthName "Restricted"
@@ -19,10 +20,7 @@ AuthUserFile /path/outside/webroot/.htpasswd
 </RequireAll>
 # There is no limit for wrong passwords: use fail2ban, mod_evasive or similar.
 
-# don't serve the library itself, nor its docs and samples
-<FilesMatch "^(basic-auth\.php|README\.md|.*\.sample)$">
-    Require all denied
-</FilesMatch>
+# The library folder (webauth/) has its own .htaccess which denies everything in it.
 
 <IfModule mod_headers.c>
     # ignored by browsers over plain HTTP

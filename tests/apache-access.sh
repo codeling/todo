@@ -65,7 +65,7 @@ check queries/trash.php 401 200
 check vendor/jquery/jquery.min.js 401 200
 check todo.css 401 200
 for denied in sql/install.sql lang/en-US.ini config.php config.sample.php package.json \
-        package-lock.json scripts/vendor.sh session.php todo-core.php lang.php basic-auth/basic-auth.php basic-auth/README.md basic-auth/htaccess.sample queries/db.php queries/db-connect.php \
+        package-lock.json scripts/vendor.sh session.php todo-core.php lang.php webauth/webauth.php webauth/src/ServerAuth.php webauth/README.md webauth/samples/htaccess.sample webauth/composer.json webauth/tests/ServerAuthTest.php queries/db.php queries/db-connect.php \
         queries/tags.php queries/reactivate-temp.php queries/reactivate.php queries/recurrence.php \
         queries/db.php/x queries/reactivate.php/x queries/reactivate-temp.php/x session.php/x config.php/x \
         .htaccess nginx.conf.sample README.md phpstan.neon; do
