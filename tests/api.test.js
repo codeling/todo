@@ -33,6 +33,10 @@ test('create, update, complete, trash and empty trash with valid token', async (
         due: '2026-01-10', start: '2026-01-05', tags: 'c' }), sess)).text, '1');
     assert.equal((await post('complete.php', { id, completed: 1, version: 2 }, sess)).text, '1');
     assert.equal((await post('trash.php', { id, trash: 1, version: 3 }, sess)).text, '1');
+    // a deleted entry can neither be reopened nor completed
+    assert.equal((await post('complete.php', { id, completed: 0, version: 3 }, sess)).text,
+        'Deleted entries cannot be completed or reopened!');
+    assert.deepEqual(sqlRows(`SELECT completed, version FROM todo WHERE id=${id}`), [['1', '3']]);
     assert.equal((await post('empty-trash.php', { list_id: 0 }, sess)).text, '1');
     assert.equal(sql('SELECT COUNT(*) FROM todo').trim(), '0');
 });

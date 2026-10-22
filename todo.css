@@ -95,7 +95,7 @@ td.start, td.due {
 .todo_deleted {
     color: #777;
 }
-.todo_deleted span {
+.todo_deleted span:not(.date_year) {
     text-decoration: line-through;
 }
 ul.todo_item_tags {
@@ -350,12 +350,17 @@ ul.ui-autocomplete {
     overflow-x: auto;
 }
 
+/* due date picker of the input line: the text label is only used on narrow screens */
+#enter_due_label {
+	display: none;
+}
+
 /********************/
 /* Responsive design */
 @media (max-width: 575px)
 {
 	/* one line per todo: number, start date and effort hidden, a long title is cut off */
-	th.start, td.start, td.effort, .todo_lineNr, #enter_due {
+	th.start, td.start, td.effort, .todo_lineNr {
 		display: none;
 	}
 	#todoTable tbody tr {
@@ -377,10 +382,42 @@ ul.ui-autocomplete {
 	.note, .recurring {
 		margin-left: 4px;
 	}
-	/* due date small and without the current year; overdue in red instead of the icon */
+	/* due date small and without the current year; overdue in red instead of the icon;
+	   right-aligned so that dates with and without year line up */
 	th.due, td.due {
 		width: auto;
 		padding: 0 4px;
+		text-align: right;
+	}
+	/* due date of a new todo: the label (calendar icon if empty) is shown,
+	   the native date input lies invisibly on top of it and opens the picker on tap */
+	.due_picker {
+		position: relative;
+		display: inline-block;
+		min-width: 28px;
+		height: 28px;
+		line-height: 28px;
+		vertical-align: middle;
+	}
+	#enter_due {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		opacity: 0;
+		padding: 0;
+		border: 0;
+	}
+	#enter_due_label {
+		display: block;
+		font-size: 11px;
+		color: #777;
+	}
+	#enter_due_label:empty {
+		background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="m8 4v2h-4v22h24v-22h-4v-2h-2v2h-12v-2h-2zm-2 4h2v2h2v-2h12v2h2v-2h2v4h-20v-4zm0 6h20v12h-20v-12zm11 6h6v4h-6z" fill="%23444"/></svg>');
+		background-size: cover;
+		height: 28px;
 	}
 	td.due {
 		font-size: 11px;

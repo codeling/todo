@@ -97,6 +97,13 @@ $(document).ready(function() {
 
     shiftDueWithStart('#modify_start', '#modify_due', false);
     shiftDueWithStart('#enter_start', '#enter_due', true);
+    $('#enter_due').on('input change', updateEnterDueLabel);
+    $('#enter_due').on('click', function() {
+        // the date input is invisible on narrow screens: open the picker on any tap
+        if (window.matchMedia(narrowScreenQuery).matches && this.showPicker) {
+            try { this.showPicker(); } catch (e) {}
+        }
+    });
 
     $('#filter .tagify__input').on('focus', function() {
         let tagStrs = tagList.map( (x) => x.name );
