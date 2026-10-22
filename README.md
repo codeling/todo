@@ -6,7 +6,9 @@ A small PHP / MariaDB (MySQL) to-do list with lists, tags, recurring entries and
 
 1. Create a database and load `sql/install.sql`.
 2. Copy `config.sample.php` to `config.php` and adapt it.
-3. Serve the directory with PHP 8.1+ (mysqli) behind **HTTP authentication and HTTPS**, see below.
+3. Serve the directory with PHP 8.1+ (mysqli; the tests run on PHP 8.3 and 8.5) behind
+   **HTTP authentication and HTTPS**, see below.
+   Or run the [container](#container).
 
 ## Upgrading and backups
 
@@ -34,6 +36,8 @@ changes and which data would stop it. Schema changes cannot be rolled back: if a
 the statements before the failing one stay applied. Fix the data it complains about and run the
 rest of the file by hand, or restore the backup and start again. What the migrations do so far:
 
+* `012`: `recurrenceMode` (an interval in days) becomes the unit (days, weeks, months, years) and
+  `recurrenceInterval` the number of units.
 * `013`: tags whose names differ only in case are merged, `recurringCopied` rows of deleted entries
   are removed, and the constraints (unique tag names, foreign keys, ranges of the values) and indexes
   are added. It stops without deleting anything if an entry belongs to a list which does not exist or
@@ -46,8 +50,10 @@ rest of the file by hand, or restore the backup and start again. What the migrat
 
 `sql/install.sql` creates a new database with the layout of the latest version (and `db.version`);
 `sql/uninstall.sql` removes it. The scripts of the first versions are in `sql/legacy/`; they cannot be
-replayed (see the note there), databases older than version 12 have to be upgraded by hand.
-The tests check that a database upgraded from version 12 has exactly the schema of a new installation.
+replayed (see the note there), databases older than version 11 have to be upgraded by hand.
+The tests check that a database upgraded from version 11 or 12 has exactly the schema of a new installation.
+They run against MariaDB 10.11 and MySQL 8.0 (with the default `sql_mode`, which refuses the zero date
+that the first versions used as a default: the migrations 012 and 013 work around that).
 
 A database on another host should be reached over TLS: see `$db_ssl` in `config.sample.php`.
 
@@ -89,6 +95,113 @@ HTTPS (`$require_https`). This is done by the shared library in `webauth/` (see 
 * PHP: `expose_php = Off` and `display_errors = Off` (the application also sets the latter for its
   own pages).
 
+## Container
+
+The image runs the application with Apache and PHP as an unprivileged user (port 8080), so it
+works with Docker and with rootless Docker / Podman (`podman` can be used instead of `docker`
+everywhere below). The CI workflow `container.yml` builds it for `amd64` and `arm64` on every change of
+the `main` branch and publishes it as `ghcr.io/codeling/todo:latest` (and `:sha-<commit>`); build it
+yourself with `docker build -t todo .`.
+
+The application only works over HTTPS and with HTTP authentication (see *Security*), so the container
+is meant to be used **behind a reverse proxy which terminates TLS** (nginx, Caddy, Traefik, ...)
+and **overwrites `X-Forwarded-Proto`**. Publish the port only to that proxy (`127.0.0.1:8080:8080`, or
+an internal network), and set `TODO_TRUST_FORWARDED_PROTO=true`: then requests with
+`X-Forwarded-Proto: https` count as HTTPS. Without the setting the container rejects every request as
+not secure. The password is checked by the container, the proxy only passes the `Authorization` header
+(and must not cache the responses).
+
+The quickest start is `compose.yaml` (the application and MariaDB, which creates the tables from
+`sql/install.sql` on its first start):
+
+```sh
+mkdir secrets
+openssl rand -hex 24 > secrets/db_password
+printf '%s' 'a long password' > secrets/todo_password      # for the user "alice" (see TODO_USER)
+docker compose up -d                                       # http://127.0.0.1:8080, behind your proxy
+```
+
+With Caddy as the proxy: `todo.example.com { reverse_proxy 127.0.0.1:8080 }`.
+To try it without a proxy: `curl -u alice:<password> -H 'X-Forwarded-Proto: https' http://127.0.0.1:8080/`.
+
+Without compose, create the database as in *Installation* and start the container:
+
+```sh
+docker run -d --name todo -p 127.0.0.1:8080:8080 \
+    -e TODO_DB_HOST=db.example.com -e TODO_DB_PASSWORD_FILE=/run/secrets/db_password \
+    -e TODO_USER=alice -e TODO_PASSWORD_FILE=/run/secrets/todo_password \
+    -e TODO_TRUST_FORWARDED_PROTO=true \
+    -v "$PWD/secrets":/run/secrets:ro,Z \
+    --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges:true \
+    ghcr.io/codeling/todo:latest
+```
+
+| Environment variable | Meaning | Default |
+| --- | --- | --- |
+| `TODO_DB_HOST`, `TODO_DB_USER`, `TODO_DB_NAME` | database connection (`$db_host`, `$db_user`, `$db_database`) | `db`, `todo`, `todo` |
+| `TODO_DB_PASSWORD` or `TODO_DB_PASSWORD_FILE` | password of the database user | empty |
+| `TODO_DB_SSL` | `true`: TLS for the database connection (`$db_ssl`) | `false` |
+| `TODO_LANGUAGE` | language, a file name of `lang/` without `.ini` | `en-US` |
+| `TODO_TRUST_FORWARDED_PROTO` | `true`: believe `X-Forwarded-Proto` (`$trust_forwarded_proto`, see above) | `false` |
+| `TODO_USER`, `TODO_PASSWORD` or `TODO_PASSWORD_FILE` | the user of the web interface (stored as a bcrypt hash) | required |
+
+Prefer the `..._FILE` variants (Docker / Podman secrets or mounted files) to plain passwords in the
+environment; the container removes the passwords from the environment of the web server. More users,
+or settings which have no variable (like `$db_ssl` with certificates), need files: mount a full
+`config.php` (see `config.sample.php`) at `/etc/todo/config.php` and an `htpasswd` file
+(`htpasswd -B -C 12 -c htpasswd alice`) at `/etc/todo/htpasswd`; they replace the variables above.
+Rootless Podman and SELinux need `:Z` on such mounts, and the files must be readable by the user of
+the container (`podman unshare chown 33:33 <file>` or `chmod a+r`).
+
+The root file system can be read-only; only `/tmp` has to be writable (it holds the generated
+`config.php` and password file). Apache logs to the output of the container.
+
+### Data, backup, import and upgrades
+
+The container itself keeps no data. Everything is in the database; with `compose.yaml` it is in the
+named volume `db` (`/var/lib/mysql` of the `db` service). It survives `docker compose down` and
+`docker compose pull`, but not `docker compose down -v`. Export and import go through SQL dumps, not
+through copies of the files of the volume (those only work with the same MariaDB version). The
+database user of `compose.yaml` has all privileges on the database `todo`, the password of
+`root` is random and not needed. The commands read the password from the secret of the `db` service:
+
+```sh
+# export (back up before every upgrade, and regularly)
+docker compose exec -T db sh -c 'mariadb-dump --single-transaction -utodo -p"$(cat /run/secrets/db_password)" todo' > todo-$(date +%F).sql
+
+# import: replaces the tables of the dump, e.g. into a new volume
+docker compose exec -T db sh -c 'mariadb -utodo -p"$(cat /run/secrets/db_password)" todo' < todo-2026-01-31.sql
+```
+
+If you start a container with `docker run` and another database server, use `mysqldump` and `mysql`
+as in *Upgrading and backups*.
+
+**Moving an existing database into the container:**
+
+1. Dump the old database (see *Upgrading and backups*): `mysqldump --single-transaction todo > todo.sql`.
+   The version of the layout must be 12 or newer (``SELECT value FROM settings WHERE `key` = 'db.version'``).
+2. Start the new setup (`docker compose up -d`, as above). A new volume is created, and `sql/install.sql`
+   creates empty tables in it.
+3. Import the dump with the import command above. It replaces the empty tables with the old data.
+4. If the dump comes from an older version of the application than the image, upgrade the database:
+
+   ```sh
+   docker compose run --rm todo php scripts/migrate.php --status
+   docker compose run --rm todo php scripts/migrate.php
+   ```
+
+   (with `compose.yaml` the database user may change the schema; with another database server set
+   `TODO_MIGRATE_USER` and `TODO_MIGRATE_PASSWORD` with `-e`, see *Upgrading and backups*).
+5. Open the application and check the data, then stop the old installation.
+
+The same steps move the data back out: export it and import it into the other database.
+
+**Upgrading the image:** make a backup, `docker compose pull && docker compose up -d`, then run
+`docker compose run --rm todo php scripts/migrate.php` (`--status` shows the pending migrations); the
+application needs the database of its own version, so do this right after the update.
+
+`sh tests/container.sh` tests the image (access rules, database connection, no root user).
+
 ## Shared authentication library
 
 `webauth/` is a copy of [php-webauth](https://github.com/codeling/php-webauth), which is shared
@@ -103,5 +216,5 @@ git subtree pull --prefix=webauth https://github.com/codeling/php-webauth.git ma
 
 ## Tests
 
-See `tests/README.md`. The workflows in `.github/workflows` run them, check that `vendor/` matches
+See `tests/README.md`. The workflows in `.github/workflows` run them (and test the container image), check that `vendor/` matches
 `package-lock.json` and run `npm audit`.

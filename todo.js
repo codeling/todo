@@ -5,6 +5,9 @@ var itemList;
 var lists;
 
 var currentlyModified = null;
+
+// screen width up to which the narrow layout of todo.css is used
+var narrowScreenQuery = '(max-width: 575px)';
 var reloadData = {
     age: 0,
     list_id: 0,
@@ -926,7 +929,7 @@ function showReadOnlyTags(inputElem, tags) {
     }));
 }
 
-function getTodoTitleHtml(it, lineNr, tagbasename, spanCssClass, baseElem, checkbox, extraHtml) {
+function getTodoTitleHtml(it, lineNr, tagbasename, spanCssClass, baseElem, checkbox) {
     var isRecurring = it.recurrenceMode != 0;
     var hasNote = it.notes != null && it.notes != '';
     var hasTags = it.tags.length > 0;
@@ -946,57 +949,58 @@ function getTodoTitleHtml(it, lineNr, tagbasename, spanCssClass, baseElem, check
     line += '<span class="todo_lineNr">'+(lineNr+1)+'.</span> '+
             '<span>'+textToHtml(it.todo)+'</span>'+
             (hasNote ? '<span class="note" title="'+textToHtml(it.notes)+'"></span>':'')+
-            (isRecurring ? '<input type="button" class="reactivateButton" id="reactivate'+it.id+'" />':'');
+            (isRecurring ? '<span class="recurring" title="'+repetition+'"></span>':'');
     if (hasTags) {
         line += ' <input id="'+tagbasename+it.id+'" class="todo_item_tags" readonly>';
     }
-    if (extraHtml) {
-        line += extraHtml;
-    }
     line += '</'+baseElem+'>';
     return line;
+}
+
+// action button; the label is shown as tooltip and read by screen readers
+function actionButton(spanClass, id, buttonClass, label) {
+    return '<span class="'+spanClass+'"><input type="button" id="'+id+'" class="'+buttonClass+
+        '" title="'+escapeHtml(label)+'" aria-label="'+escapeHtml(label)+'" /></span>';
+}
+
+// date as YYYY-MM-DD; the year is in its own span, so that it can be hidden
+// on narrow screens if it is the current one
+function dateHtml(date) {
+    var str = formatDate(date);
+    if (date == null || date.getFullYear() != new Date().getFullYear()) {
+        return str;
+    }
+    return '<span class="date_year">'+str.substring(0, 5)+'</span>'+str.substring(5);
 }
 
 function renderItem(it, lineNr) {
     var today   = new Date();
     var dueDate = parseDay(it.due);
     var complDate = parseDate(it.completionDate);
-    var dueString = (it.completed == 0) ? formatDate(dueDate): formatDate(complDate);
+    // due date for open, completion date for completed todos
+    var dueHtml = (it.completed == 0) ? dateHtml(dueDate): dateHtml(complDate);
+    var isOverdue = it.completed==0 && dueDate != null && (today - dueDate) > 0;
     var line = '<tr class="line'+
         ((lineNr%2!=0)?' line_odd':'')+
         ((it.completed==1)?' todo_completed':'')+
         ((it.deleted==1)?' todo_deleted':'')+
             '" id="todo'+it.id+'">';
-    var overdue = (it.completed==0 && dueDate != null && (today - dueDate) > 0) ?
-                ' <span class="exclamation"></span>':'';
-    // shown instead of the start/due columns on narrow screens:
-    // start -> due for open, completion date for completed todos
-    var narrowDateStr = dueString;
-    if (it.completed == 0 && it.start != null) {
-        narrowDateStr = formatDate(parseDay(it.start)) + ((dueString != '') ? ' \u2192 ' + dueString : '');
-    }
-    var narrowDates = (narrowDateStr != '' || overdue != '') ?
-        ' <span class="narrow_dates">'+narrowDateStr+overdue+'</span>' : '';
+    var overdue = isOverdue ? ' <span class="exclamation"></span>':'';
     var tagbasename = 'todo_tags_';
-    line += getTodoTitleHtml(it, lineNr, tagbasename, 'todo', 'td', true, narrowDates);
+    line += getTodoTitleHtml(it, lineNr, tagbasename, 'todo', 'td', true);
     line +=  '<td class="start">'+((it.start == null)?'undef':formatDate(parseDay(it.start)))+'</td>'+
-        '<td class="due">'+ dueString+overdue+'</td>'+
+        '<td class="due'+(isOverdue ? ' overdue' : '')+'">'+ dueHtml+overdue+'</td>'+
         '<td class="effort">'+it.effort+'</td>'+
-        '<td class="actions">'+
-            '<span class="modify"><input type="button" alt="'+
-                $T('EDIT')+'" id="modify'+it.id+
-                '" class="editButton" /></span>'+
-            '<span class="dotoday"><input type="button" alt="'+
-                $T('DOTODAY')+'" id="dotoday'+it.id+
-                '" class="todayButton" /></span>';
+        '<td class="actions">';
+    if (it.recurrenceMode != 0 && it.completed != 0) {
+        line += actionButton('reactivate', 'reactivate'+it.id, 'reactivateButton', $T('REACTIVATE'));
+    }
+    line += actionButton('modify', 'modify'+it.id, 'editButton', $T('EDIT'))+
+        actionButton('dotoday', 'dotoday'+it.id, 'todayButton', $T('DOTODAY'));
     if (it.deleted == 0) {
-        line += '<span class="trash"><input type="button" alt="'+
-               $T('DELETE')+'" id="trash'+it.id+
-               '" class="deleteButton" /></span>';
+        line += actionButton('trash', 'trash'+it.id, 'deleteButton', $T('DELETE'));
     } else {
-        line += '<span class="restore"><input type="button" alt="'+
-               $T('RESTORE')+'" id="restore'+it.id+
-               '" class="undeleteButton" /></span>';
+        line += actionButton('restore', 'restore'+it.id, 'undeleteButton', $T('RESTORE'));
     }
     line += '</td></tr>';
     $('#todoTable tbody').append(line);
@@ -1012,6 +1016,12 @@ function renderItem(it, lineNr) {
     }
     if (it.id != -1) {
         setListener(it.id);
+        // on narrow screens the edit button is hidden, a tap on the todo opens the dialog instead
+        $('#todo'+it.id+' td.todo').on('click', function(e) {
+            if (window.matchMedia(narrowScreenQuery).matches && $(e.target).closest('.completed').length == 0) {
+                modifyItem(it.id);
+            }
+        });
     }
 }
 

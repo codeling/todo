@@ -11,10 +11,13 @@ Run by `.github/workflows/tests.yml`. Locally:
 3. `TODO_URL=http://127.0.0.1:8000 TODO_MYSQL="mysql -h127.0.0.1 -uroot -proot todo" npm test`
    (`TODO_MYSQL` is the client command line used to prepare and check the database).
 
+Static analysis of the PHP code (level and exceptions in `phpstan.neon`): `phpstan analyse`
+([PHPStan](https://phpstan.org/) 2, e.g. `phpstan.phar` of its releases).
+
 `tests/schema.test.js` tests the constraints of the database and the migrations (`scripts/migrate.php`):
 it creates and drops the databases `todo_migration_old` and `todo_migration_fresh`, so the database
-user needs to be allowed to do that. `tests/fixtures/install-v12.sql` etc. are the layouts before
-the migrations; a database migrated from version 12 must have the schema of `sql/install.sql`, so a
+user needs to be allowed to do that. `tests/fixtures/install-v11.sql` etc. are the layouts before
+the migrations; a database migrated from version 11 or 12 must have the schema of `sql/install.sql`, so a
 new migration needs a change of `install.sql` (and its `db.version`) too.
 `tests/db-config.test.js` tests the connection settings.
 `tests/performance.test.js` fills the database with 10,000 entries and checks how many rows a
@@ -28,3 +31,7 @@ an authenticated user.
 
 `sh tests/apache-access.sh` checks the access rules of `.htaccess`
 with a temporary Apache instance (run as root, needs `apache2` and `htpasswd`).
+
+`sh tests/container.sh [image]` tests the container image (`Dockerfile`) with a throwaway MariaDB
+container: HTTPS and authentication, hidden files, database connection, `scripts/migrate.php`. It needs
+docker (or `DOCKER=podman`); run by `.github/workflows/container.yml`.
