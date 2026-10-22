@@ -294,13 +294,14 @@ ul.ui-autocomplete {
     background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="m8 4v2h-4v22h24v-22h-4v-2h-2v2h-12v-2h-2zm-2 4h2v2h2v-2h12v2h2v-2h2v4h-20v-4zm0 6h20v12h-20v-12zm8 1 1 6-3-2-1 2 5 3 5-3-1-2-3 2 1-6h-4z" fill="%23444"/></svg>');
 }
 .refreshButton,
-.reactivateButton {
+.reactivateButton,
+.recurring {
     background-image: url('data:image/svg+xml;utf8,<svg version="1.1" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="m16 4c-6 0-11 5-11 11s3 8 7 10l1-2c-3-2-6-3-6-8s4-9 9-9 9 4 9 9-4 9-7 9l3-5h-2l-4 6 4 5h2l-3-4c4 0 9-5 9-11s-5-11-11-11z" fill="%23444"/></svg>');
 }
 .mergeButton {
     background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="m4 8v3s9 4 9 5-9 5-9 5v3s12-6 14-6c2 0 5 0 5 0l-2 5 7-7-7-7 2 5h-5c-2 0-14-6-14-6z"/></svg>');
 }
-.exclamation, .note {
+.exclamation, .note, .recurring {
     display: inline-block;
     width: 16px;
     height: 16px;
@@ -309,6 +310,9 @@ ul.ui-autocomplete {
 }
 .exclamation {
     background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="m17 19v-7h-2v7zm12 8-13-23-13 23zm-22-2 9-17 9 17zm7-2 1 1 2 0 1-1 0-1-1-1-2-0-1 1z" fill="%23d45"/></svg>');
+}
+.recurring {
+    margin-left: 4px;
 }
 .note {
     margin-left: 10px;
@@ -348,19 +352,53 @@ ul.ui-autocomplete {
 
 /********************/
 /* Responsive design */
-/* due date / overdue marker inside the todo cell, replaces the start/due columns on narrow screens */
-.narrow_dates {
-	display: none;
-	white-space: nowrap;
-	color: #777;
-}
 @media (max-width: 575px)
 {
-	th.start, th.due, td.start, td.due, td.effort {
+	/* one line per todo: number, start date and effort hidden, a long title is cut off */
+	th.start, td.start, td.effort, .todo_lineNr, #enter_due {
 		display: none;
 	}
-	.narrow_dates {
-		display: inline;
+	#todoTable tbody tr {
+		font-size: 14px;
+	}
+	#todoTable tbody td {
+		height: 34px;
+		white-space: nowrap;
+	}
+	td.todo {
+		width: 100%;
+		max-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+	#todoTable tbody td.todo {
+		cursor: pointer;
+	}
+	.note, .recurring {
+		margin-left: 4px;
+	}
+	/* due date small and without the current year; overdue in red instead of the icon */
+	th.due, td.due {
+		width: auto;
+		padding: 0 4px;
+	}
+	td.due {
+		font-size: 11px;
+		color: #777;
+	}
+	td.due.overdue {
+		color: #D45;
+		font-weight: bold;
+	}
+	td.due .exclamation, .date_year {
+		display: none;
+	}
+	/* the edit dialog opens with a tap on the todo; "do today" is useless for completed ones */
+	td.actions .modify, .todo_completed td.actions .dotoday {
+		display: none;
+	}
+	td.actions {
+		text-align: right;
 	}
 	#todoTable {
 		width: 100%;
