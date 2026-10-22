@@ -11,6 +11,9 @@ Run by `.github/workflows/tests.yml`. Locally:
 3. `TODO_URL=http://127.0.0.1:8000 TODO_MYSQL="mysql -h127.0.0.1 -uroot -proot todo" npm test`
    (`TODO_MYSQL` is the client command line used to prepare and check the database).
 
+Static analysis of the PHP code (level and exceptions in `phpstan.neon`): `phpstan analyse`
+([PHPStan](https://phpstan.org/) 2, e.g. `phpstan.phar` of its releases).
+
 `tests/schema.test.js` tests the constraints of the database and the migrations (`scripts/migrate.php`):
 it creates and drops the databases `todo_migration_old` and `todo_migration_fresh`, so the database
 user needs to be allowed to do that. `tests/fixtures/install-v11.sql` etc. are the layouts before
