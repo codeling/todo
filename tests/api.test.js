@@ -255,6 +255,23 @@ test('pages send security headers', async () => {
     assert.equal(data.headers.get('cache-control'), 'private, no-store');
 });
 
+test('the statistics page works without and with entries', async () => {
+    // without entries the averages used to divide by zero (a DivisionByZeroError); the yearly
+    // query used to be refused by MySQL (ONLY_FULL_GROUP_BY)
+    for (const entries of [false, true]) {
+        if (entries) {
+            sql("INSERT INTO todo (creationDate, description, startDate, completed, completionDate, list_id) VALUES " +
+                "(UTC_TIMESTAMP(), 'open', UTC_DATE(), 0, NULL, 0), (UTC_TIMESTAMP(), 'done', UTC_DATE(), 1, UTC_TIMESTAMP(), 0)");
+        }
+        const res = await fetch(BASE + '/statistik.php');
+        assert.equal(res.status, 200);
+        const html = await res.text();
+        assert.doesNotMatch(html, /Database error/);
+        assert.match(html, /<\/html>/);
+        assert.equal(html.includes('not finished'), entries);
+    }
+});
+
 test('a tag cannot be renamed to a name with a comma or a too long name', async () => {
     const sess = await session();
     const tag = await taggedTodos(sess, 'keep', '');

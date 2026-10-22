@@ -6,7 +6,8 @@ A small PHP / MariaDB (MySQL) to-do list with lists, tags, recurring entries and
 
 1. Create a database and load `sql/install.sql`.
 2. Copy `config.sample.php` to `config.php` and adapt it.
-3. Serve the directory with PHP (mysqli) behind **HTTP authentication and HTTPS**, see below.
+3. Serve the directory with PHP (mysqli; the tests run on PHP 8.3 and 8.5) behind
+   **HTTP authentication and HTTPS**, see below.
    Or run the [container](#container).
 
 ## Upgrading and backups
