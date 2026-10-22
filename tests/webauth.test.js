@@ -6,9 +6,10 @@ const net = require('node:net');
 const path = require('node:path');
 const { spawn } = require('node:child_process');
 
-// Tests the basic-auth/ library on its own, as a drop-in in an otherwise empty app,
-// with PHP's built-in server and a router which sets $_SERVER like a web server would.
-const LIB = path.join(__dirname, '..', 'basic-auth', 'basic-auth.php');
+// Tests the guard of the webauth/ library (a git subtree, see README.md; its own tests are in
+// webauth/tests) as a drop-in in an otherwise empty app, with PHP's built-in server and a router
+// which sets $_SERVER like a web server would.
+const LIB = path.join(__dirname, '..', 'webauth');
 
 function freePort() {
     return new Promise((resolve) => {
@@ -23,9 +24,10 @@ let dir;
 let proc;
 let base;
 test.before(async () => {
-    dir = fs.mkdtempSync(path.join(os.tmpdir(), 'basic-auth-'));
-    fs.mkdirSync(path.join(dir, 'basic-auth'));
-    fs.copyFileSync(LIB, path.join(dir, 'basic-auth', 'basic-auth.php'));
+    dir = fs.mkdtempSync(path.join(os.tmpdir(), 'webauth-'));
+    fs.mkdirSync(path.join(dir, 'webauth'));
+    fs.copyFileSync(path.join(LIB, 'webauth.php'), path.join(dir, 'webauth', 'webauth.php'));
+    fs.cpSync(path.join(LIB, 'src'), path.join(dir, 'webauth', 'src'), { recursive: true });
     // simulates the web server: X-Test-User sets REMOTE_USER, X-Test-Https sets HTTPS
     fs.writeFileSync(path.join(dir, 'router.php'),
         "<?php\n" +
@@ -33,12 +35,12 @@ test.before(async () => {
         "if (isset($_SERVER['HTTP_X_TEST_HTTPS'])) { $_SERVER['HTTPS'] = $_SERVER['HTTP_X_TEST_HTTPS']; }\n" +
         "return false;\n");
     fs.writeFileSync(path.join(dir, 'app.php'),
-        "<?php\nrequire_once __DIR__ . '/basic-auth/basic-auth.php';\n" +
-        "$user = basicAuthRequire(isset($_GET['trust']) ? array('trust_forwarded_proto' => true) : array());\n" +
+        "<?php\nrequire_once __DIR__ . '/webauth/webauth.php';\n" +
+        "$user = WebAuth\\ServerAuth::guard(isset($_GET['trust']) ? array('trust_forwarded_proto' => true) : array());\n" +
         "echo 'hello ' . $user;\n");
     fs.writeFileSync(path.join(dir, 'custom.php'),
-        "<?php\nrequire_once __DIR__ . '/basic-auth/basic-auth.php';\n" +
-        "$user = basicAuthRequire(array('require_https' => isset($_GET['https']), 'require_auth' => isset($_GET['auth']),\n" +
+        "<?php\nrequire_once __DIR__ . '/webauth/webauth.php';\n" +
+        "$user = WebAuth\\ServerAuth::guard(array('require_https' => isset($_GET['https']), 'require_auth' => isset($_GET['auth']),\n" +
         "    'messages' => array('https' => 'nur HTTPS', 'auth' => 'nicht angemeldet')));\n" +
         "echo 'hello ' . var_export($user, true);\n");
     const port = await freePort();

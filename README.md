@@ -6,7 +6,7 @@ A small PHP / MariaDB (MySQL) to-do list with lists, tags, recurring entries and
 
 1. Create a database and load `sql/install.sql`.
 2. Copy `config.sample.php` to `config.php` and adapt it.
-3. Serve the directory with PHP (mysqli) behind **HTTP authentication and HTTPS**, see below.
+3. Serve the directory with PHP 8.1+ (mysqli) behind **HTTP authentication and HTTPS**, see below.
 
 ## Upgrading and backups
 
@@ -55,9 +55,8 @@ A database on another host should be reached over TLS: see `$db_ssl` in `config.
 
 The application has **no login of its own**. It relies on the web server's HTTP authentication
 (`REMOTE_USER`) and rejects every request without it, as well as every request not made over
-HTTPS (`$require_https`). This is done by the drop-in library in `basic-auth/`, which can be
-reused in other small apps (see `basic-auth/README.md`). It is the last line of defence only,
-set up the rest properly:
+HTTPS (`$require_https`). This is done by the shared library in `webauth/` (see below and
+`webauth/README.md`). It is the last line of defence only, set up the rest properly:
 
 * **HTTPS only.** Basic authentication sends the password with every request.
   `.htaccess` (Apache) and `nginx.conf.sample` already require it. The `X-Forwarded-Proto`
@@ -89,6 +88,18 @@ set up the rest properly:
   with an administrative account.
 * PHP: `expose_php = Off` and `display_errors = Off` (the application also sets the latter for its
   own pages).
+
+## Shared authentication library
+
+`webauth/` is a copy of [php-webauth](https://github.com/codeling/php-webauth), which is shared
+with [W2](https://github.com/codeling/w2wiki), included as a git subtree. Besides the guard used here,
+it has CSRF tokens, IP allowlists, a password check and throttling of failed logins, for a
+login of the application's own later on. Change the library in its own repository, and update
+the copy with
+
+```sh
+git subtree pull --prefix=webauth https://github.com/codeling/php-webauth.git main --squash
+```
 
 ## Tests
 
