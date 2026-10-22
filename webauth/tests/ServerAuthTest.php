@@ -81,10 +81,15 @@ PHP);
 			$lines[] = "$name: $value";
 		}
 		$context = stream_context_create(['http' => ['header' => $lines, 'ignore_errors' => true, 'timeout' => 10]]);
-		$body = (string)file_get_contents('http://127.0.0.1:' . self::$port . $path, false, $context);
+		// (the headers from the stream: $http_response_header is deprecated as of PHP 8.5)
+		$stream = fopen('http://127.0.0.1:' . self::$port . $path, 'r', false, $context);
+		$this->assertIsResource($stream);
+		$body = (string)stream_get_contents($stream);
+		$rawHeaders = stream_get_meta_data($stream)['wrapper_data'];
+		fclose($stream);
 		$responseHeaders = [];
 		$status = 0;
-		foreach ($http_response_header as $line) {
+		foreach ($rawHeaders as $line) {
 			if (preg_match('#^HTTP/\S+ (\d+)#', $line, $match)) {
 				$status = (int)$match[1];
 			} elseif (str_contains($line, ':')) {
