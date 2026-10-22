@@ -341,6 +341,9 @@ function toggleCompleted(id) {
         alert($T('ENTRY_NOT_FOUND'));
         return;
     }
+    if (itemList[index].deleted == 1) {
+        return;
+    }
     var stuff = new Object();
     stuff.id = id;
     stuff.completed = itemList[index].completed == 0 ? 1 : 0;
@@ -763,6 +766,7 @@ function addItem(stuff) {
                 log($T('CREATING_SUCCESSFUL'));
                 $('#enter_todo').val('');
                 $('#enter_due').val('');
+                updateEnterDueLabel();
                 $('#enter_start').val('');
                 $('#enter_start').data('oldVal', '');
                 $('#enter_effort').val('1');
@@ -943,8 +947,9 @@ function getTodoTitleHtml(it, lineNr, tagbasename, spanCssClass, baseElem, check
             '">';
     if (checkbox)
     {
+        // deleted todos cannot be completed or reopened
         line += '<span class="completed"><input type="checkbox" id="completed'+it.id+'" '+
-            ((it.completed==1)?'checked="true" ':'')+'/></span>';
+            ((it.completed==1)?'checked="true" ':'')+((it.deleted==1)?'disabled ':'')+'/></span>';
 	}
     line += '<span class="todo_lineNr">'+(lineNr+1)+'.</span> '+
             '<span>'+textToHtml(it.todo)+'</span>'+
@@ -971,6 +976,12 @@ function dateHtml(date) {
         return str;
     }
     return '<span class="date_year">'+str.substring(0, 5)+'</span>'+str.substring(5);
+}
+
+// narrow screens show the due date of a new todo as text (or a calendar icon if
+// there is none) over the invisible date input
+function updateEnterDueLabel() {
+    $('#enter_due_label').html(dateHtml(parseDay($('#enter_due').val())));
 }
 
 function renderItem(it, lineNr) {
