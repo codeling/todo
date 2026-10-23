@@ -1,7 +1,8 @@
 <?php
+// first: it hides PHP errors (also of loading config.php) and authenticates
+require_once(__DIR__."/../todo-core.php");
 // same location as in lang.php (see there)
 require_once(getenv('TODO_CONFIG') ? getenv('TODO_CONFIG') : __DIR__."/../config.php");
-require_once(__DIR__."/../todo-core.php");
 
 // log details server-side only, don't leak them to the client:
 function failRequest($detail) {
