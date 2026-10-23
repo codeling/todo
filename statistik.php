@@ -8,11 +8,20 @@
     {
 //        $start = microtime(true);
         global $db, $curUserID;
-        // only todos in lists of the current user:
-        $ownTodo = "t.list_id IN (SELECT id FROM list WHERE user_id=".(int)$curUserID.")";
         if ($groupName == null) {
             $groupName = $periodName;
         }
+        // column names, units and functions cannot be parameters of a prepared statement,
+        // they become part of the SQL: only these
+        if (!in_array($checkedDate, array('completionDate', 'creationDate'), true) ||
+            !in_array($periodName, array('DAY', 'WEEK', 'MONTH', 'YEAR'), true) ||
+            !in_array($groupName, array('DATE', 'WEEK', 'MONTH', 'YEAR'), true)) {
+            throw new InvalidArgumentException("invalid statistic: $periodName, $groupName, $checkedDate");
+        }
+        $valCount = (int)$valCount;
+        $userID = (int)$curUserID;
+        // only todos in lists of the current user (one parameter, the user ID):
+        $ownTodo = "t.list_id IN (SELECT id FROM list WHERE user_id=?)";
         $ChartWidth = 800;
         if ($groupName === 'YEAR')
         {
@@ -22,6 +31,7 @@
                 "FROM (SELECT YEAR(t.".$checkedDate.") AS y, COUNT(t.id) AS cnt FROM `todo` t ".
                     "WHERE deleted = 0 AND $ownTodo GROUP BY y) years ".
                 "ORDER BY y";
+            $params = array($userID);
         }
         else if ($groupName === 'MONTH')
         {
@@ -42,6 +52,7 @@
                 "ON t.y = YEAR(a.Date) AND t.m = MONTH(a.Date) ".
                 "GROUP BY YEAR(a.Date), MONTH(a.Date) ".
                 "ORDER BY YEAR(a.Date), MONTH(a.Date)";
+            $params = array($userID);
         }
         else
         {
@@ -65,14 +76,15 @@
                 // the entries are counted per day first (a range scan of the index of the date column,
                 // one day more than needed at the start because of time zones), then joined with the days:
                 " LEFT JOIN (SELECT DATE($checkedDate) AS d, COUNT(*) AS cnt FROM `todo` t ".
-                    "WHERE $checkedDate >= (UTC_TIMESTAMP() - INTERVAL $valCount $periodName - INTERVAL 1 DAY) ".
+                    "WHERE $checkedDate >= (UTC_TIMESTAMP() - INTERVAL ? $periodName - INTERVAL 1 DAY) ".
                     "AND t.deleted=0 AND $ownTodo GROUP BY d) t ON a.Date = t.d ".
-                "WHERE a.Date BETWEEN (UTC_TIMESTAMP() - INTERVAL $valCount $periodName) ".
+                "WHERE a.Date BETWEEN (UTC_TIMESTAMP() - INTERVAL ? $periodName) ".
                     "AND (UTC_TIMESTAMP() + INTERVAL 1 DAY) ".
                 "GROUP BY YEAR(a.Date), $groupNameExpr ".
                 "ORDER BY YEAR(a.Date), $groupNameExpr";
+            $params = array($valCount, $userID, $valCount);
         }
-        $qResult = dbQueryOrDie($db, $sql);
+        $qResult = dbExec($db, $sql, $params)->get_result();
 //        $end = microtime(true);
 //        echo("Query $sql took ".($end-$start)." seconds<br/>");
         $item = array();
@@ -113,7 +125,7 @@
                 'height:'.max($height, 12).'px;" >'.$stuff[2].'</div></td>';
             $value_row .= '<td class="stat_row_value">'.
                 '<div class="statvalue" '.
-                'style="width: '.$width.'px;">'.$stuff[1].'</div></td>';
+                'style="width: '.$width.'px;">'.htmlspecialchars((string)$stuff[1]).'</div></td>';
         }
         $bar_row .= '<td class="stat_row_characteristics" rowspan="2">'
                  .TodoLang::_("MAXIMUM").': '.$maxVal.'<br/>'

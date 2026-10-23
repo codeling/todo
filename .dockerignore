@@ -10,3 +10,7 @@ package-lock.json
 Dockerfile
 compose.yaml
 php-server.log
+# passwords and database dumps must not end up in the image (and so in the web root);
+# everything in .gitignore is listed here too (checked by tests/ignore-files.test.js)
+secrets
+todo-*.sql
