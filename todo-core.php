@@ -6,7 +6,7 @@ class TodoConstants {
 }
 require_once(__DIR__."/lang.php");
 require_once(__DIR__."/session.php");
-require_once(__DIR__."/basic-auth/basic-auth.php");
+require_once(__DIR__."/webauth/webauth.php");
 // URL of a local static file, with its modification time appended, so that
 // browsers load the new version after an update instead of a cached one
 function assetUrl($file) {
@@ -30,7 +30,7 @@ header("Referrer-Policy: same-origin");
 // The application has no login of its own, it relies on HTTP authentication of the web
 // server over HTTPS. Refuse to run if the request did not meet that, so that a missing
 // or ignored .htaccess / nginx setting does not leave all data open.
-basicAuthRequire(array(
+WebAuth\ServerAuth::guard(array(
     'require_https' => !(isset($require_https) && $require_https === false),
     'require_auth' => !(isset($require_http_auth) && $require_http_auth === false),
     'trust_forwarded_proto' => todoTrustsForwardedProto(),

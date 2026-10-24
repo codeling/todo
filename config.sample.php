@@ -57,7 +57,7 @@ $language    = "en-US";
 # folder will be used to translate all strings
 
 ########################################
-# HTTPS and authentication checks (see basic-auth/README.md):
+# HTTPS and authentication checks (see webauth/README.md):
 # requests which did not arrive over HTTPS are rejected.
 # only set this to false for local development or tests,
 # never on a public server:

@@ -1,18 +1,14 @@
 <?php
 // session is only used to hold the CSRF token
-require_once(__DIR__."/basic-auth/basic-auth.php");
+require_once(__DIR__."/webauth/webauth.php");
 
-// whether the request came in over HTTPS; X-Forwarded-Proto is set by the client
+// whether the HTTPS checks believe X-Forwarded-Proto: it is set by the client
 // unless a proxy overwrites it, so it is only believed if $trust_forwarded_proto
 // is set in config.php (only do that if the web server can only be reached through
 // the proxy which terminates TLS)
 function todoTrustsForwardedProto() {
     global $trust_forwarded_proto;
     return isset($trust_forwarded_proto) && $trust_forwarded_proto === true;
-}
-
-function todoIsHttps() {
-    return basicAuthIsHttps(todoTrustsForwardedProto());
 }
 
 function todoStartSession($readOnly) {
@@ -28,12 +24,7 @@ function todoStartSession($readOnly) {
     ini_set('session.use_strict_mode', '1');
     // keep the Cache-Control header of todo-core.php, PHP would replace it when the session starts
     session_cache_limiter('');
-    session_set_cookie_params(array(
-        'lifetime' => 0,
-        'secure' => todoIsHttps(),
-        'httponly' => true,
-        'samesite' => 'Strict'
-    ));
+    session_set_cookie_params(WebAuth\Session::cookieParams($_SERVER, 0, 'Strict', todoTrustsForwardedProto()));
     session_start($readOnly ? array('read_and_close' => true) : array());
 }
 
@@ -41,7 +32,7 @@ function todoStartSession($readOnly) {
 function csrfToken() {
     todoStartSession(false);
     if (empty($_SESSION['csrf'])) {
-        $_SESSION['csrf'] = bin2hex(random_bytes(32));
+        $_SESSION['csrf'] = WebAuth\Csrf::newToken();
     }
     $token = $_SESSION['csrf'];
     session_write_close();
@@ -59,8 +50,7 @@ function requirePostWithCsrf() {
     }
     todoStartSession(true);
     $token = isset($_SERVER['HTTP_X_CSRF_TOKEN']) ? $_SERVER['HTTP_X_CSRF_TOKEN'] : '';
-    if (empty($_SESSION['csrf']) || !is_string($token) ||
-        !hash_equals($_SESSION['csrf'], $token)) {
+    if (!WebAuth\Csrf::isValid(isset($_SESSION['csrf']) ? $_SESSION['csrf'] : null, $token)) {
         http_response_code(403);
         require_once(__DIR__."/lang.php");
         echo TodoLang::_("INVALID_CSRF_TOKEN");
