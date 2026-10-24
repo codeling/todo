@@ -27,7 +27,8 @@ shows as a number close to the size of the table. It needs the database to be us
 `tests/ignore-files.test.js` checks that everything in `.gitignore` is also in `.dockerignore`, so that
 passwords and database dumps are not copied into the container image (no server or database needed).
 
-`tests/basic-auth.test.js` tests the `basic-auth/` library on its own, `tests/auth.test.js` the
+`tests/webauth.test.js` tests the guard of the `webauth/` library on its own (the library's
+own PHPUnit tests are in `webauth/tests`, run in its repository), `tests/auth.test.js` the
 check in the application. Both start its own PHP servers (no database needed) to test the check for
 an authenticated user.
 

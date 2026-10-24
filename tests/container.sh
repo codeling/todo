@@ -64,7 +64,7 @@ check "static file" 200 -H "$TLS" -u "$AUTH" "$URL/vendor/jquery/jquery.min.js"
 for hidden in scripts/migrate.php tests/lib.js docker/entrypoint.sh; do
     check "$hidden is not served" 404 -H "$TLS" -u "$AUTH" "$URL/$hidden"
 done
-for denied in sql/install.sql config.php config.sample.php package.json queries/db.php session.php .htaccess README.md; do
+for denied in sql/install.sql config.php config.sample.php package.json queries/db.php session.php .htaccess README.md webauth/webauth.php webauth/src/ServerAuth.php; do
     check "$denied is not served" 403 -H "$TLS" -u "$AUTH" "$URL/$denied"
 done
 check "X-Forwarded-Proto is not believed without TODO_TRUST_FORWARDED_PROTO" 403 \

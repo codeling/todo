@@ -2,6 +2,8 @@
 .github
 node_modules
 tests
+webauth/tests
+webauth/.github
 config.php
 package.json
 package-lock.json

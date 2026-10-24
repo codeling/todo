@@ -6,6 +6,8 @@ parameters:
     excludePaths:
         - node_modules (?)
         - vendor
+        # PHPUnit tests of the library, run in its own repository (see README.md)
+        - webauth/tests
         - config.php (?)
     # the pages and queries share variables (like $db) through require(), which PHPStan does not follow
     checkMaybeUndefinedVariables: false
