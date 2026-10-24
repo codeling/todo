@@ -3,6 +3,11 @@ on:
   push:
     branches: [main]
   pull_request:
+  # weekly, and by hand: merges by dependabot-auto-merge.yml do not start this workflow
+  # (GitHub starts none for pushes made with the workflow token), this publishes them
+  schedule:
+    - cron: '17 4 * * 3'
+  workflow_dispatch:
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -14,7 +19,7 @@ jobs:
 
   # the image of the current main branch: ghcr.io/<owner>/todo:latest
   publish:
-    if: github.event_name == 'push'
+    if: github.event_name != 'pull_request'
     needs: test
     runs-on: ubuntu-latest
     permissions:

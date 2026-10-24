@@ -1,0 +1,23 @@
+# Merges Dependabot's patch updates of the actions and images (see dependabot.yml) by itself,
+# once all required checks have passed. Needs two repository settings (see README.md):
+# "Allow auto-merge", and required status checks for main (otherwise GitHub merges at once).
+# npm updates are left to a person: vendor/ has to be regenerated for them.
+name: dependabot-auto-merge
+on: pull_request
+permissions:
+  contents: read
+jobs:
+  auto-merge:
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - id: meta
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+      - if: steps.meta.outputs.update-type == 'version-update:semver-patch' && steps.meta.outputs.package-ecosystem != 'npm'
+        run: gh pr merge --auto --merge "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
