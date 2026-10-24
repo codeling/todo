@@ -21,3 +21,9 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    ignore:
+      # stays on the long-term release 10.11 (community support until 16 Feb 2028), only its
+      # patch releases: a new major or minor version upgrades the data files in the volume, which
+      # cannot be undone. Upgrade to the next long-term release by hand (backup first, README.md)
+      - dependency-name: "mariadb"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]

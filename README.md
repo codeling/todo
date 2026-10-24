@@ -100,7 +100,7 @@ HTTPS (`$require_https`). This is done by the shared library in `webauth/` (see 
 The image runs the application with Apache and PHP as an unprivileged user (port 8080), so it
 works with Docker and with rootless Docker / Podman (`podman` can be used instead of `docker`
 everywhere below). The CI workflow `container.yml` builds it for `amd64` and `arm64` on every change of
-the `main` branch and publishes it as `ghcr.io/codeling/todo:latest` (and `:sha-<commit>`); build it
+the `main` branch (and once a week) and publishes it as `ghcr.io/codeling/todo:latest` (and `:sha-<commit>`); build it
 yourself with `docker build -t todo .`.
 
 The application only works over HTTPS and with HTTP authentication (see *Security*), so the container
@@ -218,3 +218,18 @@ git subtree pull --prefix=webauth https://github.com/codeling/php-webauth.git ma
 
 See `tests/README.md`. The workflows in `.github/workflows` run them (and test the container image), check that `vendor/` matches
 `package-lock.json` and run `npm audit`.
+
+## Dependency updates
+
+The actions and the container images are pinned to exact versions (commit SHA, image digest);
+Dependabot (`.github/dependabot.yml`) opens pull requests for new versions. `dependabot-auto-merge.yml`
+merges the patch updates of the actions and images once the checks have passed, and the weekly
+build of `container.yml` publishes them. For that, enable in the repository settings:
+
+* *General → Pull Requests → Allow auto-merge*
+* in the ruleset for `main` (*Rules → Rulesets*): *Require status checks to pass*, with the checks
+  of `tests.yml`, `vendor.yml` and `container.yml` (`test`). Without required checks, GitHub would
+  merge the pull requests at once, before the tests have run.
+
+Minor and major updates, npm updates (`vendor/` has to be regenerated, see `dependabot.yml`) and
+updates of only the image digest (rebuilds of the same version) are left to be merged by hand.
