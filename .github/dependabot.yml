@@ -5,8 +5,19 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-  # the actions used by the workflows
+  # the actions used by the workflows (pinned by commit SHA, the comment names the version)
   - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+  # the base image of the Dockerfile (pinned by digest: updates come as pull requests)
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+  # the database image of compose.yaml (tests.yml and tests/container.sh use the same one:
+  # update them along with it)
+  - package-ecosystem: "docker-compose"
     directory: "/"
     schedule:
       interval: "weekly"
