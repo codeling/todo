@@ -227,9 +227,19 @@ merges the patch updates of the actions and images once the checks have passed, 
 build of `container.yml` publishes them. For that, enable in the repository settings:
 
 * *General → Pull Requests → Allow auto-merge*
-* in the ruleset for `main` (*Rules → Rulesets*): *Require status checks to pass*, with the checks
-  of `tests.yml`, `vendor.yml` and `container.yml` (`test`). Without required checks, GitHub would
-  merge the pull requests at once, before the tests have run.
+* in the ruleset for `main` (*Rules → Rulesets*): *Require status checks to pass*, source
+  *GitHub Actions*. Without required checks, GitHub would merge the pull requests at once, before
+  the tests have run. The checks are the job names, each version of a matrix job on its own:
+  * `tests.yml`: `php-lint (PHP 8.3)`, `php-lint (PHP 8.5)`, `phpstan`, `apache-access`,
+    `integration (PHP 8.3, MariaDB 10.11)`, `integration (PHP 8.5, MariaDB 10.11)`,
+    `integration (PHP 8.3, MySQL 8.0)`, `integration (PHP 8.5, MySQL 8.0)`
+  * `vendor.yml`: `vendor-up-to-date`
+  * `container.yml`: `test` (not `publish`, which does not run for pull requests)
+
+  When the PHP or database versions of `tests.yml` change, the names change too: update the
+  ruleset along with them, or no pull request can be merged (a required check which never
+  runs stays "expected"). GitHub also suggests names of earlier runs (e.g. `php-lint` without
+  a version), which do not run any more.
 
 Minor and major updates, npm updates (`vendor/` has to be regenerated, see `dependabot.yml`) and
 updates of only the image digest (rebuilds of the same version) are left to be merged by hand.
