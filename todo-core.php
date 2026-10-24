@@ -4,6 +4,10 @@ class TodoConstants {
     const AppTitle = "To Do";
     const DefaultUserID = 0;
 }
+// PHP warnings and errors (which contain file paths) go to the log, not into the response;
+// set before anything else is loaded, so that also a missing config.php or language file does not show them
+ini_set('display_errors', '0');
+header_remove('X-Powered-By');
 require_once(__DIR__."/lang.php");
 require_once(__DIR__."/session.php");
 require_once(__DIR__."/webauth/webauth.php");
@@ -15,9 +19,6 @@ function assetUrl($file) {
 // TODO: get that from the current user account
 $curUserID = TodoConstants::DefaultUserID;
 
-// PHP warnings and notices (which contain file paths) go to the log, not into the response
-ini_set('display_errors', '0');
-header_remove('X-Powered-By');
 // pages and data of the application (and the CSRF token) must not be kept by browsers or proxies
 header("Cache-Control: private, no-store");
 // inline styles are still used (statistics bars, jQuery UI), inline scripts are not

@@ -11,6 +11,8 @@ trap 'apache2 -f "$WORK/httpd.conf" -k stop >/dev/null 2>&1 || true; rm -rf "$WO
 mkdir -p "$WORK/www"
 cp -r "$REPO" "$WORK/www/todo"
 touch "$WORK/www/todo/config.php"
+# created in the checkout for compose.yaml (README.md), ignored by git
+mkdir -p "$WORK/www/todo/secrets" && echo secret > "$WORK/www/todo/secrets/todo_password"
 htpasswd -bc "$WORK/htpasswd" alice secret 2>/dev/null
 sed -i "s#/path/outside/webroot/.htpasswd#$WORK/htpasswd#" "$WORK/www/todo/.htaccess"
 chmod -R a+rX "$WORK"
@@ -71,7 +73,7 @@ for denied in sql/install.sql lang/en-US.ini config.php config.sample.php packag
         .htaccess nginx.conf.sample README.md phpstan.neon; do
     check "$denied" 403 403
 done
-for hidden in scripts/migrate.php .git/HEAD node_modules/jquery/dist/jquery.js tests/lib.js; do
+for hidden in scripts/migrate.php secrets/todo_password secrets .git/HEAD node_modules/jquery/dist/jquery.js tests/lib.js; do
     check "$hidden" 401 404
 done
 # plain HTTP: no password prompt (403, not 401), with or without credentials, and
