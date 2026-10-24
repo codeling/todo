@@ -2,6 +2,8 @@ name: tests
 on: [push, pull_request]
 permissions:
   contents: read
+# the job names (with the matrix versions) are required checks in the ruleset of main:
+# when they change, update the ruleset too (see "Dependency updates" in README.md)
 jobs:
   php-lint:
     name: php-lint (PHP ${{ matrix.php }})
