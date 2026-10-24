@@ -27,7 +27,7 @@ services:
     security_opt: ["no-new-privileges:true"]
 
   db:
-    image: mariadb:10.11
+    image: mariadb:10.11.19@sha256:0d0945c57f75b3a3b9ebe71aedaaad005fa5305054e8fca3d2e42a8c92b43b5e
     environment:
       MARIADB_DATABASE: todo
       MARIADB_USER: todo

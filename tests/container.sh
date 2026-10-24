@@ -21,7 +21,7 @@ fi
 $DOCKER network create $ID >/dev/null
 $DOCKER run -d --name $ID-db --network $ID \
     -e MARIADB_DATABASE=todo -e MARIADB_USER=todo -e MARIADB_PASSWORD=db-secret -e MARIADB_RANDOM_ROOT_PASSWORD=1 \
-    -v "$REPO/sql/install.sql:/docker-entrypoint-initdb.d/install.sql:ro" mariadb:10.11 >/dev/null
+    -v "$REPO/sql/install.sql:/docker-entrypoint-initdb.d/install.sql:ro" mariadb:10.11.19@sha256:0d0945c57f75b3a3b9ebe71aedaaad005fa5305054e8fca3d2e42a8c92b43b5e >/dev/null
 # the init script runs on a temporary server first, so wait for the real one
 for i in $(seq 1 60); do
     $DOCKER exec $ID-db healthcheck.sh --connect --innodb_initialized >/dev/null 2>&1 &&

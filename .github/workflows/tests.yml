@@ -11,8 +11,8 @@ jobs:
       matrix:
         php: ['8.3', '8.5']
     steps:
-      - uses: actions/checkout@v7
-      - uses: shivammathur/setup-php@v2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
           php-version: ${{ matrix.php }}
           coverage: none
@@ -25,8 +25,8 @@ jobs:
   phpstan:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: shivammathur/setup-php@v2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
           php-version: '8.3'
           extensions: mysqli
@@ -43,10 +43,10 @@ jobs:
         php: ['8.3', '8.5']
         db:
           - name: MariaDB 10.11
-            image: mariadb:10.11
+            image: mariadb:10.11.19@sha256:0d0945c57f75b3a3b9ebe71aedaaad005fa5305054e8fca3d2e42a8c92b43b5e
             health: healthcheck.sh --connect --innodb_initialized
           - name: MySQL 8.0
-            image: mysql:8.0
+            image: mysql:8.0.46@sha256:7dcddc01f13bab2f15cde676d44d01f61fc9f99fe7785e86196dfc07d358ae2b
             health: mysqladmin ping -h127.0.0.1 -uroot -proot --silent
     services:
       database:
@@ -66,8 +66,8 @@ jobs:
       TODO_URL: http://127.0.0.1:8000
       TODO_MYSQL: mysql -h127.0.0.1 -uroot -proot todo
     steps:
-      - uses: actions/checkout@v7
-      - uses: shivammathur/setup-php@v2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
           php-version: ${{ matrix.php }}
           extensions: mysqli
@@ -75,7 +75,7 @@ jobs:
           coverage: none
           # deprecations and warnings go to php-server.log (shown below), and fail the run
           ini-values: error_reporting=-1, log_errors=On
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
       - name: Set up database and configuration
@@ -99,6 +99,6 @@ jobs:
   apache-access:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: sudo apt-get update && sudo apt-get install -y apache2 apache2-utils
       - run: sudo sh tests/apache-access.sh
