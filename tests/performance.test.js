@@ -9,8 +9,8 @@ const { sql, sqlRows, resetDb, session, post, get, BASE } = require('./lib');
 
 const TODOS = 10000;
 const TAGS = 5000;
-// empty measurements of the overhead of reading the counters (see assertRowsRead)
-const OVERHEAD_SAMPLES = 5;
+// pairs of readings to measure the overhead of reading the counters (see assertRowsRead)
+const OVERHEAD_SAMPLES = 3;
 
 // 10,000 entries: the default user (0) has 2,000 of them in 4 lists, another user 8,000 in 20 lists;
 // 75 % are completed, 2 % are in the trash, 1 / 37 of the completed ones recur (every 5 years,
@@ -44,9 +44,13 @@ function seed() {
     assert.equal(sql('SELECT COUNT(*) FROM todo').trim(), String(TODOS));
 }
 
+// number of readings of the counters so far: each one adds its own overhead to the next one
+let readings = 0;
+
 // the counters of a connection are added to the global ones when it is closed, so wait until
 // the connection of the application is gone (only the one of this query is left)
 function rowsRead() {
+    readings++;
     for (let i = 0; i < 100; i++) {
         if (sqlRows("SHOW GLOBAL STATUS LIKE 'Threads_connected'")[0][1] === '1') {
             break;
@@ -58,19 +62,35 @@ function rowsRead() {
         .reduce((sum, [, value]) => sum + Number(value), 0);
 }
 
+// a reading which no counters of earlier connections come in after: MySQL can add them a moment
+// after Threads_connected went down (on a slow CI runner the 500 rows of a query of the previous
+// test were once counted for the next request), so read until two readings in a row differ by
+// the overhead alone
+function settledRowsRead(overhead) {
+    let last = rowsRead();
+    for (let i = 0; i < 20; i++) {
+        const next = rowsRead();
+        if (next - last === overhead) {
+            return next;
+        }
+        last = next;
+    }
+    return last;
+}
+
 // runs the request and checks how many rows were read meanwhile
 async function assertRowsRead(t, name, limit, request) {
-    // reading the counters reads rows itself (about 850 with MySQL 8, none with MariaDB), and not
-    // always the same number: the largest of a few empty measurements is subtracted, as a single
-    // one can be some hundred rows too low (and an index lookup then looks like a scan)
-    let overhead = 0;
+    // reading the counters reads rows itself (about 1000 with MySQL 8, none with MariaDB): the
+    // smallest difference of a few pairs of readings, as late counters only make it larger
+    let overhead = Infinity;
     for (let i = 0; i < OVERHEAD_SAMPLES; i++) {
         const idle = rowsRead();
-        overhead = Math.max(overhead, rowsRead() - idle);
+        overhead = Math.min(overhead, rowsRead() - idle);
     }
-    const before = rowsRead();
+    const before = settledRowsRead(overhead);
+    const readingsBefore = readings;
     const res = await request();
-    const read = rowsRead() - before - overhead;
+    const read = settledRowsRead(overhead) - before - overhead * (readings - readingsBefore);
     t.diagnostic(`${name}: ${read} rows read (limit ${limit})`);
     assert.ok(read <= limit, `${name} read ${read} rows, at most ${limit} expected (table size ${TODOS})`);
     return res;
