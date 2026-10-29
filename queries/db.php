@@ -1,8 +1,7 @@
 <?php
 // first: it hides PHP errors (also of loading config.php) and authenticates
 require_once(__DIR__."/../todo-core.php");
-// same location as in lang.php (see there)
-require_once(getenv('TODO_CONFIG') ? getenv('TODO_CONFIG') : __DIR__."/../config.php");
+// (the connection settings $db_host etc. are defined by config.php, which lang.php loads)
 
 // log details server-side only, don't leak them to the client:
 function failRequest($detail) {
@@ -53,7 +52,7 @@ function dbExec($db, $sql, $params = array()) {
 }
 
 // only for static SQL without any parameters:
-function dbQueryOrDie($db, $sql) {
+function dbQuery($db, $sql) {
     return $db->query($sql);
 }
 
@@ -63,6 +62,7 @@ function sendJson($json) {
     echo $json;
 }
 
+// the rows of a query as JSON
 function jsonQueryResults($db, $sql, $params = array())
 {
     $qResult = dbExec($db, $sql, $params)->get_result();
@@ -74,14 +74,31 @@ function jsonQueryResults($db, $sql, $params = array())
     return json_encode($allResults);
 }
 
+// stop with the (translated) message of a language key; for requests which are refused
+// (the database error has its own function above)
+function rejectRequest($langKey) {
+    echo TodoLang::_($langKey);
+    exit;
+}
+
+// stop with an error message unless exactly one row was changed (the result of a statement
+// which is meant to change one row); the messages are language keys
+function requireSingleRow($affectedRows, $noneKey, $manyKey) {
+    if ($affectedRows < 1) {
+        rejectRequest($noneKey);
+    }
+    if ($affectedRows > 1) {
+        rejectRequest($manyKey);
+    }
+}
+
 // stop with an error message unless the given list belongs to the current user
 function requireOwnList($db, $list_id) {
     global $curUserID;
     $qResult = dbExec($db, "SELECT 1 FROM list WHERE id=? AND user_id=?",
         array((int)$list_id, (int)$curUserID))->get_result();
     if ($qResult->num_rows < 1) {
-        echo TodoLang::_("ACCESS_DENIED");
-        exit;
+        rejectRequest("ACCESS_DENIED");
     }
 }
 
@@ -91,8 +108,7 @@ function requireOwnTodo($db, $todo_id) {
     $qResult = dbExec($db, "SELECT 1 FROM todo t JOIN list l ON t.list_id=l.id ".
         "WHERE t.id=? AND l.user_id=?", array((int)$todo_id, (int)$curUserID))->get_result();
     if ($qResult->num_rows < 1) {
-        echo TodoLang::_("ACCESS_DENIED");
-        exit;
+        rejectRequest("ACCESS_DENIED");
     }
 }
 
@@ -106,7 +122,6 @@ function requireOwnTag($db, $tag_id) {
         array((int)$curUserID, (int)$curUserID, (int)$tag_id))->get_result();
     $row = $qResult->fetch_object();
     if ((int)$row->own < 1 || (int)$row->others > 0) {
-        echo TodoLang::_("ACCESS_DENIED");
-        exit;
+        rejectRequest("ACCESS_DENIED");
     }
 }

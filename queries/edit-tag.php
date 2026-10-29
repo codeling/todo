@@ -1,15 +1,11 @@
 <?php
-    // authenticates first, a CSRF check is no replacement for that
-    require(__DIR__."/../todo-core.php");
-    requirePostWithCsrf();
-    require("db.php");
+    require(__DIR__."/endpoint.php");
     require("tags.php");
     $id   = (int)postParam('id');
     $name = encodeInput(trim(postParam('tag_name')));
     // no comma: tags are passed around as comma separated lists (see tags.php)
     if (!isValidTagName($name)) {
-        echo TodoLang::_("INVALID_TAG_NAME");
-        die;
+        rejectRequest("INVALID_TAG_NAME");
     }
     requireOwnTag($db, $id);
     // names are unique (case-insensitive); the unique key also catches a concurrent rename
@@ -19,14 +15,7 @@
         if ($e->getCode() != 1062) {
             throw $e;
         }
-        echo TodoLang::_("TAG_EXISTS");
-        die;
+        rejectRequest("TAG_EXISTS");
     }
-    if ($affectedRows < 1) {
-        echo TodoLang::_("NO_ROWS_AFFECTED");
-    } else if ($affectedRows > 1) {
-        echo TodoLang::_("MORE_THAN_ONE_TAG_AFFECTED");
-    } else {
-        echo $affectedRows;
-    }
-    $db->close();
+    requireSingleRow($affectedRows, "NO_ROWS_AFFECTED", "MORE_THAN_ONE_TAG_AFFECTED");
+    echo 1;

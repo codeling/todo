@@ -1,9 +1,6 @@
 <?php
-    // authenticates first, a CSRF check is no replacement for that
-    require(__DIR__."/../todo-core.php");
-    requirePostWithCsrf();
-    require("db.php");
-    require("date.php");
+    require(__DIR__."/endpoint.php");
+    require("todo-input.php");
     require("tags.php");
     require("recurrence.php");
     $id       = (int)postParam('id');
@@ -20,52 +17,25 @@
     $list_id  = (int)postParam('list_id');
     requireOwnTodo($db, $id);
     requireOwnList($db, $list_id);
-    // limits of the database columns, counted after HTML-encoding (what is stored):
-    if (charLength($todo) > MAX_TODO_LENGTH) {
-        echo TodoLang::_("TODO_TOO_LONG");
-        die;
+    $inputError = todoInputError($todo, $start, $due, $tags);
+    if ($inputError !== null) {
+        rejectRequest($inputError);
     }
-    if (strcmp($todo, '') == 0) {
-        echo TodoLang::_("TODO_MAY_NOT_BE_EMPTY");
-        die;
-    }
+    // limit of the database column, counted after HTML-encoding (what is stored):
     if (charLength($notes) > MAX_NOTES_LENGTH) {
-        echo TodoLang::_("NOTES_TOO_LONG");
-        die;
-    }
-    if ($tags === null) {
-        echo TodoLang::_("INVALID_TAGS");
-        die;
-    }
-    // empty dates are allowed:
-    if ($due != '' && !checkDateStr($due)) {
-        echo TodoLang::_("INVALID_DUE_DATE");
-        die;
-    }
-    if ($start != '' && !checkDateStr($start)) {
-        echo TodoLang::_("INVALID_START_DATE");
-        die;
-    }
-    if ($due != '' && $start != '' && convertStrToDate($due) < convertStrToDate($start))
-    {
-        echo TodoLang::_("DUE_BEFORE_START");
-        die;
+        rejectRequest("NOTES_TOO_LONG");
     }
     if ($effort < 0 || $effort > 9999) {
-        echo TodoLang::_("INVALID_EFFORT");
-        die;
+        rejectRequest("INVALID_EFFORT");
     }
     if (!isset(RECURRENCE_UNITS[$recurrenceMode]) && $recurrenceMode != 0) {
-        echo TodoLang::_("INVALID_RECURRENCE_MODE");
-        die;
+        rejectRequest("INVALID_RECURRENCE_MODE");
     }
     if ($recurrenceInterval < 1 || $recurrenceInterval > MAX_RECURRENCE_INTERVAL) {
-        echo TodoLang::_("INVALID_RECURRENCE_INTERVAL");
-        die;
+        rejectRequest("INVALID_RECURRENCE_INTERVAL");
     }
     if ($recurrenceAnchor != 0 && $recurrenceAnchor != 1) {
-        echo TodoLang::_("INVALID_RECURRENCE_ANCHOR");
-        die;
+        rejectRequest("INVALID_RECURRENCE_ANCHOR");
     }
     $sql = "UPDATE todo ".
             "SET description=?, ".
@@ -87,13 +57,6 @@
         $version+1, $recurrenceMode, $recurrenceInterval, $recurrenceAnchor, $list_id,
         $id, $version));
 
-    $affectedRows = $stmt->affected_rows;
-    if ($affectedRows < 1) {
-        echo TodoLang::_("VERSION_CONFLICT");
-    } else if ($affectedRows > 1) {
-        echo TodoLang::_("MORE_THAN_ONE_ENTRY_CHANGED");
-    } else {
-        updateTags($db, $id, $tags);
-        echo $affectedRows;
-    }
-    $db->close();
+    requireSingleRow($stmt->affected_rows, "VERSION_CONFLICT", "MORE_THAN_ONE_ENTRY_CHANGED");
+    updateTags($db, $id, $tags);
+    echo 1;

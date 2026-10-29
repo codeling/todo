@@ -2,8 +2,8 @@
 require_once(__DIR__."/recurrence.php");
 // copies all entries in the temporary table "reviving" as new, not completed entries;
 // all values are copied inside the database, so they never become part of an SQL string
-$creationDate = dbQueryOrDie($db, "SELECT UTC_TIMESTAMP()")->fetch_array()[0];
-$qResult = dbQueryOrDie($db, "SELECT id FROM reviving");
+$creationDate = dbQuery($db, "SELECT UTC_TIMESTAMP()")->fetch_array()[0];
+$qResult = dbQuery($db, "SELECT id FROM reviving");
 while ($toReactivate = $qResult->fetch_object())
 {
     $db->begin_transaction();

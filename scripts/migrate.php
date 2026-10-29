@@ -78,7 +78,7 @@ if (isset($options['help'])) {
     echo "usage: php scripts/migrate.php [--status] [--yes] [--database=NAME]\n";
     exit(0);
 }
-$config = getenv('TODO_CONFIG') ? getenv('TODO_CONFIG') : __DIR__."/../config.php";
+$config = todoConfigPath();
 if (!is_readable($config)) {
     fail("cannot read the configuration ".$config);
 }

@@ -1,6 +1,6 @@
 <?php include "todo-core.php"; $csrfToken = csrfToken(); ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<?php echo htmlspecialchars($language); ?>">
   <head>
     <meta charset="UTF-8">
     <meta name="csrf-token" content="<?php echo htmlspecialchars($csrfToken); ?>">
@@ -16,7 +16,7 @@
     <link rel="stylesheet" type="text/css" href="<?php echo(assetUrl("vendor/tagify/tagify.css")); ?>" />
     <link rel="stylesheet" type="text/css" href="<?php echo(assetUrl("todo.css")); ?>" />
     <link rel="stylesheet" type="text/css" href="<?php echo(assetUrl("vendor/jquery-ui/jquery-ui.min.css")); ?>"/>
-    <link rel="icon" href="/todo.svg" type="image/svg+xml">
+    <link rel="icon" href="todo.svg" type="image/svg+xml">
     <meta name="viewport" content="width=device-width, initial-scale=1">
   </head>
   <body>

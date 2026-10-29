@@ -24,5 +24,4 @@
             $todos[$tag->todo_id]->tags[] = $tag->name;
         }
     }
-    $db->close();
     sendJson(json_encode(array_values($todos)));

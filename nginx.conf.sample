@@ -25,7 +25,7 @@ location /todo/ {
     location ~ (/\.|~$|\.(sql|sh|ini|bak|swp|orig|md|yml|neon|lock|sample)$|/config[^/]*\.php$|/package(-lock)?\.json$) { return 404; }
     location ~ ^/todo/(session|todo-core|lang)\.php$ { return 404; }
     location ~ ^/todo/webauth/ { return 404; }
-    location ~ ^/todo/queries/(db|date|tags|todo-list-query|reactivate|reactivate-temp|recurrence|db-connect)\.php$ { return 404; }
+    location ~ ^/todo/queries/(db|date|tags|todo-list-query|reactivate|reactivate-temp|recurrence|db-connect|endpoint|todo-input)\.php$ { return 404; }
 
     location ~ \.php$ {
         include fastcgi_params;

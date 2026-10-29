@@ -1,4 +1,10 @@
 <?php
+// Path of config.php, or of the file in the environment variable TODO_CONFIG (see lang.php).
+// Used by the application (lang.php) and by the command line scripts.
+function todoConfigPath() {
+    return getenv('TODO_CONFIG') ? getenv('TODO_CONFIG') : __DIR__."/../config.php";
+}
+
 // Connects to the database; used by the application (db.php) and by the command line scripts.
 // $ssl: null / false for a plain connection (fine for a database on the same host), true for TLS
 // with the defaults of the client library, or an array with the keys ca, capath, cert, key, cipher
