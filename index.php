@@ -1,6 +1,6 @@
 <?php include "todo-core.php"; $csrfToken = csrfToken(); ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<?php echo htmlspecialchars(todoConfig('language')); ?>">
   <head>
     <meta charset="UTF-8">
     <meta name="csrf-token" content="<?php echo htmlspecialchars($csrfToken); ?>">
@@ -8,15 +8,16 @@
     <!-- JQuery & JQuery UI -->
     <script src="<?php echo(assetUrl("vendor/jquery/jquery.min.js")); ?>"></script>
     <script src="<?php echo(assetUrl("vendor/jquery-ui/jquery-ui.min.js")); ?>"></script>
-    <script src="log.js.php"></script>
-    <script src="<?php echo(assetUrl("todo.js")); ?>"></script>
-    <script src="<?php echo(assetUrl("init.js")); ?>"></script>
-    <script src="<?php echo(assetUrl("vendor/tagify/tagify.js")); ?>"></script>
     <script src="lang-js.php"></script>
+    <script src="<?php echo(assetUrl("vendor/tagify/tagify.js")); ?>"></script>
+    <!-- the application: ES modules (js/*.js) which js/main.js imports; they use the scripts above as globals.
+         Only this URL has a version: the web server makes browsers check the other modules each time
+         (Cache-Control: no-cache, see .htaccess and nginx.conf.sample) -->
+    <script type="module" src="<?php echo(assetUrl("js/main.js")); ?>"></script>
     <link rel="stylesheet" type="text/css" href="<?php echo(assetUrl("vendor/tagify/tagify.css")); ?>" />
     <link rel="stylesheet" type="text/css" href="<?php echo(assetUrl("todo.css")); ?>" />
     <link rel="stylesheet" type="text/css" href="<?php echo(assetUrl("vendor/jquery-ui/jquery-ui.min.css")); ?>"/>
-    <link rel="icon" href="/todo.svg" type="image/svg+xml">
+    <link rel="icon" href="todo.svg" type="image/svg+xml">
     <meta name="viewport" content="width=device-width, initial-scale=1">
   </head>
   <body>
@@ -26,18 +27,17 @@
           <h1><?php echo(TodoConstants::AppTitle); ?></h1>
           <div id="working"><?php echo(TodoLang::_("WORKING"));?></div>
           <div id="filter">
-            <input type="hidden" id="filter_tags" name="filter_tags" />
             <input id="filter_tag_edit" />
           </div>
           <div id="emptytrashlink"><a href="#" id="emptyTrash"><?php echo(TodoLang::_("EMPTY_TRASH"));?></a></div>
-          <div id="statistiklink"><a href="statistik.php"><?php echo(TodoLang::_("SHOW_STATISTICS"));?></a></div>
+          <div id="statisticslink"><a href="statistics.php"><?php echo(TodoLang::_("SHOW_STATISTICS"));?></a></div>
         </div>
         <div id="progress"><span id="progress_done">&nbsp;</span><span id="progress_todo">&nbsp;</span></div>
         <form method="POST" id="inputform">
           <table id="todoTable">
             <thead>
             <tr>
-              <th class="todo"><?php echo(TodoLang::_("TODO"));?> <input type="button" class="refreshButton" id="refresh" alt="refresh" /></th>
+              <th class="todo"><?php echo(TodoLang::_("TODO"));?> <input type="button" class="iconButton refreshButton" id="refresh" alt="refresh" /></th>
               <th class="start"><?php echo(TodoLang::_("START"));?></th>
               <th class="due"><?php echo(TodoLang::_("DUE"));?></th>
               <th class="actions" colspan="2"><?php echo(TodoLang::_("ACTIONS"));?></th>
@@ -46,7 +46,7 @@
               <td><input type="text" id="enter_todo" name="enter_todo" maxlength="255" /></td>
               <td class="start"><input type="date" id="enter_start" name="enter_start" /></td>
               <td class="due"><label class="due_picker"><input type="date" id="enter_due" name="enter_due" /><span id="enter_due_label"></span></label></td>
-              <td class="actions" colspan="2"><input type="button" class="addButton" name="save" id="enter_save" alt="<?php echo(TodoLang::_("SAVE"));?>" /></td>
+              <td class="actions" colspan="2"><input type="button" class="iconButton addButton" name="save" id="enter_save" alt="<?php echo(TodoLang::_("SAVE"));?>" /></td>
             </tr>
             </thead>
             <tbody>
@@ -94,14 +94,13 @@
               <textarea type="text" id="modify_notes" name="modify_notes"></textarea>
             </div><div class="modify_line">
               <span class="modify_desc"><?php echo(TodoLang::_("TAGS"));?>:</span>
-              <input type="hidden" id="modify_tags" name="modify_tags" />
               <input id="modify_tag_edit" />
             </div><div class="modify_line">
               <span class="modify_desc"><?php echo(TodoLang::_("LIST"));?>:</span>
               <select id="modify_list">
               </select>
             </div>
-            <input type="button" class="editButton" name="modify_save" id="modify_save" alt="<?php echo(TodoLang::_("SAVE"));?>" />
+            <input type="button" class="iconButton editButton" name="modify_save" id="modify_save" alt="<?php echo(TodoLang::_("SAVE"));?>" />
           </form>
         </div>
       </div>
@@ -127,12 +126,11 @@
             <input type="text" id="tag_count" name="tag_count" readonly="true" />
           </div><div class="modify_line">
             <span class="modify_desc"><?php echo(TodoLang::_("MERGE_TO"));?>: </span>
-            <input type="hidden" id="merge_tag" name="merge_tag" />
             <input id="merge_tag_edit" >
-            <input type="button" class="mergeButton" name="tag_merge" id="tag_merge" alt="<?php echo(TodoLang::_("MERGE"));?>" />
+            <input type="button" class="iconButton mergeButton" name="tag_merge" id="tag_merge" alt="<?php echo(TodoLang::_("MERGE"));?>" />
           </div>
-          <input type="button" class="deleteButton" name="tag_delete" id="tag_delete" alt="<?php echo(TodoLang::_("DELETE"));?>" />
-          <input type="button" class="editButton" name="tag_save" id="tag_save" alt="<?php echo(TodoLang::_("SAVE"));?>" />
+          <input type="button" class="iconButton deleteButton" name="tag_delete" id="tag_delete" alt="<?php echo(TodoLang::_("DELETE"));?>" />
+          <input type="button" class="iconButton editButton" name="tag_save" id="tag_save" alt="<?php echo(TodoLang::_("SAVE"));?>" />
         </form>
         <div id="tag_todo_container">
           <span id="tag_todo_caption"><?php echo(TodoLang::_("TAG_TODO_LIST_CAPTION"));?></span>

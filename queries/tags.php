@@ -4,15 +4,14 @@
 const MAX_TAG_LENGTH = 255;
 const MAX_TAGS_PER_TODO = 50;
 
-// whether the (already HTML-encoded) name can be used as tag name: tags are
-// passed around as comma separated lists, so a comma would split the tag
-function isValidTagName($encodedName)
+// whether the (trimmed) name can be used as tag name: tags are passed around as comma separated
+// lists, so a comma would split the tag; the length is counted in characters of the plain text
+function isValidTagName($name)
 {
-    return $encodedName !== '' && strpos($encodedName, ',') === false &&
-        charLength($encodedName) <= MAX_TAG_LENGTH;
+    return $name !== '' && strpos($name, ',') === false && charLength($name) <= MAX_TAG_LENGTH;
 }
 
-// "a, b,c,a" => array('a', 'b', 'c'): the HTML-encoded names, without empty tags and duplicates;
+// "a, b,c,a" => array('a', 'b', 'c'): the names, without empty tags and duplicates;
 // null if a tag or the number of tags is invalid
 function parseTags($tagString)
 {
@@ -24,11 +23,10 @@ function parseTags($tagString)
             // don't want to have empty tags in the database!
             continue;
         }
-        $encodedTag = encodeInput($trimmedTag);
-        if (!isValidTagName($encodedTag)) {
+        if (!isValidTagName($trimmedTag)) {
             return null;
         }
-        $tags[$encodedTag] = $encodedTag;
+        $tags[$trimmedTag] = $trimmedTag;
         if (count($tags) > MAX_TAGS_PER_TODO) {
             return null;
         }
@@ -36,20 +34,20 @@ function parseTags($tagString)
     return array_values($tags);
 }
 
-// $encodedTags: result of parseTags()
-function updateTags($db, $todo_id, $encodedTags)
+// $tagNames: result of parseTags()
+// The caller runs this in a transaction (withTransaction): it deletes the old assignments first,
+// which must not become visible without the new ones.
+function updateTags($db, $todo_id, $tagNames)
 {
     $todo_id = (int)$todo_id;
-    $db->begin_transaction();
     dbExec($db, "DELETE FROM todo_tags WHERE todo_id=?", array($todo_id));
-    foreach ($encodedTags as $encodedTag)
+    foreach ($tagNames as $tagName)
     {
         // tags.name is unique: an existing tag is found (and its id returned by insert_id) in
         // one statement, so two requests creating the same tag can not create it twice
         dbExec($db, "INSERT INTO tags (name) VALUES (?) ON DUPLICATE KEY UPDATE id=LAST_INSERT_ID(id)",
-            array($encodedTag));
+            array($tagName));
         $tag_id = $db->insert_id;
         dbExec($db, "INSERT IGNORE INTO todo_tags (todo_id, tag_id) VALUES (?, ?)", array($todo_id, $tag_id));
     }
-    $db->commit();
 }

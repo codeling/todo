@@ -1,20 +1,11 @@
 <?php
-    // authenticates first, a CSRF check is no replacement for that
-    require(__DIR__."/../todo-core.php");
-    requirePostWithCsrf();
-    require("db.php");
+    require(__DIR__."/endpoint.php");
+    $db = todoDb();
     $id = (int)postParam('id');
     requireOwnTodo($db, $id);
     $trash = ((int)postParam('trash') == 1) ? 1 : 0;
     $version = (int)postParam('version');
     $stmt = dbExec($db, "UPDATE todo SET deleted=? WHERE id=? AND version=?",
         array($trash, $id, $version));
-    $affectedRows = $stmt->affected_rows;
-    if ($affectedRows < 1) {
-        echo TodoLang::_("VERSION_CONFLICT");
-    } else if ($affectedRows > 1) {
-        echo TodoLang::_("MORE_THAN_ONE_ENTRY_CHANGED");
-    } else {
-        echo $affectedRows;
-    }
-    $db->close();
+    requireSingleRow($stmt->affected_rows, "VERSION_CONFLICT", "MORE_THAN_ONE_ENTRY_CHANGED");
+    sendOk();

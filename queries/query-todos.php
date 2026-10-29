@@ -1,5 +1,8 @@
 <?php
+    // (makes failRequest() answer with JSON, see response.php)
+    const TODO_API_REQUEST = true;
     require("db.php");
+    $db = todoDb();
     require("todo-list-query.php");
 
     $list_id = (int)(isset($_GET["list_id"]) ? $_GET["list_id"] : 0);
@@ -24,5 +27,4 @@
             $todos[$tag->todo_id]->tags[] = $tag->name;
         }
     }
-    $db->close();
     sendJson(json_encode(array_values($todos)));

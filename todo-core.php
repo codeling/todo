@@ -13,16 +13,22 @@ require_once(__DIR__."/session.php");
 require_once(__DIR__."/webauth/webauth.php");
 // URL of a local static file, with its modification time appended, so that
 // browsers load the new version after an update instead of a cached one
+// (for the ES modules of js/ only js/main.js gets it, the modules which it imports are
+// checked by the browser each time because of the web server's Cache-Control: no-cache)
 function assetUrl($file) {
     return $file."?v=".filemtime(__DIR__."/".$file);
 }
+// the ID of the user whose lists and entries are shown
 // TODO: get that from the current user account
-$curUserID = TodoConstants::DefaultUserID;
+function todoUserId() {
+    return TodoConstants::DefaultUserID;
+}
 
 // pages and data of the application (and the CSRF token) must not be kept by browsers or proxies
 header("Cache-Control: private, no-store");
-// inline styles are still used (statistics bars, jQuery UI), inline scripts are not
-header("Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-inline'; ".
+// neither inline scripts nor inline styles (style attributes and <style> elements): the statistics
+// charts are SVG with attributes, jQuery UI and Tagify set styles with JavaScript (allowed)
+header("Content-Security-Policy: default-src 'self'; style-src 'self'; ".
     "img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'");
 header("X-Content-Type-Options: nosniff");
 header("X-Frame-Options: DENY");
@@ -32,8 +38,8 @@ header("Referrer-Policy: same-origin");
 // server over HTTPS. Refuse to run if the request did not meet that, so that a missing
 // or ignored .htaccess / nginx setting does not leave all data open.
 WebAuth\ServerAuth::guard(array(
-    'require_https' => !(isset($require_https) && $require_https === false),
-    'require_auth' => !(isset($require_http_auth) && $require_http_auth === false),
+    'require_https' => todoConfig('require_https') !== false,
+    'require_auth' => todoConfig('require_http_auth') !== false,
     'trust_forwarded_proto' => todoTrustsForwardedProto(),
     'log_prefix' => 'todo',
     'messages' => array(

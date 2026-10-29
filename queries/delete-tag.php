@@ -1,20 +1,12 @@
 <?php
-    // authenticates first, a CSRF check is no replacement for that
-    require(__DIR__."/../todo-core.php");
-    requirePostWithCsrf();
-    require("db.php");
+    require(__DIR__."/endpoint.php");
+    $db = todoDb();
     $id = (int)postParam('id');
     requireOwnTag($db, $id);
-    $db->begin_transaction();
-    $deletedAssignments = dbExec($db, "DELETE FROM todo_tags WHERE tag_id=?", array($id))->affected_rows;
-	// TODO: only delete if no tags left!
-    $affectedRows = dbExec($db, "DELETE FROM tags WHERE id=?", array($id))->affected_rows;
-    $db->commit();
-    if ($affectedRows < 1) {
-        echo TodoLang::_("NO_ROWS_AFFECTED");
-    } else if ($affectedRows > 1) {
-        echo TodoLang::_("MORE_THAN_ONE_TAG_AFFECTED");
-    } else {
-        echo $deletedAssignments;
-    }
-    $db->close();
+    list($deletedAssignments, $affectedRows) = withTransaction($db, function () use ($db, $id) {
+        $deletedAssignments = dbExec($db, "DELETE FROM todo_tags WHERE tag_id=?", array($id))->affected_rows;
+        $affectedRows = dbExec($db, "DELETE FROM tags WHERE id=?", array($id))->affected_rows;
+        return array($deletedAssignments, $affectedRows);
+    });
+    requireSingleRow($affectedRows, "NO_ROWS_AFFECTED", "MORE_THAN_ONE_TAG_AFFECTED");
+    sendOk(array('deleted' => (int)$deletedAssignments));

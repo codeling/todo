@@ -50,7 +50,7 @@ test.after(() => {
 });
 
 const HTTPS = { 'X-Forwarded-Proto': 'https' };
-const pages = ['index.php', 'statistik.php', 'log.js.php', 'lang-js.php', 'queries/query-lists.php', 'queries/query-todos.php?list_id=0'];
+const pages = ['index.php', 'statistics.php', 'lang-js.php', 'queries/query-lists.php', 'queries/query-todos.php?list_id=0'];
 
 test('requests the web server did not authenticate are rejected', async () => {
     const srv = await startServer(dir, []);
@@ -130,7 +130,8 @@ test('a request without session cookie does not start a session', async () => {
     servers.push(srv);
     const res = await fetch(srv.base + '/queries/trash.php', { method: 'POST', headers: HTTPS });
     assert.equal(res.status, 403);
-    assert.equal(await res.text(), 'Invalid or missing CSRF token, please reload the page!');
+    assert.equal(res.headers.get('content-type'), 'application/json; charset=utf-8');
+    assert.deepEqual(await res.json(), { error: 'Invalid or missing CSRF token, please reload the page!' });
     assert.equal(res.headers.get('set-cookie'), null);
 });
 

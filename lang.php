@@ -2,8 +2,8 @@
 
 // config.php may be kept outside of the web root: set the environment variable TODO_CONFIG
 // to its path (SetEnv in Apache, env[] in the php-fpm pool, fastcgi_param in nginx)
-require_once(getenv('TODO_CONFIG') ? getenv('TODO_CONFIG') : __DIR__."/config.php");
-$langfile = __DIR__."/lang/".$language.".ini";
+require_once(__DIR__."/queries/db-connect.php");
+$langfile = __DIR__."/lang/".todoConfig('language').".ini";
 
 class TodoLang {
     static $langstrings;

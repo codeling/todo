@@ -1,5 +1,5 @@
 <?php
-header('Content-type: application/x-javascript');
+header('Content-Type: text/javascript; charset=utf-8');
 // part of the application: only for authenticated requests like all other pages
 require_once(__DIR__."/todo-core.php");
 ?>

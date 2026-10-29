@@ -66,7 +66,7 @@ CREATE TABLE `settings` (
 	PRIMARY KEY(`key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;
 
-INSERT INTO `settings` (`key`, `value`) VALUES ("db.version", "15");
+INSERT INTO `settings` (`key`, `value`) VALUES ("db.version", "16");
 
 -- default list of the default user (todo.list_id defaults to 0):
 SET SESSION sql_mode = CONCAT(@@sql_mode, ',NO_AUTO_VALUE_ON_ZERO');

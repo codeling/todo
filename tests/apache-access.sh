@@ -49,6 +49,38 @@ sleep 1
 
 URL=http://127.0.0.1:$PORT/todo
 FAIL=0
+# The files which must be denied are derived from the code (same rules as tests/deny-lists.test.js,
+# which compares them with the lists in .htaccess and nginx.conf.sample), so a new helper is checked
+# without changing this script:
+# - endpoints = queries/<name>.php called by the client JavaScript (*.js in the root and in js/)
+# - helpers = the other queries/*.php files
+# - pages = index.php and the root .php files referenced by index.php with src="" or href=""
+# - include-only = the other root .php files, except config*.php
+endpoints=$({
+    find "$REPO" -maxdepth 1 -name '*.js' -exec grep -hoE 'queries/[A-Za-z0-9_-]+\.php' {} + || true
+    if [ -d "$REPO/js" ]; then
+        grep -rhoE --include='*.js' 'queries/[A-Za-z0-9_-]+\.php' "$REPO/js" || true
+    fi
+} | sed 's#^queries/##; s#\.php$##' | sort -u)
+pages=$({
+    echo index
+    grep -Eo '(src|href)="[A-Za-z0-9_.-]+\.php["?#]' "$REPO/index.php" || true
+} | sed 's/^[a-z]*="//; s/\.php["?#]$//' | sort -u)
+helpers=
+for f in "$REPO"/queries/*.php; do
+    name=$(basename "$f" .php)
+    echo "$endpoints" | grep -Fqx "$name" || helpers="$helpers $name"
+done
+include_only=
+for f in "$REPO"/*.php; do
+    name=$(basename "$f" .php)
+    case "$name" in config*) continue ;; esac
+    echo "$pages" | grep -Fqx "$name" || include_only="$include_only $name"
+done
+if [ -z "$endpoints" ] || [ "$pages" = index ]; then
+    echo "FAIL no endpoints or pages found in the client JavaScript and index.php"
+    FAIL=1
+fi
 # path, expected status without credentials, expected status with credentials
 # (X-Test-TLS: on, see above)
 check() {
@@ -61,20 +93,62 @@ check() {
         FAIL=1
     fi
 }
-check index.php 401 200
-check lang-js.php 401 200
-check queries/trash.php 401 200
+for name in $pages; do
+    check "$name.php" 401 200
+done
+for name in $endpoints; do
+    check "queries/$name.php" 401 200
+done
+# the page was renamed from statistik.php: old bookmarks are redirected permanently by .htaccess (after the
+# authentication, like every request), not by a PHP file
+check statistik.php 401 301
+location=$(curl -s -H 'X-Test-TLS: on' -u alice:secret -D - -o /dev/null "$URL/statistik.php" | tr -d '\r' | sed -n 's/^[Ll]ocation: //p')
+case "$location" in
+    */todo/statistics.php) echo "ok   statistik.php redirects to $location" ;;
+    *) echo "FAIL statistik.php: Location is '$location', expected one ending in /todo/statistics.php"; FAIL=1 ;;
+esac
 check vendor/jquery/jquery.min.js 401 200
 check todo.css 401 200
+# The client is made of ES modules: the browser refuses a module which is not served as JavaScript, and,
+# as only the URL of js/main.js has a version, has to ask the server each time whether a module
+# changed (Cache-Control: no-cache; the answer is 304 without the file if not), see .htaccess.
+for f in "$REPO"/js/*.js; do
+    module=js/$(basename "$f")
+    check "$module" 401 200
+    headers=$(curl -s -H 'X-Test-TLS: on' -u alice:secret -D - -o /dev/null "$URL/$module" | tr -d '\r')
+    echo "$headers" | grep -qi '^Content-Type: *\(text\|application\)/javascript' || { echo "FAIL $module: not served as JavaScript"; FAIL=1; }
+    echo "$headers" | grep -qi '^Cache-Control: no-cache$' || { echo "FAIL $module: missing Cache-Control: no-cache"; FAIL=1; }
+done
+# (a browser stores the headers of a 304 answer too)
+modified=$(curl -s -H 'X-Test-TLS: on' -u alice:secret -D - -o /dev/null "$URL/js/main.js" | tr -d '\r' | sed -n 's/^[Ll]ast-[Mm]odified: //p')
+headers=$(curl -s -H 'X-Test-TLS: on' -u alice:secret -H "If-Modified-Since: $modified" -D - -o /dev/null "$URL/js/main.js" | tr -d '\r')
+echo "$headers" | head -n 1 | grep -q ' 304 ' || { echo "FAIL js/main.js: not answered with 304 if unchanged"; FAIL=1; }
+echo "$headers" | grep -qi '^Cache-Control: no-cache$' || { echo "FAIL js/main.js: the 304 answer has no Cache-Control: no-cache"; FAIL=1; }
+# the other static files are versioned by their URL (assetUrl()) and not affected
+if curl -s -H 'X-Test-TLS: on' -u alice:secret -D - -o /dev/null "$URL/todo.css" | grep -qi '^Cache-Control: no-cache'; then
+    echo "FAIL todo.css: Cache-Control: no-cache is only meant for js/"; FAIL=1
+fi
 for denied in sql/install.sql lang/en-US.ini config.php config.sample.php package.json \
-        package-lock.json scripts/vendor.sh session.php todo-core.php lang.php webauth/webauth.php webauth/src/ServerAuth.php webauth/README.md webauth/samples/htaccess.sample webauth/composer.json webauth/tests/ServerAuthTest.php queries/db.php queries/db-connect.php \
-        queries/tags.php queries/reactivate-temp.php queries/reactivate.php queries/recurrence.php \
-        queries/db.php/x queries/reactivate.php/x queries/reactivate-temp.php/x session.php/x config.php/x \
-        .htaccess nginx.conf.sample README.md phpstan.neon; do
+        package-lock.json scripts/vendor.sh webauth/webauth.php webauth/src/ServerAuth.php webauth/README.md webauth/samples/htaccess.sample webauth/composer.json webauth/tests/ServerAuthTest.php \
+        config.php/x .htaccess nginx.conf.sample README.md phpstan.neon; do
     check "$denied" 403 403
+done
+# the helpers of queries/ and the include-only files of the root, also with a trailing path
+# (FilesMatch applies to it too, see .htaccess)
+for name in $helpers; do
+    check "queries/$name.php" 403 403
+    check "queries/$name.php/x" 403 403
+done
+for name in $include_only; do
+    check "$name.php" 403 403
+    check "$name.php/x" 403 403
 done
 for hidden in scripts/migrate.php secrets/todo_password secrets .git/HEAD node_modules/jquery/dist/jquery.js tests/lib.js; do
     check "$hidden" 401 404
+done
+# migrations written in PHP: sql/ is hidden as a whole, not by the extension (.sql files are denied by it)
+for f in "$REPO"/sql/migrations/*.php; do
+    check "sql/migrations/$(basename "$f")" 401 404
 done
 # plain HTTP: no password prompt (403, not 401), with or without credentials, and
 # also if the client claims that a proxy terminated TLS (any client can send that header)

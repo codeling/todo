@@ -1,11 +1,7 @@
 <?php
+// (makes failRequest() answer with JSON, see response.php)
+const TODO_API_REQUEST = true;
 require("db.php");
-$user_id = (int)$curUserID;
-$qResult = dbExec($db, "SELECT id, name FROM list WHERE user_id=?", array($user_id))->get_result();
-$allResults = array();
-while ($stuff = $qResult->fetch_object())
-{
-    $allResults[] = $stuff;
-}
-$db->close();
-sendJson(json_encode($allResults));
+$db = todoDb();
+$user_id = (int)todoUserId();
+sendJson(jsonQueryResults($db, "SELECT id, name FROM list WHERE user_id=?", array($user_id)));

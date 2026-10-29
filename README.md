@@ -10,6 +10,11 @@ A small PHP / MariaDB (MySQL) to-do list with lists, tags, recurring entries and
    **HTTP authentication and HTTPS**, see below.
    Or run the [container](#container).
 
+The client (`js/`) is a set of ES modules which the browser loads from `js/main.js`; there is no build
+step. Only the URL of `js/main.js` carries a version, so the web server has to make browsers check the
+other modules each time (`Cache-Control: no-cache`; `.htaccess` and `nginx.conf.sample` do that),
+otherwise a browser may keep using an old module after an update.
+
 ## Upgrading and backups
 
 Back up the database before every upgrade, and regularly:
@@ -31,8 +36,9 @@ php scripts/migrate.php               # asks for confirmation, then applies them
 It reads the connection settings of `config.php` (or `TODO_CONFIG`). The database user of the
 application usually may not change the schema; set `TODO_MIGRATE_USER` and
 `TODO_MIGRATE_PASSWORD` to an administrative account. The migrations are the numbered files in
-`sql/migrations/`; read the comments at the top of a file before you run it, they describe what it
-changes and which data would stop it. Schema changes cannot be rolled back: if a migration fails,
+`sql/migrations/` (`.sql`, or `.php` for a change which SQL cannot express: it returns a function that
+gets the database connection); read the comments at the top of a file before you run it, they describe
+what it changes and which data would stop it. Schema changes cannot be rolled back: if a migration fails,
 the statements before the failing one stay applied. Fix the data it complains about and run the
 rest of the file by hand, or restore the backup and start again. What the migrations do so far:
 
@@ -47,6 +53,12 @@ rest of the file by hand, or restore the backup and start again. What the migrat
   `utf8mb4_unicode_520_ci`. It rebuilds the tables, so run it when nobody uses the application. Tags
   which the new collation considers equal (like `straße` and `STRASSE`) are merged.
 * `015`: the start and due dates become `DATE` columns (a time of day of older entries is dropped).
+* `016` (a PHP file): descriptions, notes, tag names and list names are stored as plain text instead of
+  HTML-encoded (`Stra&szlig;e &amp; Co` becomes `Straße & Co`; the application escapes the text when it
+  shows it). Run it right after updating the program: the new program shows the old entities as they
+  are. Tags which become equal (like `ä` and `&auml;`) are merged. It only changes data, so it runs in
+  one transaction and is applied completely or not at all; the account needs the right to create
+  temporary tables.
 
 `sql/install.sql` creates a new database with the layout of the latest version (and `db.version`);
 `sql/uninstall.sql` removes it. The scripts of the first versions are in `sql/legacy/`; they cannot be
@@ -56,6 +68,11 @@ They run against MariaDB 10.11 and MySQL 8.0 (with the default `sql_mode`, which
 that the first versions used as a default: the migrations 012 and 013 work around that).
 
 A database on another host should be reached over TLS: see `$db_ssl` in `config.sample.php`.
+
+The statistics page is `statistics.php` (it was `statistik.php`): `.htaccess` and `nginx.conf.sample`
+redirect the old address, so bookmarks keep working. If you copied their rules into your own server
+configuration, add that redirect, and the new include-only file `queries/statistics-data.php` to the files
+which are denied.
 
 ## Security: deployment
 
@@ -87,11 +104,11 @@ HTTPS (`$require_https`). This is done by the shared library in `webauth/` (see 
 
   ```sql
   CREATE USER 'todo'@'localhost' IDENTIFIED BY '<password>';
-  GRANT SELECT, INSERT, UPDATE, DELETE, CREATE TEMPORARY TABLES ON todo.* TO 'todo'@'localhost';
+  GRANT SELECT, INSERT, UPDATE, DELETE ON todo.* TO 'todo'@'localhost';
   ```
 
-  (`CREATE TEMPORARY TABLES` is used when recurring entries are copied.) Apply `sql/update-*.sql`
-  with an administrative account.
+  Upgrade the database with the migration runner `scripts/migrate.php` and an administrative
+  account (`TODO_MIGRATE_USER`), not with this user (see *Upgrading and backups*).
 * PHP: `expose_php = Off` and `display_errors = Off` (the application also sets the latter for its
   own pages).
 

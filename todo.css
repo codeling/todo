@@ -244,7 +244,7 @@ ul.ui-autocomplete {
     padding: 2px;
 }
 #emptytrashlink,
-#statistiklink,
+#statisticslink,
 #filter {
     margin-left: 5px;
     margin-right: 5px;
@@ -263,7 +263,7 @@ ul.ui-autocomplete {
 }
 /*******************/
 /* Button images   */
-.addButton, .editButton, .deleteButton, .undeleteButton, .todayButton, .refreshButton, .reactivateButton, .mergeButton {
+.iconButton {
     width: 20px;
     height: 20px;
     background-size: cover;
@@ -273,7 +273,7 @@ ul.ui-autocomplete {
 /* only on devices with real hover, else the highlight sticks after a tap */
 @media (hover: hover)
 {
-    .addButton:hover, .editButton:hover, .deleteButton:hover, .undeleteButton:hover, .todayButton:hover, .refreshButton:hover, .reactivateButton:hover, .mergeButton:hover
+    .iconButton:hover
     {
         background-color: #DDD;
     }
@@ -322,32 +322,46 @@ ul.ui-autocomplete {
 /*******************/
 /* Statistics page */
 
-.stat_row_bar {
-    vertical-align:bottom;
+/* a chart is an SVG (sizes and positions are attributes, see statistics.php); on narrow screens
+   it scrolls horizontally and the maximum, average and minimum move below it */
+.stat_chart {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    max-width: 100%;
 }
-.stat_row_header {
-    width: 100px;
+.stat_scroll {
+    max-width: 100%;
+    overflow-x: auto;
 }
-.stat_row_characteristics {
+.stat_svg {
+    display: block;
+}
+.stat_characteristics {
     padding-left: 10px;
 }
 .statbar {
-    background-color: blue;
-    color: white;
+    fill: blue;
 }
-.statvalue {
-    word-wrap: break-word;
-}
-.statbar, .statvalue, .emptystatbar {
-    text-align: center;
-}
+/* a bucket without entries has a bar of the smallest height, which is not drawn */
 .emptystatbar {
-    color: black;
+    fill: transparent;
 }
-/* charts have a fixed width; scroll them horizontally on small screens */
-.stat_chart {
-    max-width: 100%;
-    overflow-x: auto;
+.statcount,
+.statlabel {
+    text-anchor: middle;
+}
+.statcount {
+    fill: white;
+    /* the tooltip of the bar (its title) also shows over the number */
+    pointer-events: none;
+}
+.emptystatcount {
+    fill: black;
+}
+/* a turned label ends at the bar and reads upwards */
+.statlabel.turned {
+    text-anchor: end;
 }
 
 /* due date picker of the input line: the text label is only used on narrow screens */
@@ -473,7 +487,7 @@ ul.ui-autocomplete {
 		width: calc(100% - 90px);
 	}
 	/* larger touch targets */
-	.addButton, .editButton, .deleteButton, .undeleteButton, .todayButton, .refreshButton, .reactivateButton, .mergeButton {
+	.iconButton {
 		width: 32px;
 		height: 32px;
 	}

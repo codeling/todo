@@ -26,8 +26,12 @@ RedirectMatch 404 ^.*/(sql|scripts|secrets|tests|node_modules|lang|\.git|\.githu
 <FilesMatch "(^\.|~$|\.(sql|sh|ini|bak|swp|orig|md|yml|neon|lock|sample)$|^config.*\.php$|^package(-lock)?\.json$|^session\.php$|^todo-core\.php$|^lang\.php$)">
     Require all denied
 </FilesMatch>
+# the page was called statistik.php: old bookmarks keep working (redirected here, not by a PHP file,
+# which would be one more file to protect)
+RedirectMatch 301 ^(.*/)statistik\.php$ $1statistics.php
+
 # helper scripts which are only included by the query endpoints
-<FilesMatch "^(db|date|tags|todo-list-query|reactivate|reactivate-temp|recurrence|db-connect)\.php$">
+<FilesMatch "^(db|date|tags|todo-list-query|recurrence|db-connect|endpoint|response|todo-input|limits|statistics-data)\.php$">
     Require all denied
 </FilesMatch>
 
@@ -37,4 +41,12 @@ RedirectMatch 404 ^.*/(sql|scripts|secrets|tests|node_modules|lang|\.git|\.githu
     Header always set Referrer-Policy "same-origin"
     # ignored by browsers over plain HTTP
     Header always set Strict-Transport-Security "max-age=31536000"
+    # The client is made of ES modules (js/*.js). Only the URL of js/main.js has a version
+    # (assetUrl() in todo-core.php); the modules it imports are fetched by their plain URLs, which a
+    # browser could keep using after an update (an import map with versions would need an inline script,
+    # which the Content-Security-Policy forbids). So the browser has to ask each time whether a module
+    # changed: it gets 304 without the file if not. Keep this in sync with nginx.conf.sample.
+    <If "%{REQUEST_URI} =~ m#/js/[^/]+\.js$#">
+        Header always set Cache-Control "no-cache"
+    </If>
 </IfModule>
