@@ -115,3 +115,111 @@ test('a tag named like JSON is shown as a plain tag, it cannot inject HTML', asy
     await page.close();
 });
 
+
+test('completed entries with the same completion date and start are ordered by description', async () => {
+    resetDb();
+    // inserted in ascending order: when the comparison said "less" in both directions, the sort reversed them
+    sql("SET @c = UTC_TIMESTAMP(); " +
+        "INSERT INTO todo (creationDate, description, startDate, completed, completionDate, list_id) VALUES " +
+        "(@c, 'apple', UTC_DATE(), 1, @c, 0), " +
+        "(@c, 'banana', UTC_DATE(), 1, @c, 0), " +
+        "(@c, 'cherry', UTC_DATE(), 1, @c, 0), " +
+        "(@c, 'newest', UTC_DATE(), 1, @c + INTERVAL 1 SECOND, 0), " +
+        "(@c, 'no start', NULL, 1, @c, 0); " +
+        "INSERT INTO todo (creationDate, description, startDate, list_id) VALUES (@c, 'open', UTC_DATE(), 0)");
+    const page = await openPage();
+    await page.waitForSelector('#todoTable tbody tr');
+    // open before completed, then the most recently completed, a missing start is last
+    assert.deepEqual(await page.locator('#todoTable tbody td.todo > span:not([class])').allTextContents(),
+        ['open', 'newest', 'apple', 'banana', 'cherry', 'no start']);
+    const violations = await page.evaluate(() => {
+        const bad = [];
+        for (const a of itemList) {
+            for (const b of itemList) {
+                const ab = Math.sign(ItemSort(a, b));
+                const ba = Math.sign(ItemSort(b, a));
+                // antisymmetric, and only an item is equal to itself
+                if (ab !== -ba || (a === b) !== (ab === 0)) {
+                    bad.push(a.todo + ' / ' + b.todo + ': ' + ab + ', ' + ba);
+                }
+            }
+        }
+        return bad;
+    });
+    assert.deepEqual(violations, []);
+    assert.deepEqual(page.errors, []);
+    await page.close();
+});
+
+test('a todo just added can be started today and tapped to edit without reloading', async () => {
+    resetDb();
+    const page = await openPage();
+    // start in the future, else "do today" has nothing to change
+    await page.fill('#enter_todo', 'first');
+    await page.fill('#enter_start', '2099-01-01');
+    await page.click('#enter_save');
+    await page.waitForFunction(() => itemList.length == 1 && itemList[0].id > 0);
+    const first = await page.evaluate(() => itemList[0].id);
+    const [response] = await Promise.all([
+        page.waitForResponse((r) => r.url().includes('queries/update.php'), { timeout: 5000 }),
+        page.click('#dotoday' + first)
+    ]);
+    assert.match(await response.text(), /^\d+$/);
+    await page.waitForFunction(() => itemList[0].version == 2);
+    assert.equal(sql(`SELECT startDate = UTC_DATE() FROM todo WHERE id=${first}`).trim(), '1');
+
+    // the edit button is hidden on narrow screens, a tap on the todo opens the dialog
+    await page.setViewportSize({ width: 400, height: 800 });
+    await page.fill('#enter_todo', 'second');
+    await page.click('#enter_save');
+    await page.waitForFunction(() => itemList.length == 2 && itemList.every((i) => i.id > 0));
+    const second = await page.evaluate(() => itemList.find((i) => i.todo == 'second').id);
+    assert.equal(await page.locator('#modify_dialog').isVisible(), false);
+    await page.click(`#todo${second} td.todo`);
+    assert.equal(await page.locator('#modify_dialog').isVisible(), true);
+    assert.equal(await page.inputValue('#modify_id'), String(second));
+    assert.equal(await page.inputValue('#modify_todo'), 'second');
+    assert.deepEqual(page.errors, []);
+    await page.close();
+});
+
+test('the checkbox is unchecked again when completing an entry fails', async () => {
+    resetDb();
+    sql("INSERT INTO todo (creationDate, description, startDate, list_id) VALUES (UTC_TIMESTAMP(), 'open', UTC_DATE(), 0)");
+    const page = await openPage();
+    await page.waitForSelector('#todoTable tbody tr');
+    const id = await page.evaluate(() => itemList[0].id);
+    const alerts = [];
+    page.on('dialog', (d) => alerts.push(d.message()));
+
+    // the server answers something else than 1
+    await page.route('**/queries/complete.php*', (r) => r.fulfill({ status: 200, contentType: 'text/plain', body: 'some error' }));
+    let dialog = page.waitForEvent('dialog');
+    await page.click('#completed' + id);
+    await dialog;
+    await page.evaluate(() => 0);  // the handler goes on after the alert was accepted
+    assert.equal(alerts.length, 1);
+    assert.ok(alerts[0].endsWith('some error'), alerts[0]);
+    assert.equal(await page.isChecked('#completed' + id), false);
+
+    // the request fails
+    await page.unroute('**/queries/complete.php*');
+    await page.route('**/queries/complete.php*', (r) => r.abort());
+    dialog = page.waitForEvent('dialog');
+    await page.click('#completed' + id);
+    await dialog;
+    await page.evaluate(() => 0);
+    assert.equal(alerts.length, 2);
+    assert.equal(await page.isChecked('#completed' + id), false);
+
+    // nothing was changed, and the entry can still be completed
+    assert.equal(sql(`SELECT completed FROM todo WHERE id=${id}`).trim(), '0');
+    await page.unroute('**/queries/complete.php*');
+    await page.click('#completed' + id);
+    await page.waitForFunction(() => itemList[0].completed == 1);
+    assert.equal(await page.isChecked('#completed' + id), true);
+    assert.equal(sql(`SELECT completed FROM todo WHERE id=${id}`).trim(), '1');
+    // the failed request is reported by the browser, on purpose
+    assert.deepEqual(page.errors, ['Failed to load resource: net::ERR_FAILED']);
+    await page.close();
+});

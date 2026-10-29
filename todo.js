@@ -53,71 +53,41 @@ function printItem(item)
 }
 
 
-function ItemSort(item1, item2) {
-    var less =
-        (item1.deleted < item2.deleted) ||
-        (
-          (item1.deleted == item2.deleted) &&
-          (
-            (item1.completed < item2.completed) ||
-            (
-              (item1.completed == item2.completed) &&
-              (
-                (
-                  (item1.completed == 0) &&
-                  (
-                    (item2.start == null && item1.start != null) ||
-                    (
-                      (item1.start < item2.start) ||
-                      (
-                        (item1.start == item2.start) &&
-                        (
-                          (item2.due == null && item1.due != null) ||
-                          (
-                            (item1.due < item2.due) ||
-                            (item1.due == item2.due &&
-                             item1.todo < item2.todo)
-                          )
-                        )
-                      )
-                    )
-                  )
-                ) || (
-                  (item1.completed == 1) &&
-                  (
-                    (item1.completionDate > item2.completionDate) ||
-                    (
-                      (item1.completionDate == item2.completionDate) &&
-                      (
-                        (item2.start == null && item1.start != null) ||
-                        (
-                          (item1.start < item2.start) ||
-                          (
-                            (item1.start == item2.start) ||
-                            (item1.todo < item2.todo)
-                          )
-                        )
-                      )
-                    )
-                  )
-                )
-              )
-            )
-          )
-        );
-    // log('item1: c='+item1.completed+', p='+item1.start+'; item2: c='+item2.completed+', p='+item2.start+'; less: '+less);
-    if (less) {
-        return -1;
-    } else if (item1.deleted == item2.deleted &&
-               item1.completed == item2.completed &&
-               item1.start == item2.start &&
-               item1.todo == item2.todo &&
-               item1.tags.join(',') == item2.tags.join(',') &&
-               (item1.completed == 0 || item1.completionDate == item2.completionDate) ) {
+// -1, 0 or 1 for two values of one kind; a missing value (no date) is always last
+function compareKeys(a, b, descending) {
+    if (a == b) {
         return 0;
-    } else {
+    }
+    if (a == null) {
         return 1;
     }
+    if (b == null) {
+        return -1;
+    }
+    var result = (a < b) ? -1 : 1;
+    return descending ? -result : result;
+}
+
+
+// order of the table: not deleted before deleted, open before completed;
+// open by start, due date and description, completed by completion date (newest
+// first), start and description; the id makes it a total order
+function ItemSort(item1, item2) {
+    var result = compareKeys(item1.deleted, item2.deleted) ||
+        compareKeys(item1.completed, item2.completed);
+    if (result != 0) {
+        return result;
+    }
+    if (item1.completed == 0) {
+        result = compareKeys(item1.start, item2.start) ||
+            compareKeys(item1.due, item2.due) ||
+            compareKeys(item1.todo, item2.todo);
+    } else {
+        result = compareKeys(item1.completionDate, item2.completionDate, true) ||
+            compareKeys(item1.start, item2.start) ||
+            compareKeys(item1.todo, item2.todo);
+    }
+    return result || compareKeys(item1.id, item2.id);
 }
 
 
@@ -325,6 +295,10 @@ function sendReactivate(id) {
 
 function reactivate(id) {
     var index = findItem(id);
+    if (index == -1) {
+        alert($T('ENTRY_NOT_FOUND'));
+        return;
+    }
     if (itemList[index].completed == 0) {
         return;
     }
@@ -332,6 +306,16 @@ function reactivate(id) {
         return;
     }
     sendReactivate(id);
+}
+
+
+// the checkbox was already toggled by the click: back to the state of the item,
+// which is only changed once the server confirmed
+function resetCompletedCheckbox(id) {
+    var index = findItem(id);
+    if (index != -1) {
+        $('#completed'+id).prop('checked', itemList[index].completed == 1);
+    }
 }
 
 
@@ -358,13 +342,7 @@ function toggleCompleted(id) {
             if (returnValue != 1) {
                 log($T('ERROR_WHILE_MODIFYING')+returnValue);
                 alert($T('ERROR_WHILE_MODIFYING')+returnValue);
-                // reset checkbox:
-                var checked = $('#completed'+currentlyModified.id).prop('checked');
-                if (checked=='checked') {
-                    $('#completed'+currentlyModified.id).prop('checked', false);
-                } else {
-                    $('#completed'+currentlyModified.id).prop('checked', true);
-                }
+                resetCompletedCheckbox(id);
             } else {
                 currentlyModified.completed = stuff.completed;
                 currentlyModified.completionDate = stuff.completionDate;
@@ -376,6 +354,7 @@ function toggleCompleted(id) {
         },
         error: function(jqXHR, textStatus, errorThrown) {
             alert($T('TRANSMISSION_ERROR'));
+            resetCompletedCheckbox(id);
         }
     });
 }
@@ -644,10 +623,13 @@ function updateProgress() {
     }
     var count = done+open;
     var progressWidth = 100; // in percent
-    $('#progress_todo').css('width', ((progressWidth*open/count))+'%');
-    $('#progress_done').css('width', ((progressWidth*done/count))+'%');
+    // without entries there is nothing to divide by
+    var openPercent = (count == 0) ? 0 : progressWidth*open/count;
+    var donePercent = (count == 0) ? 0 : progressWidth*done/count;
+    $('#progress_todo').css('width', openPercent+'%');
+    $('#progress_done').css('width', donePercent+'%');
     $('#progress_todo').attr('title', $T('OPEN')+': '+open);
-    $('#progress_done').attr('title', $T('DONE')+': '+Math.round(100*done/count) + ' % ('+done+') '+$T('SINCE_DAYS_PREFIX')+reloadData.age+$T('SINCE_DAYS_POSTFIX'));
+    $('#progress_done').attr('title', $T('DONE')+': '+Math.round(donePercent) + ' % ('+done+') '+$T('SINCE_DAYS_PREFIX')+reloadData.age+$T('SINCE_DAYS_POSTFIX'));
 }
 
 
@@ -676,16 +658,17 @@ function toggleWorking(show) {
 }
 
 
+// returns a promise which is resolved when all requests are finished (also failed ones)
 function reload() {
     log($T('LOADING_TODO_LIST'));
     // recurring entries which are due are copied first; that modifies data,
     // so it is a POST request (with CSRF token) and not part of loading the list
-    $.ajax({
+    var todosLoaded = $.ajax({
         url: 'queries/reactivate-due.php',
         type: 'POST'
-    }).always(loadTodos);
+    }).then(loadTodos, loadTodos);
 
-    $.ajax({
+    var listsLoaded = $.ajax({
         url: 'queries/query-lists.php',
         type: 'GET',
         dataType: 'text'
@@ -698,10 +681,11 @@ function reload() {
         }
         renderLists();
     });
+    return $.when(todosLoaded.catch($.noop), listsLoaded.catch($.noop));
 }
 
 function loadTodos() {
-    $.ajax({
+    return $.ajax({
         url: 'queries/query-todos.php',
         type: 'GET',
         dataType: 'text',
@@ -893,8 +877,9 @@ function enter() {
 
 function refresh() {
     toggleWorking(true);
-    reload();
-    toggleWorking(false);
+    reload().always(function() {
+        toggleWorking(false);
+    });
 // TODO: change listener, or if that proves impossible,
 // refresh every 5-10 minues (or check with server if anything to refresh!!!
 //    setTimeout('refresh()', 30000);
