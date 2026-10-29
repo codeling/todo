@@ -5,6 +5,6 @@
     $id = (int)postParam('id');
     requireOwnTodo($db, $id);
     if (!reactivateOne($db, $id)) {
-        rejectRequest("REACTIVATION_NOT_POSSIBLE");
+        rejectRequest(409, "REACTIVATION_NOT_POSSIBLE");
     }
-    echo TodoLang::_("REACTIVATED_ENTRY");
+    sendOk(array('message' => TodoLang::_("REACTIVATED_ENTRY")));

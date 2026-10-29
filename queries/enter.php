@@ -9,7 +9,7 @@
     $tags     = parseTags(postParam('tags'));
     $inputError = todoInputError($todo, $start, $due, $tags);
     if ($inputError !== null) {
-        rejectRequest($inputError);
+        rejectRequest(422, $inputError);
     }
     $list_id = (int)postParam('list_id');
     requireOwnList($db, $list_id);
@@ -24,4 +24,4 @@
         updateTags($db, $todo_id, $tags);
         return $todo_id;
     });
-    echo $todo_id;
+    sendOk(array('id' => (int)$todo_id));

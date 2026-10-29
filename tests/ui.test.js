@@ -223,7 +223,7 @@ test('a todo just added can be started today and tapped to edit without reloadin
         page.waitForResponse((r) => r.url().includes('queries/update.php'), { timeout: 5000 }),
         page.click('#dotoday' + first)
     ]);
-    assert.match(await response.text(), /^\d+$/);
+    assert.deepEqual(await response.json(), { ok: true, version: 2 });
     await page.waitForFunction(() => itemList[0].version == 2);
     assert.equal(sql(`SELECT startDate = UTC_DATE() FROM todo WHERE id=${first}`).trim(), '1');
 
@@ -251,8 +251,9 @@ test('the checkbox is unchecked again when completing an entry fails', async () 
     const alerts = [];
     page.on('dialog', (d) => alerts.push(d.message()));
 
-    // the server answers something else than 1
-    await page.route('**/queries/complete.php*', (r) => r.fulfill({ status: 200, contentType: 'text/plain', body: 'some error' }));
+    // the server refuses with an error message
+    await page.route('**/queries/complete.php*', (r) => r.fulfill({
+        status: 409, contentType: 'application/json; charset=utf-8', body: JSON.stringify({ error: 'some error' }) }));
     let dialog = page.waitForEvent('dialog');
     await page.click('#completed' + id);
     await dialog;
@@ -278,7 +279,177 @@ test('the checkbox is unchecked again when completing an entry fails', async () 
     await page.waitForFunction(() => itemList[0].completed == 1);
     assert.equal(await page.isChecked('#completed' + id), true);
     assert.equal(sql(`SELECT completed FROM todo WHERE id=${id}`).trim(), '1');
-    // the failed request is reported by the browser, on purpose
-    assert.deepEqual(page.errors, ['Failed to load resource: net::ERR_FAILED']);
+    // the failed requests are reported by the browser, on purpose
+    assert.deepEqual(page.errors, [
+        'Failed to load resource: the server responded with a status of 409 (Conflict)',
+        'Failed to load resource: net::ERR_FAILED'
+    ]);
+    await page.close();
+});
+
+const errorBody = (error) => ({ contentType: 'application/json; charset=utf-8', body: JSON.stringify({ error }) });
+
+// the texts of the alerts of a page from now on (confirm dialogs are not counted)
+function collectAlerts(page) {
+    const alerts = [];
+    page.on('dialog', (d) => { if (d.type() === 'alert') alerts.push(d.message()); });
+    return alerts;
+}
+
+// runs the action and waits for the alert which that leads to
+async function untilAlert(page, action) {
+    const dialog = page.waitForEvent('dialog');
+    await action();
+    await dialog;
+    await page.evaluate(() => 0);  // the handler goes on after the alert was accepted
+}
+
+const clickForAlert = (page, selector) => untilAlert(page, () => page.click(selector));
+
+test('an entry moved to the trash or back is shown as before when that fails, also without an answer', async () => {
+    resetDb();
+    sql("INSERT INTO todo (creationDate, description, startDate, list_id) VALUES (UTC_TIMESTAMP(), 'open', UTC_DATE(), 0)");
+    const page = await openPage();
+    await page.waitForSelector('#todoTable tbody tr');
+    const id = await page.evaluate(() => itemList[0].id);
+    const alerts = collectAlerts(page);
+    const deleted = () => page.evaluate(() => itemList[0].deleted);
+
+    // the server refuses: the message is shown and the entry is back
+    await page.route('**/queries/trash.php*', (r) => r.fulfill({ status: 409, ...errorBody('trash refused') }));
+    await clickForAlert(page, '#trash' + id);
+    assert.deepEqual(alerts, ['Error while deleting: trash refused']);
+    assert.equal(await deleted(), 0);
+    assert.equal(await page.locator('#todo' + id + '.todo_deleted').count(), 0);
+
+    // no answer: the entry is back as well (it stayed in the trash before)
+    await page.unroute('**/queries/trash.php*');
+    await page.route('**/queries/trash.php*', (r) => r.abort());
+    await clickForAlert(page, '#trash' + id);
+    assert.deepEqual(alerts, ['Error while deleting: trash refused', 'Transmission error.']);
+    assert.equal(await deleted(), 0);
+    assert.equal(await page.locator('#todo' + id + '.todo_deleted').count(), 0);
+    assert.equal(sql(`SELECT deleted FROM todo WHERE id=${id}`).trim(), '0');
+
+    // restoring is undone in the same way
+    await page.unroute('**/queries/trash.php*');
+    await page.click('#trash' + id);
+    await page.waitForFunction(() => itemList[0].deleted == 1);
+    await page.route('**/queries/trash.php*', (r) => r.abort());
+    await clickForAlert(page, '#restore' + id);
+    assert.deepEqual(alerts.slice(2), ['Transmission error.']);
+    assert.equal(await deleted(), 1);
+    assert.equal(await page.locator('#todo' + id + '.todo_deleted').count(), 1);
+    assert.deepEqual(page.errors, [
+        'Failed to load resource: the server responded with a status of 409 (Conflict)',
+        'Failed to load resource: net::ERR_FAILED',
+        'Failed to load resource: net::ERR_FAILED'
+    ]);
+    await page.close();
+});
+
+test('a failed creation removes the new entry, and nothing else if the list was loaded again meanwhile', async () => {
+    resetDb();
+    sql("INSERT INTO todo (creationDate, description, startDate, list_id) VALUES " +
+        "(UTC_TIMESTAMP(), 'one', UTC_DATE(), 0), (UTC_TIMESTAMP(), 'two', UTC_DATE(), 0)");
+    const page = await openPage();
+    await page.waitForFunction(() => itemList.length == 2);
+    const alerts = collectAlerts(page);
+    const todos = () => page.evaluate(() => itemList.map((i) => i.todo).sort());
+
+    // the entry which is shown while the request is on its way is gone
+    await page.route('**/queries/enter.php', (r) => r.fulfill({ status: 422, ...errorBody('rejected') }));
+    await page.fill('#enter_todo', 'new');
+    await clickForAlert(page, '#enter_save');
+    assert.deepEqual(alerts, ['Error while inserting!rejected']);
+    assert.deepEqual(await todos(), ['one', 'two']);
+    assert.equal(await page.inputValue('#enter_todo'), 'new', 'the input is kept');
+
+    // the list was loaded again while the request was on its way: there is no new entry to remove
+    await page.unroute('**/queries/enter.php');
+    await page.route('**/queries/enter.php', async (r) => {
+        await page.evaluate(() => { itemList = itemList.filter((i) => i.id != -1); });
+        await r.fulfill({ status: 422, ...errorBody('rejected again') });
+    });
+    await clickForAlert(page, '#enter_save');
+    assert.deepEqual(alerts, ['Error while inserting!rejected', 'Error while inserting!rejected again']);
+    assert.deepEqual(await todos(), ['one', 'two']);
+    assert.equal(sql('SELECT COUNT(*) FROM todo').trim(), '2');
+    await page.close();
+});
+
+test('failed requests for data are reported, and the list works again afterwards', async () => {
+    resetDb();
+    sql("INSERT INTO todo (creationDate, description, startDate, list_id) VALUES (UTC_TIMESTAMP(), 'one', UTC_DATE(), 0)");
+    const page = await openPage();
+    await page.waitForFunction(() => itemList.length == 1);
+    const alerts = collectAlerts(page);
+    const loaded = () => page.waitForFunction(() => document.querySelector('#working').style.display == 'none');
+
+    // an error status with the message of the server; the loading indicator goes away
+    await page.route('**/queries/query-todos.php*', (r) => r.fulfill({ status: 403, ...errorBody('no access') }));
+    await page.route('**/queries/query-lists.php*', (r) => r.fulfill({ status: 500, ...errorBody('lists failed') }));
+    await page.route('**/queries/query-tags.php*', (r) => r.fulfill({ status: 403, ...errorBody('no tags') }));
+    await untilAlert(page, () => page.click('#refresh'));
+    await loaded();
+    assert.deepEqual(alerts.slice().sort(), ['Error while loading: lists failed', 'Error while loading: no access']);
+    await untilAlert(page, () => page.evaluate(() => reloadTagList()));
+    assert.equal(alerts.length, 3);
+    assert.equal(alerts[2], 'Error while loading: no tags');
+    // (also in the log)
+    const logged = await page.evaluate(() => logItems);
+    for (const text of ['Error while loading: no access', 'Error while loading: lists failed', 'Error while loading: no tags']) {
+        assert.ok(logged.includes(text), text);
+    }
+
+    // no answer, or an answer which is not from the application: only the transmission is reported
+    await page.unroute('**/queries/query-todos.php*');
+    await page.route('**/queries/query-todos.php*', (r) => r.abort());
+    await page.unroute('**/queries/query-lists.php*');
+    await page.route('**/queries/query-lists.php*', (r) => r.fulfill({ status: 403, contentType: 'text/plain', body: 'Forbidden' }));
+    alerts.length = 0;
+    await untilAlert(page, () => page.click('#refresh'));
+    await loaded();
+    assert.deepEqual(alerts, ['Transmission error.', 'Transmission error.']);
+
+    // and it works again
+    await page.unroute('**/queries/query-todos.php*');
+    await page.unroute('**/queries/query-lists.php*');
+    await page.click('#refresh');
+    await page.waitForFunction(() => document.querySelector('#lists li'));
+    await loaded();
+    assert.deepEqual(await page.evaluate(() => itemList.map((i) => i.todo)), ['one']);
+    assert.deepEqual(await page.locator('#lists li').allTextContents(), ['Main', 'Work']);
+    assert.equal(alerts.length, 2);
+    await page.close();
+});
+
+test('reactivating reports the answer of the server in the log, also if it refuses', async () => {
+    resetDb();
+    // (yearly: not due yet, so that loading the list does not copy it)
+    sql("INSERT INTO todo (creationDate, description, startDate, dueDate, completed, completionDate, " +
+        "recurrenceMode, recurrenceInterval, recurrenceAnchor, list_id) VALUES " +
+        "(UTC_TIMESTAMP(), 'yearly', UTC_DATE() - INTERVAL 2 DAY, UTC_DATE(), 1, UTC_TIMESTAMP(), 4, 1, 1, 0)");
+    const page = await openPage();
+    await page.waitForSelector('.reactivateButton');
+    const alerts = collectAlerts(page);
+
+    const loaded = () => page.waitForFunction(() => logItems[logItems.length - 1] == 'Loading finished');
+    await page.click('.reactivateButton');
+    await page.waitForFunction(() => logItems.includes('Result: Reactivated entry...'));
+    await loaded();
+    assert.equal(sql('SELECT COUNT(*) FROM todo').trim(), '2');
+    // the second time there is a reactivated entry already: no alert, the answer is in the log
+    await page.click('.reactivateButton');
+    await page.waitForFunction(() => logItems.some((l) => l.startsWith('Result: Either item is not completed')));
+    await loaded();
+    assert.equal(sql('SELECT COUNT(*) FROM todo').trim(), '2');
+    assert.deepEqual(alerts, []);
+
+    // no answer: the only case with an alert
+    await page.route('**/queries/reactivate-one.php', (r) => r.abort());
+    await clickForAlert(page, '.reactivateButton');
+    assert.deepEqual(alerts, ['Transmission error.']);
+    assert.equal(sql('SELECT COUNT(*) FROM todo').trim(), '2');
     await page.close();
 });

@@ -118,6 +118,10 @@ function setTrashedLocally(idx, trashed) {
 
 
 function deleteLocally(idx) {
+    // (-1: not in the list, e.g. replaced by a reload meanwhile; splice(-1) would remove the last one)
+    if (idx == -1) {
+        return;
+    }
     itemList.splice(idx, 1);
     refreshView();
 }
@@ -175,12 +179,32 @@ function emptyTrashLocally() {
 }
 
 
-// Sends a request which modifies data. The promise is resolved with the answer of the
-// server if the request succeeded, and rejected with { transport: true } if the request
-// itself failed or with { message: text } if the server answered with an error message.
-// This is the one place which decides what a success is: an integer answer (the id of
-// a new entry, a count, or 1). anyAnswer is for the one endpoint with a text as answer.
-function postAction(url, data, anyAnswer) {
+// the parsed JSON of a response body, null if it is not JSON
+function parseJson(text) {
+    try {
+        return JSON.parse(text);
+    } catch (e) {
+        return null;
+    }
+}
+
+// What a failed request is: { message: text } if the server answered with an error status and
+// {"error": text} (all endpoints do that), else { transport: true }
+// (no answer, aborted, or an answer which is not from an endpoint, e.g. the 403 of the web server).
+function failureOf(jqXHR) {
+    var json = parseJson(jqXHR.responseText);
+    if (jqXHR.status >= 400 && json !== null && typeof json.error === 'string') {
+        return { message: json.error };
+    }
+    return { transport: true };
+}
+
+// Sends a request which modifies data. The promise is resolved with the answer of the server
+// (parsed JSON, {"ok": true, ...}) if the request succeeded, and rejected with { transport: true }
+// if the request itself failed or the answer is not the expected JSON, or with { message: text }
+// if the server answered with an error. This is the one place which decides what a success is:
+// a 2xx status and JSON with "ok".
+function postAction(url, data) {
     return new Promise(function(resolve, reject) {
         $.ajax({
             type: 'POST',
@@ -188,13 +212,14 @@ function postAction(url, data, anyAnswer) {
             data: data,
             dataType: 'text'
         }).then(function(answer) {
-            if (anyAnswer || /^\d+$/.test(answer)) {
-                resolve(answer);
+            var json = parseJson(answer);
+            if (json !== null && json.ok === true) {
+                resolve(json);
             } else {
-                reject({ message: answer });
+                reject({ transport: true });
             }
-        }, function() {
-            reject({ transport: true });
+        }, function(jqXHR) {
+            reject(failureOf(jqXHR));
         });
     });
 }
@@ -242,23 +267,34 @@ function setTrashed(id, trashed) {
         log($T(trashed ? 'DELETING_SUCCESSFUL' : 'RESTORING_SUCCESSFUL'));
     }, function(failure) {
         reportFailure(trashed ? 'ERROR_WHILE_DELETING' : 'ERROR_WHILE_RESTORING', failure);
-        // after a transmission error the entry stays as shown, as before
-        if (!failure.transport) {
-            setTrashedLocally(idx, !trashed);
+        // undo what was shown, also after a transmission error (the list may have been loaded
+        // again meanwhile, so the entry is looked up again)
+        var current = findItem(id);
+        if (current != -1) {
+            setTrashedLocally(current, !trashed);
         }
     });
 }
 
 
+function showReactivationResult(message) {
+    log($T('RESULT')+': '+message);
+    refresh();
+}
+
+
 function sendReactivate(id) {
     log($T('REACTIVATING'));
-    // the answer is a text, whatever it says
-    postAction('queries/reactivate-one.php', { id: id }, true).then(function(answer) {
-        log($T('RESULT')+': '+answer);
-        refresh();
-    }, function() {
-        // there is no other failure with this answer
-        alert($T('TRANSMISSION_ERROR'));
+    // what the server says is the result, whether it reactivated the entry or refused to: only a
+    // failed transmission is an error
+    postAction('queries/reactivate-one.php', { id: id }).then(function(answer) {
+        showReactivationResult(answer.message);
+    }, function(failure) {
+        if (failure.transport) {
+            alert($T('TRANSMISSION_ERROR'));
+            return;
+        }
+        showReactivationResult(failure.message);
     });
 }
 
@@ -305,10 +341,10 @@ function toggleCompleted(id) {
     stuff.completionDate = stuff.completed == 1 ? formatDate(getUTCDate(), true) : null;
     // a copy of its own for each request, the item itself is only changed once the server confirmed
     var item = copyTodo(itemList[index]);
-    postAction('queries/complete.php', stuff).then(function() {
+    postAction('queries/complete.php', stuff).then(function(answer) {
         item.completed = stuff.completed;
         item.completionDate = stuff.completionDate;
-        item.version   = stuff.version + 1;
+        item.version   = answer.version;
         toggleLocally(item);
         log($T('UPDATE_SUCCESSFUL'));
     }, function(failure) {
@@ -566,8 +602,13 @@ function reload() {
                 '";'+$T('JSON_PARSER_MESSAGE')+' : '+e);
         }
         renderLists();
-    });
+    }).fail(reportLoadFailure);
     return $.when(todosLoaded.catch($.noop), listsLoaded.catch($.noop));
+}
+
+// a failed GET request for data (an error status is no .done())
+function reportLoadFailure(jqXHR) {
+    reportFailure('ERROR_WHILE_LOADING', failureOf(jqXHR));
 }
 
 function loadTodos() {
@@ -595,7 +636,7 @@ function loadTodos() {
         }
         refreshView();
         log($T('LOADING_FINISHED'));
-    });
+    }).fail(reportLoadFailure);
 }
 
 // The parameters of a request: Todo is no plain object, jQuery 4 would not serialize it,
@@ -615,25 +656,26 @@ function addItem(stuff) {
         $('#enter_start').val('');
         $('#enter_start').data('oldVal', '');
         // the item in the list is stuff; it has its id now, so it is shown like all others
-        stuff.id = parseInt(answer);
+        stuff.id = answer.id;
         refreshView();
     }, function(failure) {
         reportFailure('ERROR_WHILE_CREATING', failure);
         // remove the item from local list; the  data of it
         // will still remain in the edit fields anyway!
+        // (not there any more if the list was loaded again meanwhile)
         deleteLocally(findItem(-1));
     });
 }
 
 function storeItemRemote(stuff, onsucc) {
     log($T('SAVING_MODIFICATIONS'));
-    postAction('queries/update.php', todoParams(stuff)).then(function() {
+    postAction('queries/update.php', todoParams(stuff)).then(function(answer) {
         reloadTagList(); // a tag might have been added or removed
         // if everything went fine, close dialog:
         log($T('SAVING_SUCCESSFUL'));
         onsucc();
         // only set locally now, else it could be confusing
-        stuff.version = stuff.version+1;
+        stuff.version = answer.version;
         if (stuff.list_id != reloadData.list_id) {
             deleteLocally(findItem(stuff.id));
         } else {
@@ -736,6 +778,7 @@ function reloadTagList() {
             tagList = tags;
             fillTagList(tagList);
         },
+        error: reportLoadFailure,
         cache: false
     });
 }

@@ -20,23 +20,23 @@
     requireOwnList($db, $list_id);
     $inputError = todoInputError($todo, $start, $due, $tags);
     if ($inputError !== null) {
-        rejectRequest($inputError);
+        rejectRequest(422, $inputError);
     }
     // limit of the database column, counted in characters:
     if (charLength($notes) > MAX_NOTES_LENGTH) {
-        rejectRequest("NOTES_TOO_LONG");
+        rejectRequest(422, "NOTES_TOO_LONG");
     }
     if ($effort < 0 || $effort > 9999) {
-        rejectRequest("INVALID_EFFORT");
+        rejectRequest(422, "INVALID_EFFORT");
     }
     if (!isset(RECURRENCE_UNITS[$recurrenceMode]) && $recurrenceMode != 0) {
-        rejectRequest("INVALID_RECURRENCE_MODE");
+        rejectRequest(422, "INVALID_RECURRENCE_MODE");
     }
     if ($recurrenceInterval < 1 || $recurrenceInterval > MAX_RECURRENCE_INTERVAL) {
-        rejectRequest("INVALID_RECURRENCE_INTERVAL");
+        rejectRequest(422, "INVALID_RECURRENCE_INTERVAL");
     }
     if ($recurrenceAnchor != 0 && $recurrenceAnchor != 1) {
-        rejectRequest("INVALID_RECURRENCE_ANCHOR");
+        rejectRequest(422, "INVALID_RECURRENCE_ANCHOR");
     }
     $sql = "UPDATE todo ".
             "SET description=?, ".
@@ -66,4 +66,4 @@
         return $affectedRows;
     });
     requireSingleRow($affectedRows, "VERSION_CONFLICT", "MORE_THAN_ONE_ENTRY_CHANGED");
-    echo 1;
+    sendOk(array('version' => $version + 1));

@@ -9,4 +9,4 @@
         return array($deletedAssignments, $affectedRows);
     });
     requireSingleRow($affectedRows, "NO_ROWS_AFFECTED", "MORE_THAN_ONE_TAG_AFFECTED");
-    echo $deletedAssignments;
+    sendOk(array('deleted' => (int)$deletedAssignments));

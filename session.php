@@ -2,6 +2,7 @@
 // session is only used to hold the CSRF token
 require_once(__DIR__."/webauth/webauth.php");
 require_once(__DIR__."/queries/db-connect.php");
+require_once(__DIR__."/queries/response.php");
 
 // whether the HTTPS checks believe X-Forwarded-Proto: it is set by the client
 // unless a proxy overwrites it, so it is only believed if $trust_forwarded_proto
@@ -39,21 +40,18 @@ function csrfToken() {
     return $token;
 }
 
-// for requests that modify data: must be POST and carry the page's token
+// for requests that modify data: must be POST and carry the page's token; refused with a
+// JSON error (405 or 403) like the endpoints do it
 function requirePostWithCsrf() {
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        http_response_code(405);
         header('Allow: POST');
         require_once(__DIR__."/lang.php");
-        echo TodoLang::_("METHOD_NOT_ALLOWED");
-        exit;
+        exitWithError(405, TodoLang::_("METHOD_NOT_ALLOWED"));
     }
     todoStartSession(true);
     $token = isset($_SERVER['HTTP_X_CSRF_TOKEN']) ? $_SERVER['HTTP_X_CSRF_TOKEN'] : '';
     if (!WebAuth\Csrf::isValid(isset($_SESSION['csrf']) ? $_SESSION['csrf'] : null, $token)) {
-        http_response_code(403);
         require_once(__DIR__."/lang.php");
-        echo TodoLang::_("INVALID_CSRF_TOKEN");
-        exit;
+        exitWithError(403, TodoLang::_("INVALID_CSRF_TOKEN"));
     }
 }

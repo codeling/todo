@@ -1,11 +1,13 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { BASE, sql, sqlRows, resetDb, session, post, get } = require('./lib');
+const { BASE, sql, sqlRows, resetDb, session, post, get, answer, assertOk, assertError, createdId } = require('./lib');
 
 const todoFields = (over) => Object.assign({
     todo: 'item', due: '', start: '', effort: 1, notes: '', tags: '',
     recurrenceMode: 0, recurrenceInterval: 1, recurrenceAnchor: 0, list_id: 0
 }, over);
+
+const csrfError = 'Invalid or missing CSRF token, please reload the page!';
 
 test.beforeEach(resetDb);
 
@@ -14,30 +16,30 @@ test('modifying endpoints reject requests without valid CSRF token', async () =>
     const endpoints = ['enter.php', 'update.php', 'complete.php', 'trash.php', 'empty-trash.php',
         'reactivate-one.php', 'reactivate-due.php', 'edit-tag.php', 'delete-tag.php', 'merge-tag.php'];
     for (const ep of endpoints) {
-        assert.equal((await post(ep, { id: 1 })).status, 403, ep + ' without token');
-        assert.equal((await post(ep, { id: 1 }, sess, 'wrong')).status, 403, ep + ' with wrong token');
-        assert.equal((await get(ep + '?id=1')).status, 405, ep + ' via GET');
+        assertError(await post(ep, { id: 1 }), 403, csrfError, ep + ' without token');
+        assertError(await post(ep, { id: 1 }, sess, 'wrong'), 403, csrfError, ep + ' with wrong token');
+        assertError(await get(ep + '?id=1'), 405, 'Method not allowed!', ep + ' via GET');
     }
     assert.equal(sql('SELECT COUNT(*) FROM todo').trim(), '0');
 });
 
 test('create, update, complete, trash and empty trash with valid token', async () => {
     const sess = await session();
-    const id = (await post('enter.php', { todo: 'first', due: '', start: '', tags: 'a,b,a', list_id: 0 }, sess)).text;
-    assert.match(id, /^\d+$/);
+    const id = createdId(await post('enter.php', { todo: 'first', due: '', start: '', tags: 'a,b,a', list_id: 0 }, sess));
     assert.deepEqual(sqlRows(`SELECT description, dueDate, startDate IS NOT NULL FROM todo WHERE id=${id}`),
         [['first', null, '1']]);
     assert.deepEqual(sqlRows(`SELECT t.name FROM todo_tags r JOIN tags t ON t.id=r.tag_id WHERE todo_id=${id} ORDER BY 1`),
         [['a'], ['b']]);
-    assert.equal((await post('update.php', todoFields({ id, version: 1, todo: 'changed', notes: 'n',
-        due: '2026-01-10', start: '2026-01-05', tags: 'c' }), sess)).text, '1');
-    assert.equal((await post('complete.php', { id, completed: 1, version: 2 }, sess)).text, '1');
-    assert.equal((await post('trash.php', { id, trash: 1, version: 3 }, sess)).text, '1');
+    // update and complete answer with the new version of the entry
+    assertOk(await post('update.php', todoFields({ id, version: 1, todo: 'changed', notes: 'n',
+        due: '2026-01-10', start: '2026-01-05', tags: 'c' }), sess), { version: 2 });
+    assertOk(await post('complete.php', { id, completed: 1, version: 2 }, sess), { version: 3 });
+    assertOk(await post('trash.php', { id, trash: 1, version: 3 }, sess));
     // a deleted entry can neither be reopened nor completed
-    assert.equal((await post('complete.php', { id, completed: 0, version: 3 }, sess)).text,
+    assertError(await post('complete.php', { id, completed: 0, version: 3 }, sess), 409,
         'Deleted entries cannot be completed or reopened!');
     assert.deepEqual(sqlRows(`SELECT completed, version FROM todo WHERE id=${id}`), [['1', '3']]);
-    assert.equal((await post('empty-trash.php', { list_id: 0 }, sess)).text, '1');
+    assertOk(await post('empty-trash.php', { list_id: 0 }, sess));
     assert.equal(sql('SELECT COUNT(*) FROM todo').trim(), '0');
 });
 
@@ -46,9 +48,8 @@ test('text is stored and returned exactly as sent, not HTML-encoded', async () =
     const todo = `Tom & Jerry <b> "quoted" 'single' Straße äÄ € &amp; &lt; 🎂`;
     const notes = `a & b < c > d "e" 'f' ü ß € &szlig; &#039;`;
     const tag = `Q&A <i> "x" 'y' ä &amp;`;
-    const id = (await post('enter.php', { todo, due: '', start: '', tags: tag, list_id: 0 }, sess)).text;
-    assert.match(id, /^\d+$/);
-    assert.equal((await post('update.php', todoFields({ id, version: 1, todo, notes, tags: tag }), sess)).text, '1');
+    const id = createdId(await post('enter.php', { todo, due: '', start: '', tags: tag, list_id: 0 }, sess));
+    assertOk(await post('update.php', todoFields({ id, version: 1, todo, notes, tags: tag }), sess), { version: 2 });
     assert.deepEqual(sqlRows(`SELECT description, notes FROM todo WHERE id=${id}`), [[todo, notes]]);
     assert.deepEqual(sqlRows('SELECT name FROM tags'), [[tag]]);
     const items = JSON.parse((await get('query-todos.php?list_id=0&incomplete=true')).text);
@@ -57,7 +58,7 @@ test('text is stored and returned exactly as sent, not HTML-encoded', async () =
     assert.deepEqual(tags.map((t) => t.name), [tag]);
     // a renamed tag as well
     const renamed = 'Q&A <b> "z"';
-    assert.equal((await post('edit-tag.php', { id: tags[0].id, tag_name: ' ' + renamed + ' ' }, sess)).text, '1');
+    assertOk(await post('edit-tag.php', { id: tags[0].id, tag_name: ' ' + renamed + ' ' }, sess));
     assert.deepEqual(sqlRows('SELECT name FROM tags'), [[renamed]]);
 });
 
@@ -65,8 +66,8 @@ test('text which is not valid UTF-8 is refused', async () => {
     const sess = await session();
     const headers = { 'Content-Type': 'application/x-www-form-urlencoded', Cookie: sess.cookie, 'X-CSRF-Token': sess.token };
     for (const body of ['todo=a%FFb&tags=&list_id=0', 'todo=a&tags=t%C3&list_id=0']) {
-        const res = await fetch(BASE + '/queries/enter.php', { method: 'POST', headers, body });
-        assert.equal(await res.text(), 'Invalid parameters!', body);
+        const res = await answer(await fetch(BASE + '/queries/enter.php', { method: 'POST', headers, body }));
+        assertError(res, 422, 'Invalid parameters!', body);
     }
     assert.equal(sql('SELECT COUNT(*) FROM todo').trim(), '0');
 });
@@ -74,11 +75,11 @@ test('text which is not valid UTF-8 is refused', async () => {
 test('reactivating a recurring entry copies stored values verbatim (no second-order SQL injection)', async () => {
     const sess = await session();
     const payload = ', NULL, 0, NULL, (SELECT CONCAT(user(), 0x20, version())), 1, 7, 1, 0)# ';
-    const id = (await post('enter.php', { todo: 'x\\', due: '', start: '', tags: 't', list_id: 0 }, sess)).text;
-    assert.equal((await post('update.php', todoFields({ id, version: 1, todo: 'x\\', notes: payload,
-        recurrenceMode: 1, recurrenceInterval: 7, recurrenceAnchor: 1, tags: 't' }), sess)).text, '1');
-    assert.equal((await post('complete.php', { id, completed: 1, version: 2 }, sess)).text, '1');
-    assert.equal((await post('reactivate-one.php', { id }, sess)).text, 'Reactivated entry...');
+    const id = createdId(await post('enter.php', { todo: 'x\\', due: '', start: '', tags: 't', list_id: 0 }, sess));
+    assertOk(await post('update.php', todoFields({ id, version: 1, todo: 'x\\', notes: payload,
+        recurrenceMode: 1, recurrenceInterval: 7, recurrenceAnchor: 1, tags: 't' }), sess), { version: 2 });
+    assertOk(await post('complete.php', { id, completed: 1, version: 2 }, sess), { version: 3 });
+    assertOk(await post('reactivate-one.php', { id }, sess), { message: 'Reactivated entry...' });
     const rows = sqlRows('SELECT description, notes, completed FROM todo ORDER BY id');
     assert.equal(rows.length, 2);
     assert.deepEqual(rows[1], ['x\\', payload, '0']);
@@ -87,7 +88,7 @@ test('reactivating a recurring entry copies stored values verbatim (no second-or
 
 // a completed weekly entry which is due for reactivation, in the given list
 async function completedDueEntry(sess, list_id) {
-    const id = (await post('enter.php', { todo: 'weekly', due: '2026-01-10', start: '2026-01-08', tags: 'w', list_id }, sess)).text;
+    const id = createdId(await post('enter.php', { todo: 'weekly', due: '2026-01-10', start: '2026-01-08', tags: 'w', list_id }, sess));
     await post('update.php', todoFields({ id, version: 1, todo: 'weekly', due: '2026-01-10', start: '2026-01-08',
         recurrenceMode: 2, recurrenceInterval: 1, recurrenceAnchor: 1, tags: 'w', list_id }), sess);
     await post('complete.php', { id, completed: 1, version: 2 }, sess);
@@ -97,7 +98,7 @@ async function completedDueEntry(sess, list_id) {
 test('due recurring entries are reactivated by reactivate-due.php', async () => {
     const sess = await session();
     await completedDueEntry(sess, 0);
-    assert.equal((await post('reactivate-due.php', {}, sess)).text, '1');
+    assertOk(await post('reactivate-due.php', {}, sess));
     const items = JSON.parse((await get('query-todos.php?list_id=0&age=10000&incomplete=true')).text);
     const copy = items.find((i) => i.completed == 0);
     assert.equal(copy.todo, 'weekly');
@@ -141,11 +142,11 @@ test('recurrence supports arbitrary intervals in days, weeks, months and years',
     const cases = [[1, 10, '2026-01-20'], [2, 3, '2026-01-31'], [3, 2, '2026-03-10'], [4, 10, '2036-01-10']];
     for (const [mode, interval, expectedDue] of cases) {
         sql('DELETE FROM recurringCopied; DELETE FROM todo_tags; DELETE FROM todo');
-        const id = (await post('enter.php', { todo: 'r', due: '2026-01-10', start: '2026-01-10', tags: '', list_id: 0 }, sess)).text;
-        assert.equal((await post('update.php', todoFields({ id, version: 1, todo: 'r', due: '2026-01-10',
-            start: '2026-01-10', recurrenceMode: mode, recurrenceInterval: interval, recurrenceAnchor: 1 }), sess)).text, '1');
+        const id = createdId(await post('enter.php', { todo: 'r', due: '2026-01-10', start: '2026-01-10', tags: '', list_id: 0 }, sess));
+        assertOk(await post('update.php', todoFields({ id, version: 1, todo: 'r', due: '2026-01-10',
+            start: '2026-01-10', recurrenceMode: mode, recurrenceInterval: interval, recurrenceAnchor: 1 }), sess), { version: 2 });
         await post('complete.php', { id, completed: 1, version: 2 }, sess);
-        assert.equal((await post('reactivate-one.php', { id }, sess)).text, 'Reactivated entry...');
+        assertOk(await post('reactivate-one.php', { id }, sess), { message: 'Reactivated entry...' });
         assert.deepEqual(sqlRows('SELECT DATE(dueDate), recurrenceMode, recurrenceInterval FROM todo WHERE completed=0'),
             [[expectedDue, String(mode), String(interval)]]);
     }
@@ -156,21 +157,20 @@ test('lists and todos of other users can neither be read nor changed', async () 
     const denied = 'Access denied: this list or entry does not belong to you!';
     sql("INSERT INTO todo (id, creationDate, description, startDate, list_id) " +
         "VALUES (100, UTC_TIMESTAMP(), 'foreign', UTC_DATE(), 2)");
-    const own = (await post('enter.php', { todo: 'own', due: '', start: '', list_id: 0 }, sess)).text;
-    assert.match(own, /^\d+$/);
-    assert.equal((await post('enter.php', { todo: 'x', due: '', start: '', list_id: 2 }, sess)).text, denied);
-    assert.equal((await post('update.php', todoFields({ id: 100, version: 1, todo: 'changed' }), sess)).text, denied);
+    const own = createdId(await post('enter.php', { todo: 'own', due: '', start: '', list_id: 0 }, sess));
+    assertError(await post('enter.php', { todo: 'x', due: '', start: '', list_id: 2 }, sess), 403, denied);
+    assertError(await post('update.php', todoFields({ id: 100, version: 1, todo: 'changed' }), sess), 403, denied);
     // moving an own todo into a foreign list:
-    assert.equal((await post('update.php', todoFields({ id: own, version: 1, list_id: 2 }), sess)).text, denied);
-    assert.equal((await post('complete.php', { id: 100, completed: 1, version: 1 }, sess)).text, denied);
-    assert.equal((await post('trash.php', { id: 100, trash: 1, version: 1 }, sess)).text, denied);
-    assert.equal((await post('reactivate-one.php', { id: 100 }, sess)).text, denied);
-    assert.equal((await post('empty-trash.php', { list_id: 2 }, sess)).text, denied);
-    assert.equal((await get('query-todos.php?list_id=2')).text, denied);
-    assert.equal((await get('query-tags.php?list_id=2')).text, denied);
+    assertError(await post('update.php', todoFields({ id: own, version: 1, list_id: 2 }), sess), 403, denied);
+    assertError(await post('complete.php', { id: 100, completed: 1, version: 1 }, sess), 403, denied);
+    assertError(await post('trash.php', { id: 100, trash: 1, version: 1 }, sess), 403, denied);
+    assertError(await post('reactivate-one.php', { id: 100 }, sess), 403, denied);
+    assertError(await post('empty-trash.php', { list_id: 2 }, sess), 403, denied);
+    assertError(await get('query-todos.php?list_id=2'), 403, denied);
+    assertError(await get('query-tags.php?list_id=2'), 403, denied);
     assert.deepEqual(JSON.parse((await get('query-lists.php')).text).map((l) => l.name), ['Main', 'Work']);
     assert.deepEqual(sqlRows('SELECT id, description, completed, deleted, list_id FROM todo ORDER BY id'),
-        [['100', 'foreign', '0', '0', '2'], [own, 'own', '0', '0', '0']]);
+        [['100', 'foreign', '0', '0', '2'], [String(own), 'own', '0', '0', '0']]);
 });
 
 // two todos in list 0 with the given tags (comma separated), returns the tag ids by name
@@ -185,7 +185,7 @@ const assignments = () => sqlRows('SELECT t.description, g.name FROM todo_tags r
 test('a tag cannot be merged into itself', async () => {
     const sess = await session();
     const tag = await taggedTodos(sess, 'a,b', 'a');
-    assert.equal((await post('merge-tag.php', { id: tag.a, merge_id: tag.a }, sess)).text,
+    assertError(await post('merge-tag.php', { id: tag.a, merge_id: tag.a }, sess), 422,
         'A tag cannot be merged into itself!');
     assert.deepEqual(assignments(), ['one:a', 'one:b', 'two:a']);
     assert.equal(sql('SELECT COUNT(*) FROM tags').trim(), '2');
@@ -194,7 +194,7 @@ test('a tag cannot be merged into itself', async () => {
 test('merging tags moves the entries and keeps each only once', async () => {
     const sess = await session();
     const tag = await taggedTodos(sess, 'a,b', 'a');
-    assert.equal((await post('merge-tag.php', { id: tag.a, merge_id: tag.b }, sess)).text, '1');
+    assertOk(await post('merge-tag.php', { id: tag.a, merge_id: tag.b }, sess));
     assert.deepEqual(assignments(), ['one:b', 'two:b']);
 });
 
@@ -204,11 +204,11 @@ const invalidTags = 'Invalid tags (at most 50 tags, none longer than 255 charact
 test('tag endpoints validate their parameters', async () => {
     const sess = await session();
     const tag = await taggedTodos(sess, 'keep', '');
-    assert.equal((await post('edit-tag.php', { id: tag.keep }, sess)).text, invalidTagName);
-    assert.equal((await post('edit-tag.php', { id: tag.keep, tag_name: '  ' }, sess)).text, invalidTagName);
-    assert.equal((await post('merge-tag.php', { id: tag.keep }, sess)).text, 'Invalid parameters!');
+    assertError(await post('edit-tag.php', { id: tag.keep }, sess), 422, invalidTagName);
+    assertError(await post('edit-tag.php', { id: tag.keep, tag_name: '  ' }, sess), 422, invalidTagName);
+    assertError(await post('merge-tag.php', { id: tag.keep }, sess), 422, 'Invalid parameters!');
     assert.equal(sql('SELECT name FROM tags').trim(), 'keep');
-    assert.equal((await post('edit-tag.php', { id: tag.keep, tag_name: ' <b> ' }, sess)).text, '1');
+    assertOk(await post('edit-tag.php', { id: tag.keep, tag_name: ' <b> ' }, sess));
     assert.equal(sql('SELECT name FROM tags').trim(), '<b>');
 });
 
@@ -225,26 +225,26 @@ test('tags of other users, or shared with them, can not be changed', async () =>
     const tagsBefore = sqlRows('SELECT id, name FROM tags ORDER BY id');
     const assignmentsBefore = sql('SELECT todo_id, tag_id FROM todo_tags ORDER BY 1, 2');
     for (const tag of [50, 51, 52]) {
-        assert.equal((await post('edit-tag.php', { id: tag, tag_name: 'x' }, sess)).text, denied, 'edit ' + tag);
-        assert.equal((await post('delete-tag.php', { id: tag }, sess)).text, denied, 'delete ' + tag);
-        assert.equal((await post('merge-tag.php', { id: tag, merge_id: mine }, sess)).text, denied, 'merge ' + tag);
-        assert.equal((await post('merge-tag.php', { id: mine, merge_id: tag }, sess)).text, denied, 'merge into ' + tag);
+        assertError(await post('edit-tag.php', { id: tag, tag_name: 'x' }, sess), 403, denied, 'edit ' + tag);
+        assertError(await post('delete-tag.php', { id: tag }, sess), 403, denied, 'delete ' + tag);
+        assertError(await post('merge-tag.php', { id: tag, merge_id: mine }, sess), 403, denied, 'merge ' + tag);
+        assertError(await post('merge-tag.php', { id: mine, merge_id: tag }, sess), 403, denied, 'merge into ' + tag);
     }
     assert.deepEqual(sqlRows('SELECT id, name FROM tags ORDER BY id'), tagsBefore);
     assert.equal(sql('SELECT todo_id, tag_id FROM todo_tags ORDER BY 1, 2'), assignmentsBefore);
     // an own tag can still be edited:
-    assert.equal((await post('edit-tag.php', { id: mine, tag_name: 'renamed' }, sess)).text, '1');
+    assertOk(await post('edit-tag.php', { id: mine, tag_name: 'renamed' }, sess));
 });
 
 test('invalid input is rejected', async () => {
     const sess = await session();
-    assert.equal((await post('enter.php', { todo: 'a', due: '2026-01-10x', start: '', list_id: 0 }, sess)).text, 'Invalid due date!');
+    assertError(await post('enter.php', { todo: 'a', due: '2026-01-10x', start: '', list_id: 0 }, sess), 422, 'Invalid due date!');
     // ($ in a regular expression would match before a trailing newline)
-    assert.equal((await post('enter.php', { todo: 'a', due: '2026-01-10\n', start: '', list_id: 0 }, sess)).text, 'Invalid due date!');
+    assertError(await post('enter.php', { todo: 'a', due: '2026-01-10\n', start: '', list_id: 0 }, sess), 422, 'Invalid due date!');
     assert.equal(sql('SELECT COUNT(*) FROM todo').trim(), '0');
-    assert.equal((await post('enter.php', { todo: 'a', due: '2026-01-01', start: '2026-01-05', list_id: 0 }, sess)).text,
+    assertError(await post('enter.php', { todo: 'a', due: '2026-01-01', start: '2026-01-05', list_id: 0 }, sess), 422,
         'Due date is earlier than start date!');
-    const id = (await post('enter.php', { todo: 'a', due: '', start: '', list_id: 0 }, sess)).text;
+    const id = createdId(await post('enter.php', { todo: 'a', due: '', start: '', list_id: 0 }, sess));
     const bad = [
         [{ start: '2026-13-01' }, 'Invalid start date!'],
         [{ due: '2026-01-01', start: '2026-01-05' }, 'Due date is earlier than start date!'],
@@ -256,15 +256,15 @@ test('invalid input is rejected', async () => {
         [{ recurrenceAnchor: 2 }, 'Invalid recurrence anchor!'],
     ];
     for (const [over, msg] of bad) {
-        assert.equal((await post('update.php', todoFields(Object.assign({ id, version: 1 }, over)), sess)).text, msg);
+        assertError(await post('update.php', todoFields(Object.assign({ id, version: 1 }, over)), sess), 422, msg);
     }
 });
 
 test('a version conflict changes neither the entry nor its tags', async () => {
     const sess = await session();
-    const id = (await post('enter.php', { todo: 'first', due: '', start: '', tags: 'a,b', list_id: 0 }, sess)).text;
+    const id = createdId(await post('enter.php', { todo: 'first', due: '', start: '', tags: 'a,b', list_id: 0 }, sess));
     const res = await post('update.php', todoFields({ id, version: 7, todo: 'changed', tags: 'c' }), sess);
-    assert.match(res.text, /^The database contains a different version/);
+    assertError(res, 409, /^The database contains a different version/);
     assert.deepEqual(sqlRows(`SELECT description, version FROM todo WHERE id=${id}`), [['first', '1']]);
     assert.deepEqual(sqlRows(`SELECT t.name FROM todo_tags r JOIN tags t ON t.id=r.tag_id WHERE todo_id=${id} ORDER BY 1`),
         [['a'], ['b']]);
@@ -276,8 +276,7 @@ test('a database error while saving the tags leaves the new entry out as well', 
     sql('RENAME TABLE tags TO tags_hidden');
     try {
         const res = await post('enter.php', { todo: 'x', due: '', start: '', tags: 'a', list_id: 0 }, sess);
-        assert.equal(res.status, 500);
-        assert.equal(res.text, 'Database error!');
+        assertError(res, 500, 'Database error!');
         assert.equal(sql('SELECT COUNT(*) FROM todo').trim(), '0');
     } finally {
         sql('RENAME TABLE tags_hidden TO tags');
@@ -286,18 +285,18 @@ test('a database error while saving the tags leaves the new entry out as well', 
 
 test('reactivating an entry which is not completed does not mark it as copied', async () => {
     const sess = await session();
-    const id = (await post('enter.php', { todo: 'x', due: '2026-01-10', start: '2026-01-08', tags: 't', list_id: 0 }, sess)).text;
+    const id = createdId(await post('enter.php', { todo: 'x', due: '2026-01-10', start: '2026-01-08', tags: 't', list_id: 0 }, sess));
     const notPossible = 'Either item is not completed, not recurring, or there is already a reactivated entry!';
     // not recurring, then recurring but not completed:
-    assert.equal((await post('reactivate-one.php', { id }, sess)).text, notPossible);
+    assertError(await post('reactivate-one.php', { id }, sess), 409, notPossible);
     await post('update.php', todoFields({ id, version: 1, todo: 'x', due: '2026-01-10', start: '2026-01-08',
         recurrenceMode: 2, recurrenceInterval: 1, recurrenceAnchor: 1, tags: 't' }), sess);
-    assert.equal((await post('reactivate-one.php', { id }, sess)).text, notPossible);
+    assertError(await post('reactivate-one.php', { id }, sess), 409, notPossible);
     assert.equal(sql('SELECT COUNT(*) FROM recurringCopied').trim(), '0');
     // completed: copied once
     await post('complete.php', { id, completed: 1, version: 2 }, sess);
-    assert.equal((await post('reactivate-one.php', { id }, sess)).text, 'Reactivated entry...');
-    assert.equal((await post('reactivate-one.php', { id }, sess)).text, notPossible);
+    assertOk(await post('reactivate-one.php', { id }, sess), { message: 'Reactivated entry...' });
+    assertError(await post('reactivate-one.php', { id }, sess), 409, notPossible);
     assert.equal(sql('SELECT COUNT(*) FROM todo').trim(), '2');
     assert.equal(sql('SELECT COUNT(*) FROM recurringCopied').trim(), '1');
 });
@@ -305,12 +304,75 @@ test('reactivating an entry which is not completed does not mark it as copied', 
 test('database errors are not shown to the client', async () => {
     sql('RENAME TABLE tags TO tags_hidden');
     try {
-        const res = await get('query-tags.php?list_id=0');
-        assert.equal(res.status, 500);
-        assert.equal(res.text, 'Database error!');
+        assertError(await get('query-tags.php?list_id=0'), 500, 'Database error!');
     } finally {
         sql('RENAME TABLE tags_hidden TO tags');
     }
+});
+
+const JSON_TYPE = 'application/json; charset=utf-8';
+
+test('endpoints answer with an HTTP status and JSON: 200, 403, 405, 409 and 422', async () => {
+    const sess = await session();
+    const id = createdId(await post('enter.php', { todo: 'a', due: '', start: '', tags: 't', list_id: 0 }, sess));
+    // [what, answer, status, names of the fields of the JSON]
+    const cases = [
+        // success: 200 and {"ok": true}, with the new id (enter.php) or version (complete.php, update.php)
+        ['enter', await post('enter.php', { todo: 'b', due: '', start: '', list_id: 0 }, sess), 200, ['ok', 'id']],
+        ['complete', await post('complete.php', { id, completed: 1, version: 1 }, sess), 200, ['ok', 'version']],
+        ['trash', await post('trash.php', { id, trash: 1, version: 2 }, sess), 200, ['ok']],
+        // the data of the lists: 200 and JSON
+        ['lists', await get('query-lists.php'), 200, null],
+        ['tags', await get('query-tags.php?list_id=0'), 200, null],
+        ['todos', await get('query-todos.php?list_id=0'), 200, null],
+        // somebody else's data: 403
+        ['foreign list', await post('empty-trash.php', { list_id: 2 }, sess), 403, ['error']],
+        ['foreign list (GET)', await get('query-todos.php?list_id=2'), 403, ['error']],
+        // conflict with the current state of the data: 409
+        ['version conflict', await post('trash.php', { id, trash: 0, version: 99 }, sess), 409, ['error']],
+        // invalid input: 422
+        ['empty todo', await post('enter.php', { todo: '', due: '', start: '', list_id: 0 }, sess), 422, ['error']],
+        // no valid CSRF token: 403
+        ['no token', await post('trash.php', { id, trash: 0, version: 2 }), 403, ['error']],
+    ];
+    for (const [what, res, status, fields] of cases) {
+        assert.equal(res.status, status, what);
+        assert.equal(res.type, JSON_TYPE, what);
+        if (fields) {
+            assert.deepEqual(Object.keys(res.json), fields, what);
+        } else {
+            assert.ok(Array.isArray(res.json), what);
+        }
+        if (status >= 400) {
+            assert.ok(typeof res.json.error === 'string' && res.json.error.length > 0, what);
+        }
+    }
+    // a GET request for an endpoint which modifies data: 405 and the Allow header
+    const res = await fetch(BASE + '/queries/trash.php?id=' + id);
+    assert.equal(res.status, 405);
+    assert.equal(res.headers.get('content-type'), JSON_TYPE);
+    assert.equal(res.headers.get('allow'), 'POST');
+    assert.deepEqual(await res.json(), { error: 'Method not allowed!' });
+});
+
+test('a database error answers 500: JSON for the endpoints, plain text for the pages', async () => {
+    const sess = await session();
+    sql('RENAME TABLE todo TO todo_hidden');
+    try {
+        assertError(await post('trash.php', { id: 1, trash: 1, version: 1 }, sess), 500, 'Database error!');
+        assertError(await post('reactivate-due.php', {}, sess), 500, 'Database error!');
+        assertError(await get('query-todos.php?list_id=0'), 500, 'Database error!');
+        // the statistics page is for people: no JSON
+        const res = await answer(await fetch(BASE + '/statistik.php'));
+        assert.equal(res.status, 500);
+        assert.doesNotMatch(res.type, /json/);
+        assert.match(res.text, /Database error!/);
+        assert.equal(res.json, null);
+    } finally {
+        sql('RENAME TABLE todo_hidden TO todo');
+    }
+    // and works again
+    assertOk(await post('empty-trash.php', { list_id: 0 }, sess));
 });
 
 test('data endpoints answer with a JSON content type', async () => {
@@ -357,26 +419,25 @@ test('a tag cannot be renamed to a name with a comma or a too long name', async 
     // a comma would split the tag in lists of tags (and, as a JSON array, was once shown as HTML)
     const json = '[{"value":"x","onmouseover=1 a":"1"}]';
     for (const name of ['a,b', json, 'x'.repeat(256)]) {
-        assert.equal((await post('edit-tag.php', { id: tag.keep, tag_name: name }, sess)).text, invalidTagName, name);
+        assertError(await post('edit-tag.php', { id: tag.keep, tag_name: name }, sess), 422, invalidTagName, name);
     }
     assert.equal(sql('SELECT name FROM tags').trim(), 'keep');
-    assert.equal((await post('edit-tag.php', { id: tag.keep, tag_name: 'x'.repeat(255) }, sess)).text, '1');
+    assertOk(await post('edit-tag.php', { id: tag.keep, tag_name: 'x'.repeat(255) }, sess));
 });
 
 test('the number and length of tags is limited', async () => {
     const sess = await session();
     const tags = (n) => Array.from({ length: n }, (_, i) => 't' + i).join(',');
     // too many tags / a too long tag: nothing is written at all
-    assert.equal((await post('enter.php', { todo: 'a', due: '', start: '', tags: tags(51), list_id: 0 }, sess)).text, invalidTags);
-    assert.equal((await post('enter.php', { todo: 'a', due: '', start: '', tags: 'x'.repeat(256), list_id: 0 }, sess)).text, invalidTags);
+    assertError(await post('enter.php', { todo: 'a', due: '', start: '', tags: tags(51), list_id: 0 }, sess), 422, invalidTags);
+    assertError(await post('enter.php', { todo: 'a', due: '', start: '', tags: 'x'.repeat(256), list_id: 0 }, sess), 422, invalidTags);
     assert.equal(sql('SELECT COUNT(*) FROM todo').trim(), '0');
     assert.equal(sql('SELECT COUNT(*) FROM tags').trim(), '0');
     // 50 are fine; duplicates and empty tags do not count
-    const id = (await post('enter.php', { todo: 'a', due: '', start: '', tags: tags(50) + ',,t0, t1', list_id: 0 }, sess)).text;
-    assert.match(id, /^\d+$/);
+    const id = createdId(await post('enter.php', { todo: 'a', due: '', start: '', tags: tags(50) + ',,t0, t1', list_id: 0 }, sess));
     assert.equal(sql('SELECT COUNT(*) FROM todo_tags').trim(), '50');
     // an update with too many tags changes nothing, and keeps the version
-    assert.equal((await post('update.php', todoFields({ id, version: 1, todo: 'changed', tags: tags(51) }), sess)).text, invalidTags);
+    assertError(await post('update.php', todoFields({ id, version: 1, todo: 'changed', tags: tags(51) }), sess), 422, invalidTags);
     assert.deepEqual(sqlRows(`SELECT description, version FROM todo WHERE id=${id}`), [['a', '1']]);
     assert.equal(sql('SELECT COUNT(*) FROM todo_tags').trim(), '50');
 });
@@ -394,8 +455,7 @@ test('the tags of an entry are a JSON array: complete, ordered, and names with c
     const sess = await session();
     // 50 tags of 250 characters: far more than group_concat_max_len (1024), which cut the old list
     const names = [...Array(50).keys()].map((i) => String(100 + i) + 'x'.repeat(247));
-    const id = (await post('enter.php', { todo: 'many', due: '', start: '', tags: names.join(','), list_id: 0 }, sess)).text;
-    assert.match(id, /^\d+$/);
+    createdId(await post('enter.php', { todo: 'many', due: '', start: '', tags: names.join(','), list_id: 0 }, sess));
     sql("INSERT INTO todo (id, creationDate, description, startDate, list_id) VALUES (900, UTC_TIMESTAMP(), 'none', UTC_DATE(), 0), " +
         "(901, UTC_TIMESTAMP(), 'comma', UTC_DATE(), 0); INSERT INTO tags (id, name) VALUES (900, 'a,b'), (901, 'c'); " +
         "INSERT INTO todo_tags VALUES (901, 900), (901, 901)");

@@ -1,4 +1,6 @@
 <?php
+// (makes failRequest() answer with JSON, see response.php)
+const TODO_API_REQUEST = true;
 require("db.php");
 $db = todoDb();
 $list_id=(int)(isset($_GET["list_id"]) ? $_GET["list_id"] : 0);

@@ -3,4 +3,4 @@
     require("recurrence.php");
     $db = todoDb();
     reactivateDue($db, todoUserId());
-    echo 1;
+    sendOk();

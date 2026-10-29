@@ -6,7 +6,7 @@
     $name = trim(postParam('tag_name'));
     // no comma: tags are passed around as comma separated lists (see tags.php)
     if (!isValidTagName($name)) {
-        rejectRequest("INVALID_TAG_NAME");
+        rejectRequest(422, "INVALID_TAG_NAME");
     }
     requireOwnTag($db, $id);
     // names are unique (case-insensitive); the unique key also catches a concurrent rename
@@ -16,7 +16,7 @@
         if ($e->getCode() != 1062) {
             throw $e;
         }
-        rejectRequest("TAG_EXISTS");
+        rejectRequest(409, "TAG_EXISTS");
     }
     requireSingleRow($affectedRows, "NO_ROWS_AFFECTED", "MORE_THAN_ONE_TAG_AFFECTED");
-    echo 1;
+    sendOk();

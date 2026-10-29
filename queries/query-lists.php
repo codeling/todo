@@ -1,4 +1,6 @@
 <?php
+// (makes failRequest() answer with JSON, see response.php)
+const TODO_API_REQUEST = true;
 require("db.php");
 $db = todoDb();
 $user_id = (int)todoUserId();

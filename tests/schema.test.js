@@ -5,7 +5,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
-const { sql, sqlRows, resetDb, session, post, get } = require('./lib');
+const { sql, sqlRows, resetDb, session, post, get, assertOk, assertError, createdId } = require('./lib');
 
 const sqlFile = (...parts) => fs.readFileSync(path.join(__dirname, '..', ...parts), 'utf8');
 
@@ -30,7 +30,7 @@ test('tag names are unique, ignoring case', () => {
 test('entries with the same tag in a different case share the tag', async () => {
     const sess = await session();
     for (const tags of ['Work, home', 'work', 'WORK,Home']) {
-        assert.match((await post('enter.php', { todo: 'a', due: '', start: '', tags, list_id: 0 }, sess)).text, /^\d+$/);
+        createdId(await post('enter.php', { todo: 'a', due: '', start: '', tags, list_id: 0 }, sess));
     }
     assert.deepEqual(sqlRows('SELECT name FROM tags ORDER BY name'), [['home'], ['Work']]);
     assert.equal(sql('SELECT COUNT(*) FROM todo_tags').trim(), '5');
@@ -41,7 +41,7 @@ test('requests creating the same new tag at the same time create it once', async
     const results = await Promise.all([...Array(12).keys()].map(() =>
         post('enter.php', { todo: 'a', due: '', start: '', tags: 'brandnew, other', list_id: 0 }, sess)));
     for (const res of results) {
-        assert.match(res.text, /^\d+$/);
+        createdId(res);
     }
     assert.deepEqual(sqlRows('SELECT name FROM tags ORDER BY name'), [['brandnew'], ['other']]);
     assert.equal(sql('SELECT COUNT(*) FROM todo_tags').trim(), '24');
@@ -52,11 +52,11 @@ test('a tag cannot be renamed to the name of another tag', async () => {
     sql("INSERT INTO todo (id, creationDate, description, list_id) VALUES (1, UTC_TIMESTAMP(), 'a', 0); " +
         "INSERT INTO tags (id, name) VALUES (1, 'one'), (2, 'Two'); INSERT INTO todo_tags VALUES (1, 1)");
     for (const name of ['Two', 'two', ' TWO ']) {
-        assert.equal((await post('edit-tag.php', { id: 1, tag_name: name }, sess)).text, 'A tag with this name already exists!');
+        assertError(await post('edit-tag.php', { id: 1, tag_name: name }, sess), 409, 'A tag with this name already exists!');
     }
     assert.deepEqual(sqlRows('SELECT id, name FROM tags ORDER BY id'), [['1', 'one'], ['2', 'Two']]);
     // another case of the own name is fine:
-    assert.equal((await post('edit-tag.php', { id: 1, tag_name: 'ONE' }, sess)).text, '1');
+    assertOk(await post('edit-tag.php', { id: 1, tag_name: 'ONE' }, sess));
     assert.equal(sql('SELECT name FROM tags WHERE id=1').trim(), 'ONE');
 });
 
@@ -92,51 +92,50 @@ test('over-long input is rejected with a message (counted in characters of the p
     const fields = (todo) => ({ todo, due: '', start: '', tags: '', list_id: 0 });
     // 255 characters fit, whatever they are: a & is stored as one character, like an ä
     for (const todo of ['x'.repeat(255), '&'.repeat(255), 'ä'.repeat(100) + '&'.repeat(155)]) {
-        assert.match((await post('enter.php', fields(todo), sess)).text, /^\d+$/, todo.length + ' characters');
+        createdId(await post('enter.php', fields(todo), sess), todo.length + ' characters');
     }
     for (const todo of ['x'.repeat(256), '&'.repeat(256), 'ä'.repeat(100) + '&'.repeat(156)]) {
-        assert.equal((await post('enter.php', fields(todo), sess)).text, 'Todo is too long (at most 255 characters)!',
+        assertError(await post('enter.php', fields(todo), sess), 422, 'Todo is too long (at most 255 characters)!',
             todo.length + ' characters');
     }
     assert.equal(sql('SELECT COUNT(*) FROM todo').trim(), '3');
 
-    const id = (await post('enter.php', fields('a'), sess)).text;
+    const id = createdId(await post('enter.php', fields('a'), sess));
     const update = (over) => post('update.php', Object.assign({ id, version: 1, todo: 'a', due: '', start: '', effort: 1,
         notes: '', tags: '', recurrenceMode: 0, recurrenceInterval: 1, recurrenceAnchor: 0, list_id: 0 }, over), sess);
     const tooLong = 'Notes are too long (at most 10000 characters)!';
-    assert.equal((await update({ notes: 'n'.repeat(10001) })).text, tooLong);
-    assert.equal((await update({ notes: '&'.repeat(10001) })).text, tooLong);
-    assert.match((await update({ todo: 'x'.repeat(256) })).text, /^Todo is too long/);
+    assertError(await update({ notes: 'n'.repeat(10001) }), 422, tooLong);
+    assertError(await update({ notes: '&'.repeat(10001) }), 422, tooLong);
+    assertError(await update({ todo: 'x'.repeat(256) }), 422, /^Todo is too long/);
     assert.equal(sql(`SELECT version FROM todo WHERE id=${id}`).trim(), '1', 'nothing was changed');
-    assert.equal((await update({ notes: 'n'.repeat(10000) })).text, '1');
-    assert.equal((await update({ version: 2, notes: '&'.repeat(10000) })).text, '1');
+    assertOk(await update({ notes: 'n'.repeat(10000) }), { version: 2 });
+    assertOk(await update({ version: 2, notes: '&'.repeat(10000) }), { version: 3 });
     assert.equal(sql(`SELECT notes = REPEAT('&', 10000) FROM todo WHERE id=${id}`).trim(), '1');
 });
 
 test('emoji and other 4-byte characters can be stored, in all text fields and tags', async () => {
     const sess = await session();
-    const id = (await post('enter.php', { todo: 'buy 🎂 cake', due: '', start: '', tags: '🎂, 🍕, Ünï', list_id: 0 }, sess)).text;
-    assert.match(id, /^\d+$/);
+    const id = createdId(await post('enter.php', { todo: 'buy 🎂 cake', due: '', start: '', tags: '🎂, 🍕, Ünï', list_id: 0 }, sess));
     const update = await post('update.php', { id, version: 1, todo: 'buy 🎂 cake 𝔘', due: '', start: '', effort: 1,
         notes: 'notes 😀', tags: '🎂, 🍕, 😀', recurrenceMode: 0, recurrenceInterval: 1, recurrenceAnchor: 0, list_id: 0 }, sess);
-    assert.equal(update.text, '1');
+    assertOk(update, { version: 2 });
     const list = JSON.parse((await get('query-todos.php?list_id=0&incomplete=true')).text);
     assert.equal(list[0].todo, 'buy 🎂 cake 𝔘');
     assert.equal(list[0].notes, 'notes 😀');
     assert.deepEqual(list[0].tags, ['🍕', '🎂', '😀']); // ordered by code point
     // different emoji are different tags, the same emoji is the same tag:
     assert.equal(sql('SELECT COUNT(*) FROM tags').trim(), '4');
-    assert.equal((await post('edit-tag.php', { id: sqlRows("SELECT id FROM tags WHERE name='🍕'")[0][0], tag_name: '🎂' }, sess)).text,
+    assertError(await post('edit-tag.php', { id: sqlRows("SELECT id FROM tags WHERE name='🍕'")[0][0], tag_name: '🎂' }, sess), 409,
         'A tag with this name already exists!');
 });
 
 test('the length limits count characters, not bytes', async () => {
     const sess = await session();
     const fields = (todo) => ({ todo, due: '', start: '', tags: '', list_id: 0 });
-    assert.match((await post('enter.php', fields('🎂'.repeat(255)), sess)).text, /^\d+$/);
-    assert.match((await post('enter.php', fields('🎂'.repeat(256)), sess)).text, /^Todo is too long/);
-    assert.match((await post('enter.php', Object.assign(fields('a'), { tags: '🎂'.repeat(255) }), sess)).text, /^\d+$/);
-    assert.equal((await post('enter.php', Object.assign(fields('a'), { tags: '🎂'.repeat(256) }), sess)).text,
+    createdId(await post('enter.php', fields('🎂'.repeat(255)), sess));
+    assertError(await post('enter.php', fields('🎂'.repeat(256)), sess), 422, /^Todo is too long/);
+    createdId(await post('enter.php', Object.assign(fields('a'), { tags: '🎂'.repeat(255) }), sess));
+    assertError(await post('enter.php', Object.assign(fields('a'), { tags: '🎂'.repeat(256) }), sess), 422,
         'Invalid tags (at most 50 tags, none longer than 255 characters)!');
 });
 

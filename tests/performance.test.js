@@ -5,7 +5,7 @@
 // They need a running server and database, see tests/README.md
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { sql, sqlRows, resetDb, session, post, get, BASE } = require('./lib');
+const { sql, sqlRows, resetDb, session, post, get, BASE, assertOk, createdId } = require('./lib');
 
 const TODOS = 10000;
 const TAGS = 5000;
@@ -111,7 +111,7 @@ test('loading a list reads the entries of the list, not the whole table', async 
 test('reactivating due entries reads only the completed entries of the own lists', async (t) => {
     const sess = await session();
     const res = await assertRowsRead(t, 'reactivate-due', 4500, () => post('reactivate-due.php', {}, sess));
-    assert.equal(res.text, '1');
+    assertOk(res);
     assert.equal(sql('SELECT COUNT(*) FROM todo').trim(), String(TODOS), 'nothing is due');
 });
 
@@ -119,16 +119,16 @@ test('emptying the trash reads only the entries of the list', async (t) => {
     const sess = await session();
     const trashed = Number(sql('SELECT COUNT(*) FROM todo WHERE deleted=1 AND list_id=10').trim());
     assert.ok(trashed > 0);
-    await assertRowsRead(t, 'empty-trash', 3000, () => post('empty-trash.php', { list_id: 10 }, sess));
+    const res = await assertRowsRead(t, 'empty-trash', 3000, () => post('empty-trash.php', { list_id: 10 }, sess));
+    assertOk(res);
     assert.equal(sql('SELECT COUNT(*) FROM todo WHERE deleted=1 AND list_id=10').trim(), '0');
     assert.ok(Number(sql('SELECT COUNT(*) FROM todo WHERE deleted=1').trim()) > 0, 'other lists are untouched');
 });
 
 test('creating an entry with an existing tag finds the tag by its index', async (t) => {
     const sess = await session();
-    const id = (await assertRowsRead(t, 'enter', 150, () =>
-        post('enter.php', { todo: 'new', due: '', start: '', tags: 'tag4321', list_id: 0 }, sess))).text;
-    assert.match(id, /^\d+$/);
+    const id = createdId(await assertRowsRead(t, 'enter', 150, () =>
+        post('enter.php', { todo: 'new', due: '', start: '', tags: 'tag4321', list_id: 0 }, sess)));
     assert.equal(sql(`SELECT COUNT(*) FROM tags WHERE name='tag4321'`).trim(), '1');
     assert.equal(sql(`SELECT COUNT(*) FROM todo_tags WHERE todo_id=${id}`).trim(), '1');
 });
@@ -137,9 +137,9 @@ test('completing and trashing a single entry reads a few rows', async (t) => {
     const sess = await session();
     const row = sqlRows('SELECT id, version FROM todo WHERE list_id=0 AND completed=0 AND deleted=0 LIMIT 1')[0];
     await assertRowsRead(t, 'complete', 100, async () =>
-        assert.equal((await post('complete.php', { id: row[0], completed: 1, version: row[1] }, sess)).text, '1'));
+        assertOk(await post('complete.php', { id: row[0], completed: 1, version: row[1] }, sess), { version: Number(row[1]) + 1 }));
     await assertRowsRead(t, 'trash', 100, async () =>
-        assert.equal((await post('trash.php', { id: row[0], trash: 1, version: Number(row[1]) + 1 }, sess)).text, '1'));
+        assertOk(await post('trash.php', { id: row[0], trash: 1, version: Number(row[1]) + 1 }, sess)));
 });
 
 test('the statistics page counts per period without a scan per day', async (t) => {

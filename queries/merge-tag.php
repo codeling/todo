@@ -5,12 +5,12 @@
     $merge_id = (int)postParam('merge_id');
     if ($id < 1 || $merge_id < 1)
     {
-        rejectRequest("INVALID_PARAMETERS");
+        rejectRequest(422, "INVALID_PARAMETERS");
     }
     // the join below would match every entry with itself and delete them all:
     if ($id == $merge_id)
     {
-        rejectRequest("CANNOT_MERGE_TAG_INTO_ITSELF");
+        rejectRequest(422, "CANNOT_MERGE_TAG_INTO_ITSELF");
     }
     requireOwnTag($db, $id);
     requireOwnTag($db, $merge_id);
@@ -24,4 +24,4 @@
         return dbExec($db, "DELETE FROM `tags` WHERE id=?", array($id))->affected_rows;
     });
     requireSingleRow($affectedRows, "NO_ROWS_AFFECTED", "MORE_THAN_ONE_TAG_AFFECTED");
-    echo 1;
+    sendOk();
