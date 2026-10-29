@@ -74,11 +74,13 @@ function statisticsChart($db, $today, $unit, $dateColumn)
     }
     $periods = ($unit === 'year') ? null : statisticsPeriods($unit, $today);
     // one query per chart: the entries of the lists of the current user per bucket
+    // a range of the index of the date column (todo_completionDate, todo_creationDate): no function
+    // around the column, and the index is forced, as MySQL otherwise reads all entries of the lists
+    // through list_id when its statistics of the table are old (e.g. after many entries were added)
     $sql = "SELECT ".str_replace('{col}', "t.".$dateColumn, STATISTICS_BUCKET_SQL[$unit])." AS bucket, COUNT(*) ".
-        "FROM todo t WHERE ";
+        "FROM todo t ".(($periods !== null) ? "FORCE INDEX (todo_".$dateColumn.") " : "")."WHERE ";
     $params = array();
     if ($periods !== null) {
-        // a range of the index of the date column: no function around the column here
         $sql .= "t.".$dateColumn." >= ? AND ";
         $params[] = $periods['from'];
     }
