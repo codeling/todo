@@ -776,6 +776,7 @@ function addItem(stuff) {
                 $('#todo-1').attr('id', 'todo'+id);
                 $('#completed-1').attr('id', 'completed'+id);
                 $('#modify-1').attr('id', 'modify'+id);
+                $('#dotoday-1').attr('id', 'dotoday'+id);
                 $('#trash-1').attr('id', 'trash'+id);
                 setListener(id);
             }
@@ -1027,13 +1028,15 @@ function renderItem(it, lineNr) {
     }
     if (it.id != -1) {
         setListener(it.id);
-        // on narrow screens the edit button is hidden, a tap on the todo opens the dialog instead
-        $('#todo'+it.id+' td.todo').on('click', function(e) {
-            if (window.matchMedia(narrowScreenQuery).matches && $(e.target).closest('.completed').length == 0) {
-                modifyItem(it.id);
-            }
-        });
     }
+    // on narrow screens the edit button is hidden, a tap on the todo opens the dialog instead;
+    // bound for every row, the id is read when tapping as a just added todo only gets its id later
+    $('#todo'+it.id+' td.todo').on('click', function(e) {
+        var id = parseInt($(this).closest('tr').attr('id').substring('todo'.length));
+        if (id != -1 && window.matchMedia(narrowScreenQuery).matches && $(e.target).closest('.completed').length == 0) {
+            modifyItem(id);
+        }
+    });
 }
 
 function modifyItem(id) {
