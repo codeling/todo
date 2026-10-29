@@ -11,8 +11,6 @@ const STATISTICS_DAYS = 30;
 const STATISTICS_WEEKS = 26;
 const STATISTICS_MONTHS = 24;
 const STATISTICS_YEARS = 14;
-// label of the bucket of the entries without date (not completed), the first one of the yearly chart
-const STATISTICS_NOT_FINISHED = 'not finished';
 // the bucket of a date as SQL, per unit: {col} is the date column (fixed names, see statisticsChart(),
 // never input). The result is the key of the bucket which statisticsPeriods() generates for the
 // same period; weeks and their years are ISO 8601 (the week of a date belongs to the year which has
@@ -104,7 +102,7 @@ function statisticsChart($db, $today, $unit, $dateColumn)
         ksort($counts);
         $years = array_slice(array_keys($counts), -STATISTICS_YEARS);
         if ($unfinished > 0) {
-            $buckets[] = array('key' => 'none', 'label' => STATISTICS_NOT_FINISHED, 'count' => $unfinished);
+            $buckets[] = array('key' => 'none', 'label' => TodoLang::_("STAT_NOT_FINISHED"), 'count' => $unfinished);
         }
         foreach ($years as $year) {
             $buckets[] = array('key' => (string)$year, 'label' => (string)$year, 'count' => $counts[$year]);
