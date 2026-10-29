@@ -3,11 +3,11 @@
 require_once(__DIR__."/date.php");
 
 // the language key of the first problem with the description, the dates and the tags of a todo,
-// null if there is none; $todo is HTML-encoded, $start and $due are the dates as sent by the
-// client, $tags is the result of parseTags()
+// null if there is none; $start and $due are the dates as sent by the client, $tags is the result of
+// parseTags()
 function todoInputError($todo, $start, $due, $tags)
 {
-    // limits of the database columns, counted after HTML-encoding (what is stored):
+    // limits of the database columns, counted in characters:
     if (charLength($todo) > MAX_TODO_LENGTH) {
         return "TODO_TOO_LONG";
     }

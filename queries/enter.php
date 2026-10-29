@@ -3,7 +3,7 @@
     $db = todoDb();
     require("todo-input.php");
     require("tags.php");
-    $todo     = encodeInput(postParam('todo'));
+    $todo     = postParam('todo');
     $due      = postParam('due');
     $start    = postParam('start');
     $tags     = parseTags(postParam('tags'));

@@ -3,7 +3,7 @@
     $db = todoDb();
     require("tags.php");
     $id   = (int)postParam('id');
-    $name = encodeInput(trim(postParam('tag_name')));
+    $name = trim(postParam('tag_name'));
     // no comma: tags are passed around as comma separated lists (see tags.php)
     if (!isValidTagName($name)) {
         rejectRequest("INVALID_TAG_NAME");

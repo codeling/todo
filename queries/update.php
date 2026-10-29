@@ -5,11 +5,11 @@
     require("tags.php");
     require("recurrence.php");
     $id       = (int)postParam('id');
-    $todo     = encodeInput(postParam('todo'));
+    $todo     = postParam('todo');
     $due      = postParam('due');
     $start    = postParam('start');
     $effort   = (int)postParam('effort');
-    $notes    = encodeInput(postParam('notes'));
+    $notes    = postParam('notes');
     $tags     = parseTags(postParam('tags'));
     $version  = (int)postParam('version');
     $recurrenceMode = (int)postParam('recurrenceMode');
@@ -22,7 +22,7 @@
     if ($inputError !== null) {
         rejectRequest($inputError);
     }
-    // limit of the database column, counted after HTML-encoding (what is stored):
+    // limit of the database column, counted in characters:
     if (charLength($notes) > MAX_NOTES_LENGTH) {
         rejectRequest("NOTES_TOO_LONG");
     }

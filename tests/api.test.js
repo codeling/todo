@@ -41,6 +41,36 @@ test('create, update, complete, trash and empty trash with valid token', async (
     assert.equal(sql('SELECT COUNT(*) FROM todo').trim(), '0');
 });
 
+test('text is stored and returned exactly as sent, not HTML-encoded', async () => {
+    const sess = await session();
+    const todo = `Tom & Jerry <b> "quoted" 'single' Straße äÄ € &amp; &lt; 🎂`;
+    const notes = `a & b < c > d "e" 'f' ü ß € &szlig; &#039;`;
+    const tag = `Q&A <i> "x" 'y' ä &amp;`;
+    const id = (await post('enter.php', { todo, due: '', start: '', tags: tag, list_id: 0 }, sess)).text;
+    assert.match(id, /^\d+$/);
+    assert.equal((await post('update.php', todoFields({ id, version: 1, todo, notes, tags: tag }), sess)).text, '1');
+    assert.deepEqual(sqlRows(`SELECT description, notes FROM todo WHERE id=${id}`), [[todo, notes]]);
+    assert.deepEqual(sqlRows('SELECT name FROM tags'), [[tag]]);
+    const items = JSON.parse((await get('query-todos.php?list_id=0&incomplete=true')).text);
+    assert.deepEqual(items.map((i) => [i.todo, i.notes, i.tags]), [[todo, notes, [tag]]]);
+    const tags = JSON.parse((await get('query-tags.php?list_id=0')).text);
+    assert.deepEqual(tags.map((t) => t.name), [tag]);
+    // a renamed tag as well
+    const renamed = 'Q&A <b> "z"';
+    assert.equal((await post('edit-tag.php', { id: tags[0].id, tag_name: ' ' + renamed + ' ' }, sess)).text, '1');
+    assert.deepEqual(sqlRows('SELECT name FROM tags'), [[renamed]]);
+});
+
+test('text which is not valid UTF-8 is refused', async () => {
+    const sess = await session();
+    const headers = { 'Content-Type': 'application/x-www-form-urlencoded', Cookie: sess.cookie, 'X-CSRF-Token': sess.token };
+    for (const body of ['todo=a%FFb&tags=&list_id=0', 'todo=a&tags=t%C3&list_id=0']) {
+        const res = await fetch(BASE + '/queries/enter.php', { method: 'POST', headers, body });
+        assert.equal(await res.text(), 'Invalid parameters!', body);
+    }
+    assert.equal(sql('SELECT COUNT(*) FROM todo').trim(), '0');
+});
+
 test('reactivating a recurring entry copies stored values verbatim (no second-order SQL injection)', async () => {
     const sess = await session();
     const payload = ', NULL, 0, NULL, (SELECT CONCAT(user(), 0x20, version())), 1, 7, 1, 0)# ';
@@ -179,7 +209,7 @@ test('tag endpoints validate their parameters', async () => {
     assert.equal((await post('merge-tag.php', { id: tag.keep }, sess)).text, 'Invalid parameters!');
     assert.equal(sql('SELECT name FROM tags').trim(), 'keep');
     assert.equal((await post('edit-tag.php', { id: tag.keep, tag_name: ' <b> ' }, sess)).text, '1');
-    assert.equal(sql('SELECT name FROM tags').trim(), '&lt;b&gt;');
+    assert.equal(sql('SELECT name FROM tags').trim(), '<b>');
 });
 
 test('tags of other users, or shared with them, can not be changed', async () => {

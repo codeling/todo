@@ -1,6 +1,6 @@
 <?php
-// Upgrades the database: applies the scripts sql/migrations/NNN-*.sql which are newer than
-// the version in the table `settings` (key db.version), in order. Command line only.
+// Upgrades the database: applies the scripts sql/migrations/NNN-*.sql and NNN-*.php which are
+// newer than the version in the table `settings` (key db.version), in order. Command line only.
 //
 //   php scripts/migrate.php [--status] [--yes] [--database=NAME]
 //
@@ -13,6 +13,15 @@
 // TODO_MIGRATE_USER and TODO_MIGRATE_PASSWORD to the account of an administrator.
 // Make a backup first (README.md). A migration which fails stops the run; as the server cannot
 // roll back schema changes, the statements before the failing one stay applied.
+//
+// A .sql file is run with multi_query. A .php file is for changes which SQL cannot express: it
+// returns a function which gets the mysqli connection (and nothing else, so it does not depend on
+// the variables of this script):
+//
+//   <?php return function ($db) { ... };
+//
+// It should change the data in one transaction, so that it is applied completely or not at all.
+// Both kinds set db.version themselves, the check below is the same.
 if (PHP_SAPI !== 'cli') {
     http_response_code(404);
     exit(1);
@@ -28,11 +37,11 @@ function fail($message) {
     exit(1);
 }
 
-// array(number => path) of sql/migrations/NNN-name.sql
+// array(number => path) of sql/migrations/NNN-name.sql and NNN-name.php
 function findMigrations($dir) {
     $migrations = array();
-    foreach (glob($dir."/*.sql") as $path) {
-        if (!preg_match('/^(\d{3})-[a-z0-9-]+\.sql$/', basename($path), $m)) {
+    foreach (array_merge(glob($dir."/*.sql"), glob($dir."/*.php")) as $path) {
+        if (!preg_match('/^(\d{3})-[a-z0-9-]+\.(sql|php)$/', basename($path), $m)) {
             fail("unexpected file name in ".$dir.": ".basename($path));
         }
         $number = (int)$m[1];
@@ -63,8 +72,17 @@ function currentVersion($db) {
     return (int)$row[0];
 }
 
-// runs all statements of the file; throws mysqli_sql_exception at the first one which fails
+// runs the migration; throws (mysqli_sql_exception for an error of the database) at the first error
 function runMigration($db, $path) {
+    if (substr($path, -4) === ".php") {
+        $migrate = require $path;
+        if (!($migrate instanceof Closure)) {
+            throw new RuntimeException(basename($path)." must return a function");
+        }
+        $migrate($db);
+        return;
+    }
+    // all statements of the file:
     $db->multi_query(file_get_contents($path));
     do {
         $result = $db->store_result();
@@ -130,10 +148,14 @@ foreach ($pending as $number => $path) {
     echo "applying ".basename($path)." ... ";
     try {
         runMigration($db, $path);
-    } catch (mysqli_sql_exception $e) {
+    } catch (Exception $e) {
         echo "FAILED\n";
-        fail($e->getMessage()."\n".basename($path)." stopped at this error, the statements before it are applied. ".
-            "Fix the data it complains about and run the rest of the file by hand, or restore the backup and start again.");
+        $rest = substr($path, -4) === ".php" ?
+            "the comment at the top of the file says what is applied. Fix the data it complains about and run ".
+                "the migrations again, or restore the backup and start again." :
+            "the statements before it are applied. Fix the data it complains about and run the rest of the file ".
+                "by hand, or restore the backup and start again.";
+        fail($e->getMessage()."\n".basename($path)." stopped at this error, ".$rest);
     }
     if (currentVersion($db) !== $number) {
         echo "FAILED\n";

@@ -31,8 +31,9 @@ php scripts/migrate.php               # asks for confirmation, then applies them
 It reads the connection settings of `config.php` (or `TODO_CONFIG`). The database user of the
 application usually may not change the schema; set `TODO_MIGRATE_USER` and
 `TODO_MIGRATE_PASSWORD` to an administrative account. The migrations are the numbered files in
-`sql/migrations/`; read the comments at the top of a file before you run it, they describe what it
-changes and which data would stop it. Schema changes cannot be rolled back: if a migration fails,
+`sql/migrations/` (`.sql`, or `.php` for a change which SQL cannot express: it returns a function that
+gets the database connection); read the comments at the top of a file before you run it, they describe
+what it changes and which data would stop it. Schema changes cannot be rolled back: if a migration fails,
 the statements before the failing one stay applied. Fix the data it complains about and run the
 rest of the file by hand, or restore the backup and start again. What the migrations do so far:
 
@@ -47,6 +48,12 @@ rest of the file by hand, or restore the backup and start again. What the migrat
   `utf8mb4_unicode_520_ci`. It rebuilds the tables, so run it when nobody uses the application. Tags
   which the new collation considers equal (like `straße` and `STRASSE`) are merged.
 * `015`: the start and due dates become `DATE` columns (a time of day of older entries is dropped).
+* `016` (a PHP file): descriptions, notes, tag names and list names are stored as plain text instead of
+  HTML-encoded (`Stra&szlig;e &amp; Co` becomes `Straße & Co`; the application escapes the text when it
+  shows it). Run it right after updating the program: the new program shows the old entities as they
+  are. Tags which become equal (like `ä` and `&auml;`) are merged. It only changes data, so it runs in
+  one transaction and is applied completely or not at all; the account needs the right to create
+  temporary tables.
 
 `sql/install.sql` creates a new database with the layout of the latest version (and `db.version`);
 `sql/uninstall.sql` removes it. The scripts of the first versions are in `sql/legacy/`; they cannot be

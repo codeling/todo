@@ -38,14 +38,16 @@ function charLength($str) {
     return preg_match_all('/./su', $str);
 }
 
-// values are stored HTML-encoded (the client relies on it):
-function encodeInput($str) {
-    return htmlentities($str, ENT_QUOTES, "UTF-8");
-}
-
-// POST parameter as string ('' if missing)
+// POST parameter as string ('' if missing); text is stored as sent, so the request is refused if
+// it is not valid UTF-8 (the database would refuse it, or cut it off with other settings)
 function postParam($name) {
-    return (isset($_POST[$name]) && is_string($_POST[$name])) ? $_POST[$name] : '';
+    if (!isset($_POST[$name]) || !is_string($_POST[$name])) {
+        return '';
+    }
+    if (preg_match('//u', $_POST[$name]) !== 1) {
+        rejectRequest("INVALID_PARAMETERS");
+    }
+    return $_POST[$name];
 }
 
 // run a prepared statement; all parameters are bound as strings (NULL stays NULL)

@@ -317,24 +317,17 @@ function toggleCompleted(id) {
     });
 }
 
-function html_entity_decode(str) {
-    var txtEl = document.createElement('textarea');
-    txtEl.innerHTML = str;
-    return txtEl.value;
-}
-
 function escapeHtml(str) {
     return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }
 
-// for inserting text from the server (stored HTML-encoded) or from user input
-// (not encoded yet) into HTML: decode once, then encode, so both end up correct and safe
+// for inserting text (stored as plain text, or typed by the user) into HTML; null is no text
 function textToHtml(str) {
     if (str == null) {
         return '';
     }
-    return escapeHtml(html_entity_decode(str));
+    return escapeHtml(str);
 }
 
 function toggleRecurrenceAnchor(e)
@@ -363,12 +356,12 @@ function fillModifyForm(id) {
     var item = itemList[index];
     // set values:
     $('#modify_id').val(item.id);
-    $('#modify_todo').val(html_entity_decode(item.todo));
+    $('#modify_todo').val(item.todo);
     $('#modify_due').val(formatDate(parseDay(item.due)));
     $('#modify_start').val(formatDate(parseDay(item.start)));
     $('#modify_start').data('oldVal', formatDate(parseDay(item.start)));
     $('#modify_effort').val(item.effort);
-    $('#modify_notes').val(html_entity_decode(item.notes));
+    $('#modify_notes').val(item.notes);
     // otherwise only visible in the tooltip, which touch devices can't show:
     $('#modify_info').text($T('CREATED')+': '+formatDate(parseDate(item.creationDate), true)+
         ((item.completed != 0) ? '; '+$T('DONE')+': '+formatDate(parseDate(item.completionDate), true) : ''));
@@ -378,7 +371,7 @@ function fillModifyForm(id) {
 
     for (var i=0; i<item.tags.length; i++)
     {
-        modifyTagify.addTags([ html_entity_decode(item.tags[i]) ] );
+        modifyTagify.addTags([ item.tags[i] ]);
     }
 
     $('#modify_recurrenceMode option:selected').prop('selected', false);
@@ -451,7 +444,7 @@ function renderTable() {
 
 function renderList(listItem)
 {
-    var liItem = $('<li></li>').text(html_entity_decode(listItem.name)).data('list_id', listItem.id);
+    var liItem = $('<li></li>').text(listItem.name).data('list_id', listItem.id);
     $('#lists ul').append(liItem);
 }
 
@@ -468,7 +461,7 @@ function renderLists() {
 
     $('#modify_list').empty();
     for (var i=0; i<lists.length; ++i) {
-        $('#modify_list').append($('<option></option>').val(lists[i].id).text(html_entity_decode(lists[i].name)));
+        $('#modify_list').append($('<option></option>').val(lists[i].id).text(lists[i].name));
     }
 }
 
@@ -753,14 +746,14 @@ function clearTable()
     $("#todoTable tbody").empty();
 }
 
-// Shows the tags (an array of HTML-encoded names) of a todo in an empty input field.
+// Shows the tags (an array of names) of a todo in an empty input field.
 // They are added one by one and not as the value of the input: Tagify parses a value which
 // looks like JSON and writes the keys of the objects into the tag element as attribute
 // names, without escaping them, so a tag named like that could inject HTML.
 function showReadOnlyTags(inputElem, tags) {
     var tagify = new Tagify(inputElem, { readOnly: true });
     tagify.addTags(tags.map(function(tag) {
-        return html_entity_decode(tag).trim();
+        return tag.trim();
     }).filter(function(tag) {
         return tag != '';
     }));
@@ -883,7 +876,7 @@ function openTagDialog(tagname)
 {
     $('#tag_name').val(tagname);
     var result = $.grep(tagList,
-        function(e) { return html_entity_decode(e.name) === tagname; });
+        function(e) { return e.name === tagname; });
     $('#tag_count').val(result[0].tagCount);
     $('#tag_id').val(result[0].id);
     $('#tag_dialog').dialog( {
@@ -915,7 +908,7 @@ function fillTagList(choices)
         tagListTagify = new Tagify($('#taglist input')[0], { readonly: true } );
     }
     for (var i=0; i<choices.length; i++) {
-        tagListTagify.addTags([ html_entity_decode(choices[i].name) ]);
+        tagListTagify.addTags([ choices[i].name ]);
     }
 }
 
@@ -964,7 +957,7 @@ $(document).ready(function() {
     $('#tag_merge').on('click', function() {
         var mergeTagname = mergeTagify.value.map((tag) => tag.value)[0];
         var result = $.grep(tagList,
-            function(e) { return html_entity_decode(e.name) === mergeTagname; });
+            function(e) { return e.name === mergeTagname; });
         if (result.length == 0 || result.length > 1)
         {
             alert("Found no tag or more than one tag with that name, aborting merge!");

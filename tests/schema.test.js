@@ -87,28 +87,30 @@ test('values outside of their range are rejected by the database', () => {
     sql(insert('recurrenceMode', 4));
 });
 
-test('over-long input is rejected with a message (counted after HTML-encoding)', async () => {
+test('over-long input is rejected with a message (counted in characters of the plain text)', async () => {
     const sess = await session();
     const fields = (todo) => ({ todo, due: '', start: '', tags: '', list_id: 0 });
-    // 255 characters fit, but each & is stored as 5 characters (&amp;):
-    assert.match((await post('enter.php', fields('x'.repeat(255)), sess)).text, /^\d+$/);
-    for (const todo of ['x'.repeat(256), '&'.repeat(52), 'ä'.repeat(100) + '&'.repeat(40)]) {
-        assert.equal((await post('enter.php', fields(todo), sess)).text, 'Todo is too long (at most 255 characters, ' +
-            'special characters like & count more than once)!', todo.length + ' characters');
+    // 255 characters fit, whatever they are: a & is stored as one character, like an ä
+    for (const todo of ['x'.repeat(255), '&'.repeat(255), 'ä'.repeat(100) + '&'.repeat(155)]) {
+        assert.match((await post('enter.php', fields(todo), sess)).text, /^\d+$/, todo.length + ' characters');
     }
-    assert.match((await post('enter.php', fields('&'.repeat(51)), sess)).text, /^\d+$/);
-    assert.equal(sql('SELECT COUNT(*) FROM todo').trim(), '2');
+    for (const todo of ['x'.repeat(256), '&'.repeat(256), 'ä'.repeat(100) + '&'.repeat(156)]) {
+        assert.equal((await post('enter.php', fields(todo), sess)).text, 'Todo is too long (at most 255 characters)!',
+            todo.length + ' characters');
+    }
+    assert.equal(sql('SELECT COUNT(*) FROM todo').trim(), '3');
 
     const id = (await post('enter.php', fields('a'), sess)).text;
     const update = (over) => post('update.php', Object.assign({ id, version: 1, todo: 'a', due: '', start: '', effort: 1,
         notes: '', tags: '', recurrenceMode: 0, recurrenceInterval: 1, recurrenceAnchor: 0, list_id: 0 }, over), sess);
-    const tooLong = 'Notes are too long (at most 10000 characters, special characters like & count more than once)!';
+    const tooLong = 'Notes are too long (at most 10000 characters)!';
     assert.equal((await update({ notes: 'n'.repeat(10001) })).text, tooLong);
-    assert.equal((await update({ notes: '&'.repeat(2001) })).text, tooLong);
+    assert.equal((await update({ notes: '&'.repeat(10001) })).text, tooLong);
     assert.match((await update({ todo: 'x'.repeat(256) })).text, /^Todo is too long/);
     assert.equal(sql(`SELECT version FROM todo WHERE id=${id}`).trim(), '1', 'nothing was changed');
     assert.equal((await update({ notes: 'n'.repeat(10000) })).text, '1');
-    assert.equal((await update({ version: 2, notes: '&'.repeat(2000) })).text, '1');
+    assert.equal((await update({ version: 2, notes: '&'.repeat(10000) })).text, '1');
+    assert.equal(sql(`SELECT notes = REPEAT('&', 10000) FROM todo WHERE id=${id}`).trim(), '1');
 });
 
 test('emoji and other 4-byte characters can be stored, in all text fields and tags', async () => {
@@ -182,13 +184,13 @@ test.describe('migrations', () => {
                     'ON DELETE CASCADE ON UPDATE CASCADE;' : '') + OLD_DATA);
             const res = migrate(DB_OLD, '--yes');
             assert.equal(res.status, 0, res.err);
-            assert.match(res.out, /done, database version: 15/);
+            assert.match(res.out, /done, database version: 16/);
             // duplicates merged into the tag with the lowest id, their entries moved, orphans removed:
             assert.deepEqual(sqlRows(`SELECT id, name FROM ${DB_OLD}.tags ORDER BY id`), [['1', 'Work'], ['3', 'home'], ['5', 'unused']]);
             assert.deepEqual(sqlRows(`SELECT todo_id, tag_id FROM ${DB_OLD}.todo_tags ORDER BY 1, 2`), [['1', '1'], ['2', '1'], ['2', '3']]);
             assert.deepEqual(sqlRows(`SELECT todo_id FROM ${DB_OLD}.recurringCopied`), [['1']]);
             assert.equal(sql(`SELECT COUNT(*) FROM ${DB_OLD}.todo`).trim(), '2');
-            assert.equal(sql(`SELECT value FROM ${DB_OLD}.settings WHERE \`key\`='db.version'`).trim(), '15');
+            assert.equal(sql(`SELECT value FROM ${DB_OLD}.settings WHERE \`key\`='db.version'`).trim(), '16');
             assert.equal(schemaOf(DB_OLD), schemaOf(DB_FRESH));
         });
     }
@@ -206,7 +208,7 @@ test.describe('migrations', () => {
         assert.deepEqual(sqlRows(`SELECT recurrenceMode, recurrenceInterval FROM ${DB_OLD}.todo ORDER BY id`), [
             [0, 1], [1, 1], [2, 1], [1, 10], [2, 2], [3, 1], [3, 2], [3, 3], [3, 4], [3, 6], [4, 1], [4, 2], [4, 5],
         ].map((row) => row.map(String)));
-        assert.equal(sql(`SELECT value FROM ${DB_OLD}.settings WHERE \`key\`='db.version'`).trim(), '15');
+        assert.equal(sql(`SELECT value FROM ${DB_OLD}.settings WHERE \`key\`='db.version'`).trim(), '16');
         assert.equal(schemaOf(DB_OLD), schemaOf(DB_FRESH));
     });
 
@@ -244,11 +246,60 @@ test.describe('migrations', () => {
         assert.equal(sql(`SELECT value FROM ${DB_OLD}.settings WHERE \`key\`='db.version'`).trim(), '15');
     });
 
+    test('016 decodes the HTML entities and merges tags that become equal', () => {
+        createDb(DB_OLD, sqlFile('tests', 'fixtures', 'install-v15.sql') + `
+            INSERT INTO list (id, name, user_id) VALUES (1, 'Fish &amp; Chips', 0);
+            INSERT INTO todo (id, creationDate, description, notes, list_id) VALUES
+                (1, UTC_TIMESTAMP(), 'Stra&szlig;e &amp; &lt;b&gt; &#039;x&#039;', 'say &quot;hi&quot; for 5&euro;', 0),
+                (2, UTC_TIMESTAMP(), 'plain', NULL, 1),
+                (3, UTC_TIMESTAMP(), 'both tags', '', 0),
+                (4, UTC_TIMESTAMP(), '&amp;amp; is not &amp;', 'AT&amp;T &auml;&Auml; &unknown; AT&T', 0);
+            -- 1 and 2 become equal (2 was stored decoded by an older version), 6 and 8 only in the
+            -- case-insensitive collation; 4 is renamed to the name which 5 has until it is renamed itself
+            INSERT INTO tags (id, name) VALUES (1, '&auml;pfel'), (2, 'äpfel'), (3, 'Tom &amp; Jerry'),
+                (4, '&amp;amp;'), (5, '&amp;'), (6, '&Ouml;l'), (7, 'unused &amp; co'), (8, 'öL');
+            INSERT INTO todo_tags VALUES (1, 1), (1, 3), (2, 2), (2, 5), (2, 8), (3, 1), (3, 2), (4, 4), (4, 6), (4, 8);`);
+        const res = migrate(DB_OLD, '--yes');
+        assert.equal(res.status, 0, res.err);
+        assert.match(res.out, /applying 016-plain-text\.php \.\.\. ok/);
+        assert.deepEqual(sqlRows(`SELECT id, description, notes FROM ${DB_OLD}.todo ORDER BY id`), [
+            ['1', "Straße & <b> 'x'", 'say "hi" for 5€'],
+            ['2', 'plain', null],
+            ['3', 'both tags', ''],
+            // decoded once; what is no entity stays
+            ['4', '&amp; is not &', 'AT&T äÄ &unknown; AT&T'],
+        ]);
+        assert.deepEqual(sqlRows(`SELECT id, name FROM ${DB_OLD}.list ORDER BY id`), [['0', 'Default'], ['1', 'Fish & Chips']]);
+        // the tag with the lowest id of the group is kept (with the decoded name)
+        assert.deepEqual(sqlRows(`SELECT id, name FROM ${DB_OLD}.tags ORDER BY id`),
+            [['1', 'äpfel'], ['3', 'Tom & Jerry'], ['4', '&amp;'], ['5', '&'], ['6', 'Öl'], ['7', 'unused & co']]);
+        // the entries of the merged tags have the kept one, once
+        assert.deepEqual(sqlRows(`SELECT todo_id, tag_id FROM ${DB_OLD}.todo_tags ORDER BY 1, 2`),
+            [['1', '1'], ['1', '3'], ['2', '1'], ['2', '5'], ['2', '6'], ['3', '1'], ['4', '4'], ['4', '6']]);
+        assert.equal(sql(`SELECT value FROM ${DB_OLD}.settings WHERE \`key\`='db.version'`).trim(), '16');
+        assert.equal(schemaOf(DB_OLD), schemaOf(DB_FRESH));
+    });
+
+    test('016 is applied completely or not at all', () => {
+        createDb(DB_OLD, sqlFile('tests', 'fixtures', 'install-v15.sql') + `
+            INSERT INTO todo (id, creationDate, description, list_id) VALUES (1, UTC_TIMESTAMP(), 'Stra&szlig;e', 0);
+            INSERT INTO tags (id, name) VALUES (1, 'a&amp;b');
+            DROP TABLE todo_tags;`);
+        const res = migrate(DB_OLD, '--yes');
+        assert.equal(res.status, 1);
+        assert.match(res.err, /todo_tags/);
+        assert.match(res.err, /016-plain-text\.php stopped at this error/);
+        // the entries are decoded before the tags are looked at: that was rolled back
+        assert.deepEqual(sqlRows(`SELECT description FROM ${DB_OLD}.todo`), [['Stra&szlig;e']]);
+        assert.deepEqual(sqlRows(`SELECT name FROM ${DB_OLD}.tags`), [['a&amp;b']]);
+        assert.equal(sql(`SELECT value FROM ${DB_OLD}.settings WHERE \`key\`='db.version'`).trim(), '15');
+    });
+
     test('the runner shows the pending migrations, and does nothing if the database is up to date', () => {
         createDb(DB_OLD, sqlFile('tests', 'fixtures', 'install-v14.sql'));
         let res = migrate(DB_OLD, '--status');
         assert.equal(res.status, 0, res.err);
-        assert.match(res.out, /database version: 14, latest: 15\npending: 015-date-columns\.sql\n$/);
+        assert.match(res.out, /database version: 14, latest: 16\npending: 015-date-columns\.sql\npending: 016-plain-text\.php\n$/);
         assert.equal(sql(`SELECT value FROM ${DB_OLD}.settings WHERE \`key\`='db.version'`).trim(), '14');
         assert.equal(migrate(DB_OLD, '--yes').status, 0);
         res = migrate(DB_OLD, '--yes');
@@ -261,7 +312,7 @@ test.describe('migrations', () => {
         sql(`UPDATE ${DB_OLD}.settings SET value='10' WHERE \`key\`='db.version'`);
         assert.match(migrate(DB_OLD, '--yes').err, /oldest one this script upgrades is 11/);
         sql(`UPDATE ${DB_OLD}.settings SET value='99' WHERE \`key\`='db.version'`);
-        assert.match(migrate(DB_OLD, '--yes').err, /version 99 but this program only knows version 15/);
+        assert.match(migrate(DB_OLD, '--yes').err, /version 99 but this program only knows version 16/);
         sql(`DROP DATABASE ${DB_OLD}; CREATE DATABASE ${DB_OLD}`);
         const res = migrate(DB_OLD, '--yes');
         assert.equal(res.status, 1);

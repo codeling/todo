@@ -119,6 +119,10 @@ done
 for hidden in scripts/migrate.php secrets/todo_password secrets .git/HEAD node_modules/jquery/dist/jquery.js tests/lib.js; do
     check "$hidden" 401 404
 done
+# migrations written in PHP: sql/ is hidden as a whole, not by the extension (.sql files are denied by it)
+for f in "$REPO"/sql/migrations/*.php; do
+    check "sql/migrations/$(basename "$f")" 401 404
+done
 # plain HTTP: no password prompt (403, not 401), with or without credentials, and
 # also if the client claims that a proxy terminated TLS (any client can send that header)
 for creds in "" "-u alice:secret" "-H X-Forwarded-Proto:https -u alice:secret"; do

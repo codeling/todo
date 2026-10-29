@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { chromium } = require('playwright');
-const { BASE, sql, resetDb } = require('./lib');
+const { BASE, sql, sqlRows, resetDb } = require('./lib');
 const vendored = (pkg) => JSON.parse(require('node:fs').readFileSync(
     require('node:path').join(__dirname, '..', 'node_modules', pkg, 'package.json'), 'utf8')).version;
 
@@ -34,14 +34,16 @@ test('HTML stored in the database is shown as text, not executed', async () => {
         "INSERT INTO tags (name) VALUES ('<img src=x onerror=window.__xss=3>'); " +
         "INSERT INTO todo_tags VALUES (@t, LAST_INSERT_ID()); " +
         "UPDATE list SET name='Work<img src=x onerror=window.__xss=4>' WHERE id=1; " +
+        // text is stored as it is shown, so a stored "&amp;" is shown as "&amp;" (not decoded to "&")
         "INSERT INTO todo (creationDate, description, startDate, list_id) VALUES " +
-        "(UTC_TIMESTAMP(), 'Tom &amp; Jerry &lt;b&gt;', UTC_DATE(), 0)");
+        "(UTC_TIMESTAMP(), 'Tom & Jerry <b>', UTC_DATE(), 0), (UTC_TIMESTAMP(), '&amp;', UTC_DATE(), 0)");
     const page = await openPage();
     await page.waitForSelector('#todoTable tbody tr');
     await page.waitForTimeout(500);
     const texts = await page.locator('#todoTable tbody td.todo > span:not([class])').allTextContents();
     assert.ok(texts.includes('<img src=x onerror=window.__xss=1>'), texts.join('|'));
     assert.ok(texts.includes('Tom & Jerry <b>'), texts.join('|'));
+    assert.ok(texts.includes('&amp;'), texts.join('|'));
     assert.deepEqual(await page.locator('#lists li').allTextContents(), ['Main', 'Work<img src=x onerror=window.__xss=4>']);
     await page.locator('#taglist .tagify__tag').first().click();
     await page.keyboard.press('Escape');  // tag dialog is modal
@@ -89,17 +91,74 @@ test('main workflows work (and do not violate the Content-Security-Policy)', asy
     await page.close();
 });
 
+test('special characters are stored as typed and shown as typed: in the list, after a reload and in the dialog', async () => {
+    resetDb();
+    const tag = 'Fish & Chips <x>';
+    const text = `Tom & Jerry <b> mit ä, "quotes" and 'single'`;
+    const notes = 'a & b <c> &amp; "d"';
+    const page = await openPage();
+    await page.fill('#enter_todo', tag + ': ' + text);
+    await page.click('#enter_save');
+    await page.waitForFunction(() => itemList.length == 1 && itemList[0].id > 0);
+    const id = await page.evaluate(() => itemList[0].id);
+    // plain text in the database, not HTML entities
+    assert.equal(sql(`SELECT description FROM todo WHERE id=${id}`).trim(), text);
+    assert.equal(sql('SELECT name FROM tags').trim(), tag);
+    const shown = () => page.locator('#todo' + id + ' td.todo > span:not([class])').textContent();
+    assert.equal(await shown(), text);
+
+    await page.reload();
+    await page.waitForSelector('#todo' + id);
+    assert.equal(await shown(), text);
+    assert.equal(await page.locator('#todo' + id + ' .tagify__tag').first().evaluate((t) => t.__tagifyTagData.value), tag);
+    assert.equal(await page.locator('#taglist .tagify__tag').first().evaluate((t) => t.__tagifyTagData.value), tag);
+
+    // the dialog shows the same text, and saving it unchanged keeps it
+    await page.click('#modify' + id);
+    assert.equal(await page.inputValue('#modify_todo'), text);
+    assert.deepEqual(await page.evaluate(() => modifyTagify.value.map((t) => t.value)), [tag]);
+    await page.fill('#modify_notes', notes);
+    await page.click('#modify_save');
+    await page.waitForFunction(() => itemList[0].version == 2);
+    assert.deepEqual(sqlRows(`SELECT description, notes FROM todo WHERE id=${id}`), [[text, notes]]);
+    assert.equal(sql('SELECT name FROM tags').trim(), tag);
+    await page.click('#modify' + id);
+    assert.equal(await page.inputValue('#modify_todo'), text);
+    assert.equal(await page.inputValue('#modify_notes'), notes);
+    assert.equal(await page.locator('#todo' + id + ' .note').getAttribute('title'), notes);
+    await page.keyboard.press('Escape');  // the dialog is modal
+
+    // the dialog of the tag finds the tag and its entry by the name, and merges it into another tag
+    const other = 'Salt & <Pepper>';
+    await page.fill('#enter_todo', other + ': second');
+    await page.click('#enter_save');
+    await page.waitForFunction(() => itemList.length == 2 && itemList.every((i) => i.id > 0));
+    await page.waitForFunction(() => tagList.length == 2);
+    await page.locator('#taglist .tagify__tag', { hasText: tag }).click();
+    assert.equal(await page.inputValue('#tag_name'), tag);
+    assert.equal(await page.inputValue('#tag_count'), '1');
+    assert.equal(await page.locator('#tag_todo_table .todo').count(), 1);
+    assert.match(await page.locator('#tag_todo_table .todo').textContent(), /Tom & Jerry <b> mit ä/);
+    await page.evaluate((name) => mergeTagify.addTags([name]), other);
+    await page.click('#tag_merge');
+    await page.waitForFunction(() => tagList.length == 1);
+    assert.deepEqual(sqlRows('SELECT name FROM tags'), [[other]]);
+    assert.equal(sql('SELECT COUNT(*) FROM todo_tags').trim(), '2');
+    assert.deepEqual(page.errors, []);
+    await page.close();
+});
+
 test('a tag named like JSON is shown as a plain tag, it cannot inject HTML', async () => {
     resetDb();
     // names with a comma can not be created any more (rename is rejected), but may exist from earlier versions
     const attr = '[{"value":"x","onmouseover=window.__xss=1 a":"1"}]';
     const meta = '[{"value":"y","\\"><meta http-equiv=refresh content=\\"0;url=http://127.0.0.1:9/\\"> a":"1"}]';
-    const enc = (s) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const quote = (s) => "'" + s.replace(/\\/g, '\\\\').replace(/'/g, "''") + "'";
     // one todo for each: the tag list of a todo is the single tag name, so it is valid JSON
     for (const name of [attr, meta]) {
         sql("INSERT INTO todo (creationDate, description, startDate, list_id) VALUES (UTC_TIMESTAMP(), 'tagged', UTC_DATE(), 0); " +
             "SET @t=LAST_INSERT_ID(); " +
-            `INSERT INTO tags (name) VALUES ('${enc(name)}'); INSERT INTO todo_tags VALUES (@t, LAST_INSERT_ID())`);
+            `INSERT INTO tags (name) VALUES (${quote(name)}); INSERT INTO todo_tags VALUES (@t, LAST_INSERT_ID())`);
     }
     const page = await openPage();
     await page.waitForSelector('#todoTable tbody tr .tagify__tag');
