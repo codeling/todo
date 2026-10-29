@@ -13,6 +13,8 @@ require_once(__DIR__."/session.php");
 require_once(__DIR__."/webauth/webauth.php");
 // URL of a local static file, with its modification time appended, so that
 // browsers load the new version after an update instead of a cached one
+// (for the ES modules of js/ only js/main.js gets it, the modules which it imports are
+// checked by the browser each time because of the web server's Cache-Control: no-cache)
 function assetUrl($file) {
     return $file."?v=".filemtime(__DIR__."/".$file);
 }

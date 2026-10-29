@@ -61,6 +61,15 @@ check "HTTPS with wrong password" 401 -H "$TLS" -u alice:wrong "$URL/index.php"
 check "HTTPS with credentials" 200 -H "$TLS" -u "$AUTH" "$URL/index.php"
 check "data query (database connection)" 200 -H "$TLS" -u "$AUTH" "$URL/queries/query-lists.php"
 check "static file" 200 -H "$TLS" -u "$AUTH" "$URL/vendor/jquery/jquery.min.js"
+check "client module" 200 -H "$TLS" -u "$AUTH" "$URL/js/main.js"
+# (a module is only run if it is served as JavaScript; no-cache: see .htaccess)
+module_headers=$(curl -s -H "$TLS" -u "$AUTH" -D - -o /dev/null "$URL/js/main.js" | tr -d '\r')
+if echo "$module_headers" | grep -qi '^Content-Type: *\(text\|application\)/javascript' &&
+        echo "$module_headers" | grep -qi '^Cache-Control: no-cache$'; then
+    echo "ok   client module is JavaScript and not cached without asking"
+else
+    echo "FAIL client module: wrong Content-Type or no Cache-Control: no-cache"; FAIL=1
+fi
 for hidden in scripts/migrate.php tests/lib.js docker/entrypoint.sh; do
     check "$hidden is not served" 404 -H "$TLS" -u "$AUTH" "$URL/$hidden"
 done

@@ -1,10 +1,12 @@
-// needs lang-js.php (for $T) loaded before it, and escapeHtml() of todo.js when logging
-var logItems = [$T('STARTING_LOG')];
-// number of lines of the small log in the sidebar
-var logLines = 3;
-var logVisible = true;
+// needs lang-js.php (for $T) loaded before it
+import { escapeHtml } from './html.js';
 
-function updateLog(element, maxCount) {
+export const logItems = [$T('STARTING_LOG')];
+// number of lines of the small log in the sidebar
+const logLines = 3;
+let logVisible = true;
+
+export function updateLog(element, maxCount) {
     var logOutput = '';
     var start = Math.max(0, logItems.length-maxCount);
     var end   = Math.min(start+maxCount, logItems.length);
@@ -18,14 +20,14 @@ function updateLog(element, maxCount) {
 }
 
 
-function toggleLog() {
+export function toggleLog() {
     $('#smallLog').css('display', (logVisible)? 'none': 'block');
     $('#logLink').css('display', (logVisible)? 'block': 'none');
     logVisible = !logVisible;
 }
 
 
-function log(logStr) {
+export function log(logStr) {
     logItems.push(logStr);
     updateLog('#smallLog', logLines);
     $('#smallLog').css('display', 'block');

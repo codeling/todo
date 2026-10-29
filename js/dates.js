@@ -1,4 +1,4 @@
-// date helpers; needed by todo.js and init.js, so loaded before them
+// date helpers
 
 function fillStr(str, fillchar, count) {
     return String(str).padStart(count, fillchar);
@@ -6,7 +6,7 @@ function fillStr(str, fillchar, count) {
 
 
 // parse a UTC timestamp ("yyyy-mm-dd hh:mm:ss", e.g. creation or completion date)
-function parseDate(dateStr) {
+export function parseDate(dateStr) {
     if (dateStr == null || dateStr == '') {
         return null;
     }
@@ -25,7 +25,7 @@ function parseDate(dateStr) {
 // parse a calendar day ("yyyy-mm-dd", optionally followed by a time which is
 // ignored; start and due date): local midnight of that day, so that it is
 // shown as the same day in every time zone
-function parseDay(dateStr) {
+export function parseDay(dateStr) {
     if (dateStr == null || dateStr == '') {
         return null;
     }
@@ -37,7 +37,7 @@ function parseDay(dateStr) {
 }
 
 
-function formatDate(date, includeTime) {
+export function formatDate(date, includeTime) {
     if (date == null){
         return '';
     }
@@ -57,7 +57,7 @@ function formatDate(date, includeTime) {
     return result;
 }
 
-function getUTCDate() {
+export function getUTCDate() {
     var now = new Date();
     var now_utc = new Date(
         now.getUTCFullYear(),
@@ -71,7 +71,7 @@ function getUTCDate() {
 }
 
 // from https://stackoverflow.com/questions/3224834/get-difference-between-2-dates-in-javascript
-function dateDiffInDays(a, b) {
+export function dateDiffInDays(a, b) {
     var _MS_PER_DAY = 1000 * 60 * 60 * 24;
     // Discard the time and time-zone information.
     var utc1 = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
@@ -80,7 +80,7 @@ function dateDiffInDays(a, b) {
 }
 
 // from http://stackoverflow.com/a/19691491
-function addDays(date, days) {
+export function addDays(date, days) {
     var result = new Date(date);
     result.setDate(result.getDate() + days);
     return result;

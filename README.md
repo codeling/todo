@@ -10,6 +10,11 @@ A small PHP / MariaDB (MySQL) to-do list with lists, tags, recurring entries and
    **HTTP authentication and HTTPS**, see below.
    Or run the [container](#container).
 
+The client (`js/`) is a set of ES modules which the browser loads from `js/main.js`; there is no build
+step. Only the URL of `js/main.js` carries a version, so the web server has to make browsers check the
+other modules each time (`Cache-Control: no-cache`; `.htaccess` and `nginx.conf.sample` do that),
+otherwise a browser may keep using an old module after an update.
+
 ## Upgrading and backups
 
 Back up the database before every upgrade, and regularly:

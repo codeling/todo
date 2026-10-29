@@ -41,4 +41,12 @@ RedirectMatch 301 ^(.*/)statistik\.php$ $1statistics.php
     Header always set Referrer-Policy "same-origin"
     # ignored by browsers over plain HTTP
     Header always set Strict-Transport-Security "max-age=31536000"
+    # The client is made of ES modules (js/*.js). Only the URL of js/main.js has a version
+    # (assetUrl() in todo-core.php); the modules it imports are fetched by their plain URLs, which a
+    # browser could keep using after an update (an import map with versions would need an inline script,
+    # which the Content-Security-Policy forbids). So the browser has to ask each time whether a module
+    # changed: it gets 304 without the file if not. Keep this in sync with nginx.conf.sample.
+    <If "%{REQUEST_URI} =~ m#/js/[^/]+\.js$#">
+        Header always set Cache-Control "no-cache"
+    </If>
 </IfModule>

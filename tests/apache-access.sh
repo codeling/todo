@@ -57,7 +57,7 @@ FAIL=0
 # - pages = index.php and the root .php files referenced by index.php with src="" or href=""
 # - include-only = the other root .php files, except config*.php
 endpoints=$({
-    grep -hoE 'queries/[A-Za-z0-9_-]+\.php' "$REPO"/*.js || true
+    find "$REPO" -maxdepth 1 -name '*.js' -exec grep -hoE 'queries/[A-Za-z0-9_-]+\.php' {} + || true
     if [ -d "$REPO/js" ]; then
         grep -rhoE --include='*.js' 'queries/[A-Za-z0-9_-]+\.php' "$REPO/js" || true
     fi
@@ -109,6 +109,25 @@ case "$location" in
 esac
 check vendor/jquery/jquery.min.js 401 200
 check todo.css 401 200
+# The client is made of ES modules: the browser refuses a module which is not served as JavaScript, and,
+# as only the URL of js/main.js has a version, has to ask the server each time whether a module
+# changed (Cache-Control: no-cache; the answer is 304 without the file if not), see .htaccess.
+for f in "$REPO"/js/*.js; do
+    module=js/$(basename "$f")
+    check "$module" 401 200
+    headers=$(curl -s -H 'X-Test-TLS: on' -u alice:secret -D - -o /dev/null "$URL/$module" | tr -d '\r')
+    echo "$headers" | grep -qi '^Content-Type: *\(text\|application\)/javascript' || { echo "FAIL $module: not served as JavaScript"; FAIL=1; }
+    echo "$headers" | grep -qi '^Cache-Control: no-cache$' || { echo "FAIL $module: missing Cache-Control: no-cache"; FAIL=1; }
+done
+# (a browser stores the headers of a 304 answer too)
+modified=$(curl -s -H 'X-Test-TLS: on' -u alice:secret -D - -o /dev/null "$URL/js/main.js" | tr -d '\r' | sed -n 's/^[Ll]ast-[Mm]odified: //p')
+headers=$(curl -s -H 'X-Test-TLS: on' -u alice:secret -H "If-Modified-Since: $modified" -D - -o /dev/null "$URL/js/main.js" | tr -d '\r')
+echo "$headers" | head -n 1 | grep -q ' 304 ' || { echo "FAIL js/main.js: not answered with 304 if unchanged"; FAIL=1; }
+echo "$headers" | grep -qi '^Cache-Control: no-cache$' || { echo "FAIL js/main.js: the 304 answer has no Cache-Control: no-cache"; FAIL=1; }
+# the other static files are versioned by their URL (assetUrl()) and not affected
+if curl -s -H 'X-Test-TLS: on' -u alice:secret -D - -o /dev/null "$URL/todo.css" | grep -qi '^Cache-Control: no-cache'; then
+    echo "FAIL todo.css: Cache-Control: no-cache is only meant for js/"; FAIL=1
+fi
 for denied in sql/install.sql lang/en-US.ini config.php config.sample.php package.json \
         package-lock.json scripts/vendor.sh webauth/webauth.php webauth/src/ServerAuth.php webauth/README.md webauth/samples/htaccess.sample webauth/composer.json webauth/tests/ServerAuthTest.php \
         config.php/x .htaccess nginx.conf.sample README.md phpstan.neon; do

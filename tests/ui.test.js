@@ -13,7 +13,7 @@ test.before(async () => {
 test.after(() => browser.close());
 
 // opens the page (the main page, or another one which is ready when the function says so), records JS errors, CSP violations and dialogs
-async function openPage(path = '/index.php', ready = () => typeof itemList !== 'undefined' && Array.isArray(itemList)) {
+async function openPage(path = '/index.php', ready = () => typeof todoApp !== 'undefined' && Array.isArray(todoApp.state.itemList)) {
     const page = await browser.newPage();
     page.errors = [];
     page.on('console', (m) => { if (m.type() === 'error') page.errors.push(m.text()); });
@@ -61,14 +61,14 @@ test('main workflows work (and do not violate the Content-Security-Policy)', asy
     assert.equal(await page.evaluate(() => $.ui.version), vendored('jquery-ui'));
     await page.fill('#enter_todo', 'tag1: new <i>item</i>');
     await page.click('#enter_save');
-    await page.waitForFunction(() => itemList.length == 1 && itemList[0].id > 0);
-    const id = await page.evaluate(() => itemList[0].id);
+    await page.waitForFunction(() => todoApp.state.itemList.length == 1 && todoApp.state.itemList[0].id > 0);
+    const id = await page.evaluate(() => todoApp.state.itemList[0].id);
     assert.equal(await page.locator('#todo' + id + ' td.todo > span:not([class])').textContent(), 'new <i>item</i>');
 
     await page.click('#modify' + id);
     await page.fill('#modify_notes', 'a note');
     await page.click('#modify_save');
-    await page.waitForFunction(() => itemList[0].version == 2);
+    await page.waitForFunction(() => todoApp.state.itemList[0].version == 2);
     assert.equal(sql(`SELECT notes FROM todo WHERE id=${id}`).trim(), 'a note');
 
     // tags are only listed while a todo of the current list has them
@@ -76,15 +76,15 @@ test('main workflows work (and do not violate the Content-Security-Policy)', asy
     assert.equal(await page.locator('#tag_dialog').isVisible(), true);
     assert.equal(await page.inputValue('#tag_name'), 'tag1');
     await page.click('#tag_delete');
-    await page.waitForFunction(() => tagList.length == 0);
+    await page.waitForFunction(() => todoApp.state.tagList.length == 0);
     assert.equal(sql('SELECT COUNT(*) FROM tags').trim(), '0');
 
     await page.click('#completed' + id);
-    await page.waitForFunction(() => itemList[0].version == 3);
+    await page.waitForFunction(() => todoApp.state.itemList[0].version == 3);
     await page.click('#trash' + id);
-    await page.waitForFunction(() => itemList[0].deleted == 1);
+    await page.waitForFunction(() => todoApp.state.itemList[0].deleted == 1);
     await page.click('#emptyTrash');
-    await page.waitForFunction(() => itemList.length == 0);
+    await page.waitForFunction(() => todoApp.state.itemList.length == 0);
     assert.equal(sql('SELECT COUNT(*) FROM todo').trim(), '0');
 
     assert.deepEqual(page.errors, []);
@@ -99,8 +99,8 @@ test('special characters are stored as typed and shown as typed: in the list, af
     const page = await openPage();
     await page.fill('#enter_todo', tag + ': ' + text);
     await page.click('#enter_save');
-    await page.waitForFunction(() => itemList.length == 1 && itemList[0].id > 0);
-    const id = await page.evaluate(() => itemList[0].id);
+    await page.waitForFunction(() => todoApp.state.itemList.length == 1 && todoApp.state.itemList[0].id > 0);
+    const id = await page.evaluate(() => todoApp.state.itemList[0].id);
     // plain text in the database, not HTML entities
     assert.equal(sql(`SELECT description FROM todo WHERE id=${id}`).trim(), text);
     assert.equal(sql('SELECT name FROM tags').trim(), tag);
@@ -116,10 +116,10 @@ test('special characters are stored as typed and shown as typed: in the list, af
     // the dialog shows the same text, and saving it unchanged keeps it
     await page.click('#modify' + id);
     assert.equal(await page.inputValue('#modify_todo'), text);
-    assert.deepEqual(await page.evaluate(() => modifyTagify.value.map((t) => t.value)), [tag]);
+    assert.deepEqual(await page.evaluate(() => todoApp.state.modifyTagify.value.map((t) => t.value)), [tag]);
     await page.fill('#modify_notes', notes);
     await page.click('#modify_save');
-    await page.waitForFunction(() => itemList[0].version == 2);
+    await page.waitForFunction(() => todoApp.state.itemList[0].version == 2);
     assert.deepEqual(sqlRows(`SELECT description, notes FROM todo WHERE id=${id}`), [[text, notes]]);
     assert.equal(sql('SELECT name FROM tags').trim(), tag);
     await page.click('#modify' + id);
@@ -132,16 +132,16 @@ test('special characters are stored as typed and shown as typed: in the list, af
     const other = 'Salt & <Pepper>';
     await page.fill('#enter_todo', other + ': second');
     await page.click('#enter_save');
-    await page.waitForFunction(() => itemList.length == 2 && itemList.every((i) => i.id > 0));
-    await page.waitForFunction(() => tagList.length == 2);
+    await page.waitForFunction(() => todoApp.state.itemList.length == 2 && todoApp.state.itemList.every((i) => i.id > 0));
+    await page.waitForFunction(() => todoApp.state.tagList.length == 2);
     await page.locator('#taglist .tagify__tag', { hasText: tag }).click();
     assert.equal(await page.inputValue('#tag_name'), tag);
     assert.equal(await page.inputValue('#tag_count'), '1');
     assert.equal(await page.locator('#tag_todo_table .todo').count(), 1);
     assert.match(await page.locator('#tag_todo_table .todo').textContent(), /Tom & Jerry <b> mit ä/);
-    await page.evaluate((name) => mergeTagify.addTags([name]), other);
+    await page.evaluate((name) => todoApp.state.mergeTagify.addTags([name]), other);
     await page.click('#tag_merge');
-    await page.waitForFunction(() => tagList.length == 1);
+    await page.waitForFunction(() => todoApp.state.tagList.length == 1);
     assert.deepEqual(sqlRows('SELECT name FROM tags'), [[other]]);
     assert.equal(sql('SELECT COUNT(*) FROM todo_tags').trim(), '2');
     assert.deepEqual(page.errors, []);
@@ -193,10 +193,10 @@ test('completed entries with the same completion date and start are ordered by d
         ['open', 'newest', 'apple', 'banana', 'cherry', 'no start']);
     const violations = await page.evaluate(() => {
         const bad = [];
-        for (const a of itemList) {
-            for (const b of itemList) {
-                const ab = Math.sign(ItemSort(a, b));
-                const ba = Math.sign(ItemSort(b, a));
+        for (const a of todoApp.state.itemList) {
+            for (const b of todoApp.state.itemList) {
+                const ab = Math.sign(todoApp.ItemSort(a, b));
+                const ba = Math.sign(todoApp.ItemSort(b, a));
                 // antisymmetric, and only an item is equal to itself
                 if (ab !== -ba || (a === b) !== (ab === 0)) {
                     bad.push(a.todo + ' / ' + b.todo + ': ' + ab + ', ' + ba);
@@ -217,22 +217,22 @@ test('a todo just added can be started today and tapped to edit without reloadin
     await page.fill('#enter_todo', 'first');
     await page.fill('#enter_start', '2099-01-01');
     await page.click('#enter_save');
-    await page.waitForFunction(() => itemList.length == 1 && itemList[0].id > 0);
-    const first = await page.evaluate(() => itemList[0].id);
+    await page.waitForFunction(() => todoApp.state.itemList.length == 1 && todoApp.state.itemList[0].id > 0);
+    const first = await page.evaluate(() => todoApp.state.itemList[0].id);
     const [response] = await Promise.all([
         page.waitForResponse((r) => r.url().includes('queries/update.php'), { timeout: 5000 }),
         page.click('#dotoday' + first)
     ]);
     assert.deepEqual(await response.json(), { ok: true, version: 2 });
-    await page.waitForFunction(() => itemList[0].version == 2);
+    await page.waitForFunction(() => todoApp.state.itemList[0].version == 2);
     assert.equal(sql(`SELECT startDate = UTC_DATE() FROM todo WHERE id=${first}`).trim(), '1');
 
     // the edit button is hidden on narrow screens, a tap on the todo opens the dialog
     await page.setViewportSize({ width: 400, height: 800 });
     await page.fill('#enter_todo', 'second');
     await page.click('#enter_save');
-    await page.waitForFunction(() => itemList.length == 2 && itemList.every((i) => i.id > 0));
-    const second = await page.evaluate(() => itemList.find((i) => i.todo == 'second').id);
+    await page.waitForFunction(() => todoApp.state.itemList.length == 2 && todoApp.state.itemList.every((i) => i.id > 0));
+    const second = await page.evaluate(() => todoApp.state.itemList.find((i) => i.todo == 'second').id);
     assert.equal(await page.locator('#modify_dialog').isVisible(), false);
     await page.click(`#todo${second} td.todo`);
     assert.equal(await page.locator('#modify_dialog').isVisible(), true);
@@ -247,7 +247,7 @@ test('the checkbox is unchecked again when completing an entry fails', async () 
     sql("INSERT INTO todo (creationDate, description, startDate, list_id) VALUES (UTC_TIMESTAMP(), 'open', UTC_DATE(), 0)");
     const page = await openPage();
     await page.waitForSelector('#todoTable tbody tr');
-    const id = await page.evaluate(() => itemList[0].id);
+    const id = await page.evaluate(() => todoApp.state.itemList[0].id);
     const alerts = [];
     page.on('dialog', (d) => alerts.push(d.message()));
 
@@ -276,7 +276,7 @@ test('the checkbox is unchecked again when completing an entry fails', async () 
     assert.equal(sql(`SELECT completed FROM todo WHERE id=${id}`).trim(), '0');
     await page.unroute('**/queries/complete.php*');
     await page.click('#completed' + id);
-    await page.waitForFunction(() => itemList[0].completed == 1);
+    await page.waitForFunction(() => todoApp.state.itemList[0].completed == 1);
     assert.equal(await page.isChecked('#completed' + id), true);
     assert.equal(sql(`SELECT completed FROM todo WHERE id=${id}`).trim(), '1');
     // the failed requests are reported by the browser, on purpose
@@ -312,9 +312,9 @@ test('an entry moved to the trash or back is shown as before when that fails, al
     sql("INSERT INTO todo (creationDate, description, startDate, list_id) VALUES (UTC_TIMESTAMP(), 'open', UTC_DATE(), 0)");
     const page = await openPage();
     await page.waitForSelector('#todoTable tbody tr');
-    const id = await page.evaluate(() => itemList[0].id);
+    const id = await page.evaluate(() => todoApp.state.itemList[0].id);
     const alerts = collectAlerts(page);
-    const deleted = () => page.evaluate(() => itemList[0].deleted);
+    const deleted = () => page.evaluate(() => todoApp.state.itemList[0].deleted);
 
     // the server refuses: the message is shown and the entry is back
     await page.route('**/queries/trash.php*', (r) => r.fulfill({ status: 409, ...errorBody('trash refused') }));
@@ -335,7 +335,7 @@ test('an entry moved to the trash or back is shown as before when that fails, al
     // restoring is undone in the same way
     await page.unroute('**/queries/trash.php*');
     await page.click('#trash' + id);
-    await page.waitForFunction(() => itemList[0].deleted == 1);
+    await page.waitForFunction(() => todoApp.state.itemList[0].deleted == 1);
     await page.route('**/queries/trash.php*', (r) => r.abort());
     await clickForAlert(page, '#restore' + id);
     assert.deepEqual(alerts.slice(2), ['Transmission error.']);
@@ -354,9 +354,9 @@ test('a failed creation removes the new entry, and nothing else if the list was 
     sql("INSERT INTO todo (creationDate, description, startDate, list_id) VALUES " +
         "(UTC_TIMESTAMP(), 'one', UTC_DATE(), 0), (UTC_TIMESTAMP(), 'two', UTC_DATE(), 0)");
     const page = await openPage();
-    await page.waitForFunction(() => itemList.length == 2);
+    await page.waitForFunction(() => todoApp.state.itemList.length == 2);
     const alerts = collectAlerts(page);
-    const todos = () => page.evaluate(() => itemList.map((i) => i.todo).sort());
+    const todos = () => page.evaluate(() => todoApp.state.itemList.map((i) => i.todo).sort());
 
     // the entry which is shown while the request is on its way is gone
     await page.route('**/queries/enter.php', (r) => r.fulfill({ status: 422, ...errorBody('rejected') }));
@@ -369,7 +369,7 @@ test('a failed creation removes the new entry, and nothing else if the list was 
     // the list was loaded again while the request was on its way: there is no new entry to remove
     await page.unroute('**/queries/enter.php');
     await page.route('**/queries/enter.php', async (r) => {
-        await page.evaluate(() => { itemList = itemList.filter((i) => i.id != -1); });
+        await page.evaluate(() => { todoApp.state.itemList = todoApp.state.itemList.filter((i) => i.id != -1); });
         await r.fulfill({ status: 422, ...errorBody('rejected again') });
     });
     await clickForAlert(page, '#enter_save');
@@ -383,7 +383,7 @@ test('failed requests for data are reported, and the list works again afterwards
     resetDb();
     sql("INSERT INTO todo (creationDate, description, startDate, list_id) VALUES (UTC_TIMESTAMP(), 'one', UTC_DATE(), 0)");
     const page = await openPage();
-    await page.waitForFunction(() => itemList.length == 1);
+    await page.waitForFunction(() => todoApp.state.itemList.length == 1);
     const alerts = collectAlerts(page);
     const loaded = () => page.waitForFunction(() => document.querySelector('#working').style.display == 'none');
 
@@ -394,11 +394,11 @@ test('failed requests for data are reported, and the list works again afterwards
     await untilAlert(page, () => page.click('#refresh'));
     await loaded();
     assert.deepEqual(alerts.slice().sort(), ['Error while loading: lists failed', 'Error while loading: no access']);
-    await untilAlert(page, () => page.evaluate(() => reloadTagList()));
+    await untilAlert(page, () => page.evaluate(() => todoApp.reloadTagList()));
     assert.equal(alerts.length, 3);
     assert.equal(alerts[2], 'Error while loading: no tags');
     // (also in the log)
-    const logged = await page.evaluate(() => logItems);
+    const logged = await page.evaluate(() => todoApp.logItems);
     for (const text of ['Error while loading: no access', 'Error while loading: lists failed', 'Error while loading: no tags']) {
         assert.ok(logged.includes(text), text);
     }
@@ -419,7 +419,7 @@ test('failed requests for data are reported, and the list works again afterwards
     await page.click('#refresh');
     await page.waitForFunction(() => document.querySelector('#lists li'));
     await loaded();
-    assert.deepEqual(await page.evaluate(() => itemList.map((i) => i.todo)), ['one']);
+    assert.deepEqual(await page.evaluate(() => todoApp.state.itemList.map((i) => i.todo)), ['one']);
     assert.deepEqual(await page.locator('#lists li').allTextContents(), ['Main', 'Work']);
     assert.equal(alerts.length, 2);
     await page.close();
@@ -435,14 +435,14 @@ test('reactivating reports the answer of the server in the log, also if it refus
     await page.waitForSelector('.reactivateButton');
     const alerts = collectAlerts(page);
 
-    const loaded = () => page.waitForFunction(() => logItems[logItems.length - 1] == 'Loading finished');
+    const loaded = () => page.waitForFunction(() => todoApp.logItems[todoApp.logItems.length - 1] == 'Loading finished');
     await page.click('.reactivateButton');
-    await page.waitForFunction(() => logItems.includes('Result: Reactivated entry...'));
+    await page.waitForFunction(() => todoApp.logItems.includes('Result: Reactivated entry...'));
     await loaded();
     assert.equal(sql('SELECT COUNT(*) FROM todo').trim(), '2');
     // the second time there is a reactivated entry already: no alert, the answer is in the log
     await page.click('.reactivateButton');
-    await page.waitForFunction(() => logItems.some((l) => l.startsWith('Result: Either item is not completed')));
+    await page.waitForFunction(() => todoApp.logItems.some((l) => l.startsWith('Result: Either item is not completed')));
     await loaded();
     assert.equal(sql('SELECT COUNT(*) FROM todo').trim(), '2');
     assert.deepEqual(alerts, []);

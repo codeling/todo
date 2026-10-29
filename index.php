@@ -9,11 +9,11 @@
     <script src="<?php echo(assetUrl("vendor/jquery/jquery.min.js")); ?>"></script>
     <script src="<?php echo(assetUrl("vendor/jquery-ui/jquery-ui.min.js")); ?>"></script>
     <script src="lang-js.php"></script>
-    <script src="<?php echo(assetUrl("log.js")); ?>"></script>
-    <script src="<?php echo(assetUrl("dates.js")); ?>"></script>
-    <script src="<?php echo(assetUrl("todo.js")); ?>"></script>
-    <script src="<?php echo(assetUrl("init.js")); ?>"></script>
     <script src="<?php echo(assetUrl("vendor/tagify/tagify.js")); ?>"></script>
+    <!-- the application: ES modules (js/*.js) which js/main.js imports; they use the scripts above as globals.
+         Only this URL has a version: the web server makes browsers check the other modules each time
+         (Cache-Control: no-cache, see .htaccess and nginx.conf.sample) -->
+    <script type="module" src="<?php echo(assetUrl("js/main.js")); ?>"></script>
     <link rel="stylesheet" type="text/css" href="<?php echo(assetUrl("vendor/tagify/tagify.css")); ?>" />
     <link rel="stylesheet" type="text/css" href="<?php echo(assetUrl("todo.css")); ?>" />
     <link rel="stylesheet" type="text/css" href="<?php echo(assetUrl("vendor/jquery-ui/jquery-ui.min.css")); ?>"/>
