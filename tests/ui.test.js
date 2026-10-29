@@ -296,9 +296,10 @@ function collectAlerts(page) {
     return alerts;
 }
 
-// runs the action and waits for the alert which that leads to
+// runs the action and waits for the alert which that leads to (not for a confirm() before it, as
+// reactivate shows one: its alert only comes after the request, the test would not wait for it)
 async function untilAlert(page, action) {
-    const dialog = page.waitForEvent('dialog');
+    const dialog = page.waitForEvent('dialog', (d) => d.type() === 'alert');
     await action();
     await dialog;
     await page.evaluate(() => 0);  // the handler goes on after the alert was accepted
