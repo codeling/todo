@@ -1,19 +1,3 @@
-// from https://stackoverflow.com/questions/3224834/get-difference-between-2-dates-in-javascript
-function dateDiffInDays(a, b) {
-    var _MS_PER_DAY = 1000 * 60 * 60 * 24;
-    // Discard the time and time-zone information.
-    var utc1 = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
-    var utc2 = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate());
-    return Math.floor((utc2 - utc1) / _MS_PER_DAY);
-}
-
-// from http://stackoverflow.com/a/19691491
-function addDays(date, days) {
-    var result = new Date(date);
-    result.setDate(result.getDate() + days);
-    return result;
-}
-
 // when the start date is changed, move the due date by the same number of days
 // (or, if fillEmptyDue is set and no due date is set yet, set it to the start date)
 function shiftDueWithStart(startSel, dueSel, fillEmptyDue) {
@@ -31,8 +15,6 @@ function shiftDueWithStart(startSel, dueSel, fillEmptyDue) {
         $(startSel).data('oldVal', $(startSel).val());
     });
 }
-
-var tagList;
 
 $(document).ready(function() {
 
@@ -93,8 +75,6 @@ $(document).ready(function() {
         reload();
     });
 
-    new Tagify($('#modify_tag_edit')[0]);
-
     shiftDueWithStart('#modify_start', '#modify_due', false);
     shiftDueWithStart('#enter_start', '#enter_due', true);
     $('#enter_due').on('input change', updateEnterDueLabel);
@@ -106,8 +86,7 @@ $(document).ready(function() {
     });
 
     $('#filter .tagify__input').on('focus', function() {
-        let tagStrs = tagList.map( (x) => x.name );
-        $('#filter_tag_edit')[0].__tagify.settings.whitelist = tagStrs;
+        filterTagify.settings.whitelist = tagList.map( (x) => x.name );
     });
 
     $('#refresh').on('click', refresh);

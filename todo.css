@@ -263,7 +263,7 @@ ul.ui-autocomplete {
 }
 /*******************/
 /* Button images   */
-.addButton, .editButton, .deleteButton, .undeleteButton, .todayButton, .refreshButton, .reactivateButton, .mergeButton {
+.iconButton {
     width: 20px;
     height: 20px;
     background-size: cover;
@@ -273,7 +273,7 @@ ul.ui-autocomplete {
 /* only on devices with real hover, else the highlight sticks after a tap */
 @media (hover: hover)
 {
-    .addButton:hover, .editButton:hover, .deleteButton:hover, .undeleteButton:hover, .todayButton:hover, .refreshButton:hover, .reactivateButton:hover, .mergeButton:hover
+    .iconButton:hover
     {
         background-color: #DDD;
     }
@@ -473,7 +473,7 @@ ul.ui-autocomplete {
 		width: calc(100% - 90px);
 	}
 	/* larger touch targets */
-	.addButton, .editButton, .deleteButton, .undeleteButton, .todayButton, .refreshButton, .reactivateButton, .mergeButton {
+	.iconButton {
 		width: 32px;
 		height: 32px;
 	}

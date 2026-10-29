@@ -4,7 +4,16 @@ var itemList;
 // holds all lists of current user
 var lists;
 
-var currentlyModified = null;
+// the tags of the current list with their counts
+var tagList;
+
+// the Tagify instances (created in the ready handler at the end): the filter above the
+// table, the tags in the dialog of a todo, the target of a merge in the dialog of a
+// tag, and the list of all tags in the sidebar (created when it is first filled)
+var filterTagify;
+var modifyTagify;
+var mergeTagify;
+var tagListTagify;
 
 // screen width up to which the narrow layout of todo.css is used
 var narrowScreenQuery = '(max-width: 575px)';
@@ -44,12 +53,6 @@ function copyTodo(item)
         item.version, item.recurrenceMode, item.recurrenceInterval, item.recurrenceAnchor,
         item.completionDate, item.creationDate, item.list_id
     );
-}
-
-
-function printItem(item)
-{
-    alert(JSON.stringify(item).replace(/,/g,"\n").replace(/[{}\"]/g, ""));
 }
 
 
@@ -101,25 +104,24 @@ function findItem(id) {
 }
 
 
-function trashLocally(idx) {
-    itemList[idx].deleted = 1;
+// shows the table and the progress bar again after the list changed
+function refreshView() {
     renderTable();
     updateProgress();
+}
+
+
+function setTrashedLocally(idx, trashed) {
+    itemList[idx].deleted = trashed ? 1 : 0;
+    refreshView();
 }
 
 
 function deleteLocally(idx) {
     itemList.splice(idx, 1);
-    renderTable();
-    updateProgress();
+    refreshView();
 }
 
-
-function restoreLocally(idx) {
-    itemList[idx].deleted = 0;
-    renderTable();
-    updateProgress();
-}
 
 function modifyLocally(item) {
     var index = findItem(item.id);
@@ -144,16 +146,8 @@ function modifyLocally(item) {
 
 function addLocally(newItem) {
     // just enter at the end, the sorting is done separately anyway
-    var insertIdx = itemList.length;
-/*
-    while(insertIdx < itemList.length && 
-        ItemSort(newItem, itemList[insertIdx]) > 0) {
-        ++insertIdx;
-    }
-*/
-    itemList.splice(insertIdx, 0, newItem);
-    renderTable();
-    updateProgress();
+    itemList.push(newItem);
+    refreshView();
 }
 
 
@@ -163,17 +157,16 @@ function toggleLocally(item) {
         alert($T('ENTRY_NOT_FOUND'));
         return;
     }
-    toggledItem = itemList[index];
+    var toggledItem = itemList[index];
     toggledItem.completed = item.completed;
     toggledItem.version = item.version;
     toggledItem.completionDate = item.completionDate;
-    renderTable();
-    updateProgress();
+    refreshView();
 }
 
 
 function emptyTrashLocally() {
-    for (idx = itemList.length-1; idx>=0; --idx) {
+    for (var idx = itemList.length-1; idx>=0; --idx) {
         if (itemList[idx].deleted == 1) {
             itemList.splice(idx, 1);
         }
@@ -182,36 +175,59 @@ function emptyTrashLocally() {
 }
 
 
+// Sends a request which modifies data. The promise is resolved with the answer of the
+// server if the request succeeded, and rejected with { transport: true } if the request
+// itself failed or with { message: text } if the server answered with an error message.
+// This is the one place which decides what a success is: an integer answer (the id of
+// a new entry, a count, or 1). anyAnswer is for the one endpoint with a text as answer.
+function postAction(url, data, anyAnswer) {
+    return new Promise(function(resolve, reject) {
+        $.ajax({
+            type: 'POST',
+            url: url,
+            data: data,
+            dataType: 'text'
+        }).then(function(answer) {
+            if (anyAnswer || /^\d+$/.test(answer)) {
+                resolve(answer);
+            } else {
+                reject({ message: answer });
+            }
+        }, function() {
+            reject({ transport: true });
+        });
+    });
+}
+
+// reports a failed postAction(): the message of the server is logged and shown behind
+// the text of the language key prefixKey, a failed transmission is only shown
+function reportFailure(prefixKey, failure) {
+    if (failure.transport) {
+        alert($T('TRANSMISSION_ERROR'));
+        return;
+    }
+    log($T(prefixKey)+failure.message);
+    alert($T(prefixKey)+failure.message);
+}
+
+
 function emptyTrash() {
     if (!confirm($T('CONFIRM_EMPTY_TRASH'))) {
         return;
     }
-    var stuff = new Object();
-    stuff.list_id = reloadData.list_id;
-    $.ajax( {
-        type: 'POST',
-        url: 'queries/empty-trash.php',
-        data: stuff,
-        success: function(returnValue) {
-            if (returnValue != 1) {
-                log($T('ERROR_WHILE_EMPTYING_TRASH')+returnValue);
-                alert($T('ERROR_WHILE_EMPTYING_TRASH')+returnValue);
-            } else {
-                log($T('EMPTYING_TRASH_SUCCESSFUL'));
-                emptyTrashLocally();
-                reloadTagList();
-            }
-        },
-        error: function(jqXHR, textStatus, errorThrown) {
-            alert($T('TRANSMISSION_ERROR'));
-        }
-   });
-
+    postAction('queries/empty-trash.php', { list_id: reloadData.list_id }).then(function() {
+        log($T('EMPTYING_TRASH_SUCCESSFUL'));
+        emptyTrashLocally();
+        reloadTagList();
+    }, function(failure) {
+        reportFailure('ERROR_WHILE_EMPTYING_TRASH', failure);
+    });
 }
 
 
-function trashItem(id) {
-    log($T('DELETING_ENTRY'));
+// moves an entry into the trash or back; shown at once and undone if the server refuses
+function setTrashed(id, trashed) {
+    log($T(trashed ? 'DELETING_ENTRY' : 'RESTORING_ENTRY'));
     var idx = findItem(id);
     if (idx == -1) {
         alert($T('ENTRY_NOT_FOUND'));
@@ -220,75 +236,29 @@ function trashItem(id) {
     var stuff = new Object();
     stuff.id = id;
     stuff.version = itemList[idx].version;
-    stuff.trash   = 1;
-    trashLocally(idx);
-    $.ajax( {
-        type: 'POST',
-        url: 'queries/trash.php',
-        data: stuff,
-        success: function(returnValue) {
-            if (returnValue != 1) {
-                log($T('ERROR_WHILE_DELETING')+returnValue);
-                alert($T('ERROR_WHILE_DELETING')+returnValue);
-                restoreLocally(idx);
-            } else {
-                log($T('DELETING_SUCCESSFUL'));
-            }
-        },
-        error: function(jqXHR, textStatus, errorThrown) {
-            alert($T('TRANSMISSION_ERROR'));
+    stuff.trash   = trashed ? 1 : 0;
+    setTrashedLocally(idx, trashed);
+    postAction('queries/trash.php', stuff).then(function() {
+        log($T(trashed ? 'DELETING_SUCCESSFUL' : 'RESTORING_SUCCESSFUL'));
+    }, function(failure) {
+        reportFailure(trashed ? 'ERROR_WHILE_DELETING' : 'ERROR_WHILE_RESTORING', failure);
+        // after a transmission error the entry stays as shown, as before
+        if (!failure.transport) {
+            setTrashedLocally(idx, !trashed);
         }
-   });
-}
-
-
-function restoreItem(id) {
-    log($T('RESTORING_ENTRY'));
-    var idx = findItem(id);
-    if (idx == -1) {
-        alert($T('ENTRY_NOT_FOUND'));
-        return;
-    }
-    var stuff = new Object();
-    stuff.id = id;
-    stuff.version = itemList[idx].version;
-    stuff.trash   = 0;
-    restoreLocally(idx);
-    $.ajax( {
-        type: 'POST',
-        url: 'queries/trash.php',
-        data: stuff,
-        success: function(returnValue) {
-            if (returnValue != 1) {
-                log($T('ERROR_WHILE_RESTORING')+returnValue);
-                alert($T('ERROR_WHILE_RESTORING')+returnValue);
-                trashLocally(idx);
-            } else {
-                log($T('RESTORING_SUCCESSFUL'));
-            }
-        },
-        error: function(jqXHR, textStatus, errorThrown) {
-            alert($T('TRANSMISSION_ERROR'));
-        }
-   });
+    });
 }
 
 
 function sendReactivate(id) {
     log($T('REACTIVATING'));
-    var idobj = new Object();
-    idobj.id = id;
-    $.ajax( {
-        type: 'POST',
-        url: 'queries/reactivate-one.php',
-        data: idobj,
-        success: function(returnValue) {
-            log($T('RESULT')+': '+returnValue);
-            refresh();
-        },
-        error: function(jqXHR, textStatus, errorThrown) {
-            alert($T('TRANSMISSION_ERROR'));
-        }
+    // the answer is a text, whatever it says
+    postAction('queries/reactivate-one.php', { id: id }, true).then(function(answer) {
+        log($T('RESULT')+': '+answer);
+        refresh();
+    }, function() {
+        // there is no other failure with this answer
+        alert($T('TRANSMISSION_ERROR'));
     });
 }
 
@@ -333,29 +303,17 @@ function toggleCompleted(id) {
     stuff.completed = itemList[index].completed == 0 ? 1 : 0;
     stuff.version   = itemList[index].version;
     stuff.completionDate = stuff.completed == 1 ? formatDate(getUTCDate(), true) : null;
-    currentlyModified = copyTodo(itemList[index]);
-    $.ajax({
-        type: 'POST',
-        url: 'queries/complete.php',
-        data: stuff,
-        success: function(returnValue) {
-            if (returnValue != 1) {
-                log($T('ERROR_WHILE_MODIFYING')+returnValue);
-                alert($T('ERROR_WHILE_MODIFYING')+returnValue);
-                resetCompletedCheckbox(id);
-            } else {
-                currentlyModified.completed = stuff.completed;
-                currentlyModified.completionDate = stuff.completionDate;
-                currentlyModified.version   = stuff.version + 1;
-                toggleLocally(currentlyModified);
-                log($T('UPDATE_SUCCESSFUL'));
-            }
-            currentlyModified = null;
-        },
-        error: function(jqXHR, textStatus, errorThrown) {
-            alert($T('TRANSMISSION_ERROR'));
-            resetCompletedCheckbox(id);
-        }
+    // a copy of its own for each request, the item itself is only changed once the server confirmed
+    var item = copyTodo(itemList[index]);
+    postAction('queries/complete.php', stuff).then(function() {
+        item.completed = stuff.completed;
+        item.completionDate = stuff.completionDate;
+        item.version   = stuff.version + 1;
+        toggleLocally(item);
+        log($T('UPDATE_SUCCESSFUL'));
+    }, function(failure) {
+        reportFailure('ERROR_WHILE_MODIFYING', failure);
+        resetCompletedCheckbox(id);
     });
 }
 
@@ -415,14 +373,12 @@ function fillModifyForm(id) {
     $('#modify_info').text($T('CREATED')+': '+formatDate(parseDate(item.creationDate), true)+
         ((item.completed != 0) ? '; '+$T('DONE')+': '+formatDate(parseDate(item.completionDate), true) : ''));
 
-    var tagify = $('#modify_tag_edit')[0].__tagify;
-    tagify.removeAllTags();
-    let tagStrs = tagList.map( (x) => x.name );
-    $('#modify_tag_edit')[0].__tagify.settings.whitelist = tagStrs;
+    modifyTagify.removeAllTags();
+    modifyTagify.settings.whitelist = tagList.map( (x) => x.name );
 
     for (var i=0; i<item.tags.length; i++)
     {
-        tagify.addTags([ html_entity_decode(item.tags[i]) ] );
+        modifyTagify.addTags([ html_entity_decode(item.tags[i]) ] );
     }
 
     $('#modify_recurrenceMode option:selected').prop('selected', false);
@@ -435,67 +391,6 @@ function fillModifyForm(id) {
     $('#modify_list option:selected').prop('selected', false);
     $('#modify_list option[value="'+item.list_id+'"]').prop('selected', true);
     toggleRecurrenceAnchor();
-}
-
-function fillStr(str, fillchar, count) {
-    var fillStr = '';
-    for (var i=0; i < (count - str.toString().length); ++i) {
-        fillStr += fillchar;
-    }
-    return fillStr + str;
-}
-
-
-// parse a UTC timestamp ("yyyy-mm-dd hh:mm:ss", e.g. creation or completion date)
-function parseDate(dateStr) {
-    if (dateStr == null || dateStr == '') {
-        return null;
-    }
-    var parts = dateStr.split(' ');
-    if (parts.length < 1 || parts.length > 2) {
-        return null;
-    }
-    var datePart = parts[0].split('-');
-    var timePart = new Array(0, 0, 0);
-    if (parts.length > 1) {
-         timePart = parts[1].split(':');
-    }
-    return new Date(Date.UTC(datePart[0], datePart[1]-1, datePart[2], timePart[0], timePart[1], timePart[2], 0));
-}
-
-// parse a calendar day ("yyyy-mm-dd", optionally followed by a time which is
-// ignored; start and due date): local midnight of that day, so that it is
-// shown as the same day in every time zone
-function parseDay(dateStr) {
-    if (dateStr == null || dateStr == '') {
-        return null;
-    }
-    var datePart = dateStr.split(' ')[0].split('-');
-    if (datePart.length != 3) {
-        return null;
-    }
-    return new Date(datePart[0], datePart[1]-1, datePart[2]);
-}
- 
-
-function formatDate(date, includeTime) {
-    if (date == null){
-        return '';
-    }
-    if (isNaN(date.getFullYear())) {
-        return 'invalid';
-    }
-    result = ''+
-        date.getFullYear()               +'-'+
-        fillStr(date.getMonth()+1, '0', 2) +'-'+
-        fillStr(date.getDate() , '0', 2);
-    if (includeTime != null && includeTime == true)
-    {
-        result += ' ' + fillStr(date.getHours(), '0', 2) + ':' +
-                  fillStr(date.getMinutes(), '0', 2) + ':' +
-                  fillStr(date.getSeconds(), '0', 2);
-    }
-    return result;
 }
 
 function doToday(id)
@@ -524,10 +419,10 @@ function setListener(id) {
         });
     }
     $('#trash'+id).on('click', function() {
-        trashItem(id);
+        setTrashed(id, true);
     });
     $('#restore'+id).on('click', function() {
-        restoreItem(id);
+        setTrashed(id, false);
     });
     $('#reactivate'+id).on('click', function() {
         reactivate(id);
@@ -598,7 +493,8 @@ function getTodoWithTag(filterTags)
 }
 
 function filterList() {
-    let filterTags = $('#filter_tag_edit')[0].__tagify.value.map((tag) => tag.value);
+    var result;
+    var filterTags = filterTagify.value.map((tag) => tag.value);
     if (filterTags.length == 0) {
         result = itemList.slice(0);
     } else {
@@ -663,10 +559,7 @@ function reload() {
     log($T('LOADING_TODO_LIST'));
     // recurring entries which are due are copied first; that modifies data,
     // so it is a POST request (with CSRF token) and not part of loading the list
-    var todosLoaded = $.ajax({
-        url: 'queries/reactivate-due.php',
-        type: 'POST'
-    }).then(loadTodos, loadTodos);
+    var todosLoaded = postAction('queries/reactivate-due.php').then(loadTodos, loadTodos);
 
     var listsLoaded = $.ajax({
         url: 'queries/query-lists.php',
@@ -707,23 +600,9 @@ function loadTodos() {
             itemList[i].recurrenceInterval = parseInt(itemList[i].recurrenceInterval);
             itemList[i].recurrenceAnchor = parseInt(itemList[i].recurrenceAnchor);
         }
-        renderTable();
-        updateProgress();
+        refreshView();
         log($T('LOADING_FINISHED'));
     });
-}
-
-function getUTCDate() {
-    var now = new Date(); 
-    var now_utc = new Date(
-        now.getUTCFullYear(),
-        now.getUTCMonth(),
-        now.getUTCDate(),
-        now.getUTCHours(),
-        now.getUTCMinutes(),
-        now.getUTCSeconds()
-    );
-    return now_utc;
 }
 
 // The parameters of a request: Todo is no plain object, jQuery 4 would not serialize it,
@@ -734,74 +613,42 @@ function todoParams(stuff) {
 
 function addItem(stuff) {
     addLocally(stuff);
-    $.ajax( {
-        type: 'POST',
-        url: 'queries/enter.php',
-        data: todoParams(stuff),
-        success: function(returnValue) {
-            if (isNaN(returnValue)) {
-                log($T('ERROR_WHILE_CREATING')+returnValue);
-                alert($T('ERROR_WHILE_CREATING')+returnValue);
-                // remove the item from local list; the  data of it
-                // will still remain in the edit fields anyway!
-                deleteLocally(findItem(-1));
-            } else {
-                reloadTagList(); // a tag might have been added or removed
-                log($T('CREATING_SUCCESSFUL'));
-                $('#enter_todo').val('');
-                $('#enter_due').val('');
-                updateEnterDueLabel();
-                $('#enter_start').val('');
-                $('#enter_start').data('oldVal', '');
-                $('#enter_effort').val('1');
-                var index = findItem(-1);
-                var id = parseInt(returnValue);
-                itemList[index].id = id;
-                $('#todo-1').attr('id', 'todo'+id);
-                $('#completed-1').attr('id', 'completed'+id);
-                $('#modify-1').attr('id', 'modify'+id);
-                $('#dotoday-1').attr('id', 'dotoday'+id);
-                $('#trash-1').attr('id', 'trash'+id);
-                setListener(id);
-            }
-        },
-        error: function(jqXHR, textStatus, errorThrown) {
-            alert($T('TRANSMISSION_ERROR'));
-            deleteLocally(findItem(-1));
-        }
+    postAction('queries/enter.php', todoParams(stuff)).then(function(answer) {
+        reloadTagList(); // a tag might have been added or removed
+        log($T('CREATING_SUCCESSFUL'));
+        $('#enter_todo').val('');
+        $('#enter_due').val('');
+        updateEnterDueLabel();
+        $('#enter_start').val('');
+        $('#enter_start').data('oldVal', '');
+        // the item in the list is stuff; it has its id now, so it is shown like all others
+        stuff.id = parseInt(answer);
+        refreshView();
+    }, function(failure) {
+        reportFailure('ERROR_WHILE_CREATING', failure);
+        // remove the item from local list; the  data of it
+        // will still remain in the edit fields anyway!
+        deleteLocally(findItem(-1));
     });
 }
 
 function storeItemRemote(stuff, onsucc) {
-    currentlyModified = stuff;
     log($T('SAVING_MODIFICATIONS'));
-    $.ajax({
-        type: 'POST',
-        url: 'queries/update.php',
-        data: todoParams(stuff),
-        success: function(returnValue) {
-            if (isNaN(returnValue)) {
-                log($T('ERROR_WHILE_MODIFYING')+returnValue);
-                alert($T('ERROR_WHILE_MODIFYING')+returnValue);
-            // just keep dialog open...then changed values aren't lost
-            } else {
-                reloadTagList(); // a tag might have been added or removed
-                // if everything went fine, close dialog:
-                log($T('SAVING_SUCCESSFUL'));
-                onsucc();
-                // only set locally now, else it could be confusing
-                currentlyModified.version = currentlyModified.version+1;
-                if (currentlyModified.list_id != reloadData.list_id) {
-                    deleteLocally(findItem(currentlyModified.id));
-                } else {
-                    modifyLocally(currentlyModified);
-                }
-                currentlyModified = null;
-            }
-        },
-        error: function(jqXHR, textStatus, errorThrown) {
-            alert($T('TRANSMISSION_ERROR'));
+    postAction('queries/update.php', todoParams(stuff)).then(function() {
+        reloadTagList(); // a tag might have been added or removed
+        // if everything went fine, close dialog:
+        log($T('SAVING_SUCCESSFUL'));
+        onsucc();
+        // only set locally now, else it could be confusing
+        stuff.version = stuff.version+1;
+        if (stuff.list_id != reloadData.list_id) {
+            deleteLocally(findItem(stuff.id));
+        } else {
+            modifyLocally(stuff);
         }
+    }, function(failure) {
+        // just keep dialog open...then changed values aren't lost
+        reportFailure('ERROR_WHILE_MODIFYING', failure);
     });
 }
 
@@ -819,7 +666,7 @@ function storeItem() {
         $('#modify_effort').val(),
         0,  // currently not taken into account on server, and not modifiable at server
         $('#modify_notes').val().trim(),
-        $('#modify_tag_edit')[0].__tagify.value.map((tag) => tag.value),
+        modifyTagify.value.map((tag) => tag.value),
         0,  // deleted items cannot be modified
         itemList[idx].version,
         $('#modify_recurrenceMode').val(),
@@ -927,7 +774,7 @@ function getTodoTitleHtml(it, lineNr, tagbasename, spanCssClass, baseElem, check
     // label of the recurrence option (DOM text), goes into an HTML attribute:
     var repetition = escapeHtml(getRecurrenceString(it.recurrenceMode, it.recurrenceInterval));
     var complDate = parseDate(it.completionDate);
-    line =   '<'+baseElem+' class="'+spanCssClass+'" title="'+$T('CREATED')+': '+formatDate(createDate, true)+
+    var line = '<'+baseElem+' class="'+spanCssClass+'" title="'+$T('CREATED')+': '+formatDate(createDate, true)+
             '; '+$T('RECURRENCE')+': '+repetition+
         ((it.completed != 0)? '; '+$T('DONE')+': '+formatDate(complDate, true):'')+
             '">';
@@ -936,7 +783,7 @@ function getTodoTitleHtml(it, lineNr, tagbasename, spanCssClass, baseElem, check
         // deleted todos cannot be completed or reopened
         line += '<span class="completed"><input type="checkbox" id="completed'+it.id+'" '+
             ((it.completed==1)?'checked="true" ':'')+((it.deleted==1)?'disabled ':'')+'/></span>';
-	}
+    }
     line += '<span class="todo_lineNr">'+(lineNr+1)+'.</span> '+
             '<span>'+textToHtml(it.todo)+'</span>'+
             (hasNote ? '<span class="note" title="'+textToHtml(it.notes)+'"></span>':'')+
@@ -950,7 +797,7 @@ function getTodoTitleHtml(it, lineNr, tagbasename, spanCssClass, baseElem, check
 
 // action button; the label is shown as tooltip and read by screen readers
 function actionButton(spanClass, id, buttonClass, label) {
-    return '<span class="'+spanClass+'"><input type="button" id="'+id+'" class="'+buttonClass+
+    return '<span class="'+spanClass+'"><input type="button" id="'+id+'" class="iconButton '+buttonClass+
         '" title="'+escapeHtml(label)+'" aria-label="'+escapeHtml(label)+'" /></span>';
 }
 
@@ -1005,23 +852,16 @@ function renderItem(it, lineNr) {
     if (it.tags.length > 0) {
         showReadOnlyTags(elem[0], it.tags);
     }
-    if (window.matchMedia('(hover: hover)').matches) {
-        // debug output; not on touch devices, where a double tap would trigger it
-        $('#todo'+it.id).on('dblclick', function() {
-            printItem(it);
-        });
-    }
+    // a just added todo has no id yet, it is rendered again when it got one
     if (it.id != -1) {
         setListener(it.id);
+        // on narrow screens the edit button is hidden, a tap on the todo opens the dialog instead
+        $('#todo'+it.id+' td.todo').on('click', function(e) {
+            if (window.matchMedia(narrowScreenQuery).matches && $(e.target).closest('.completed').length == 0) {
+                modifyItem(it.id);
+            }
+        });
     }
-    // on narrow screens the edit button is hidden, a tap on the todo opens the dialog instead;
-    // bound for every row, the id is read when tapping as a just added todo only gets its id later
-    $('#todo'+it.id+' td.todo').on('click', function(e) {
-        var id = parseInt($(this).closest('tr').attr('id').substring('todo'.length));
-        if (id != -1 && window.matchMedia(narrowScreenQuery).matches && $(e.target).closest('.completed').length == 0) {
-            modifyItem(id);
-        }
-    });
 }
 
 function modifyItem(id) {
@@ -1052,10 +892,9 @@ function openTagDialog(tagname)
         maxWidth: 420,
         title: $T('EDIT_TAG')
     });
-    var tagify = $('#merge_tag_edit')[0].__tagify;
-    tagify.removeAllTags();
+    mergeTagify.removeAllTags();
     // a tag cannot be merged into itself:
-    tagify.settings.whitelist = tagList.filter( (x) => x.id != result[0].id ).map( (x) => x.name );
+    mergeTagify.settings.whitelist = tagList.filter( (x) => x.id != result[0].id ).map( (x) => x.name );
     $('#tag_todo_table').empty();
     var filtered = getTodoWithTag(new Array(tagname));
     filtered.sort(ItemSort);
@@ -1070,23 +909,28 @@ function openTagDialog(tagname)
 
 function fillTagList(choices)
 {
-    var tagify;
-    if ($('#taglist input')[0].__tagify) {
-        tagify = $('#taglist input')[0].__tagify;
-        tagify.removeAllTags();
+    if (tagListTagify) {
+        tagListTagify.removeAllTags();
     } else {
-        tagify = new Tagify($('#taglist input')[0], { readonly: true } );
+        tagListTagify = new Tagify($('#taglist input')[0], { readonly: true } );
     }
     for (var i=0; i<choices.length; i++) {
-        tagify.addTags([ html_entity_decode(choices[i].name) ]);
+        tagListTagify.addTags([ html_entity_decode(choices[i].name) ]);
     }
 }
 
-function isInt(value)
-{
-    return !isNaN(value) && 
-        parseInt(Number(value)) == value && 
-        !isNaN(parseInt(value, 10));
+// the buttons of the tag dialog: on success the dialog is closed and the tags and
+// todos are loaded again; false, so that the click does nothing else
+function tagDialogAction(url, data, successKey, errorKey) {
+    postAction(url, data).then(function() {
+        log($T(successKey));
+        $('#tag_dialog').dialog('close');
+        reloadTagList();
+        refresh();
+    }, function(failure) {
+        reportFailure(errorKey, failure);
+    });
+    return false;
 }
 
 $(document).ready(function() {
@@ -1104,123 +948,42 @@ $(document).ready(function() {
         openTagDialog(tagname);
     });
     $('#tag_save').on('click', function() {
-        var tagobject = new Object();
-        tagobject.id = $('#tag_id').val();
-        tagobject.tag_name = $('#tag_name').val();
-        $.ajax( {
-            type: 'POST',
-            url: 'queries/edit-tag.php',
-            data: tagobject,
-            success: function(returnValue) {
-                if (isInt(returnValue)) {
-                    log($T('EDITED_TAG_SUCCESSFUL'));
-                    $('#tag_dialog').dialog('close');
-                    reloadTagList();
-                    refresh();
-                } else {
-                    log($T('ERROR_WHILE_MODIFYING')+returnValue);
-                    alert($T('ERROR_WHILE_MODIFYING')+returnValue);
-                }
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                alert($T('TRANSMISSION_ERROR'));
-            }
-        });
-        return false;
+        return tagDialogAction('queries/edit-tag.php',
+            { id: $('#tag_id').val(), tag_name: $('#tag_name').val() },
+            'EDITED_TAG_SUCCESSFUL', 'ERROR_WHILE_MODIFYING');
     });
     $('#tag_delete').on('click', function() {
         if (!confirm($T('CONFIRM_DELETE_TAG')))
         {
             return false;
         }
-        var tagidobject = new Object();
-        tagidobject.id = $('#tag_id').val();
-        $.ajax( {
-            type: 'POST',
-            url: 'queries/delete-tag.php',
-            data: tagidobject,
-            success: function(returnValue) {
-                if (isInt(returnValue)) {
-                    log($T('DELETED_TAG_SUCCESSFUL'));
-                    $('#tag_dialog').dialog('close');
-                    refresh();
-                    reloadTagList();
-                } else {
-                    log($T('ERROR_WHILE_DELETING')+returnValue);
-                    alert($T('ERROR_WHILE_DELETING')+returnValue);
-                }
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                alert($T('TRANSMISSION_ERROR'));
-            }
-        });
-        return false;
+        return tagDialogAction('queries/delete-tag.php',
+            { id: $('#tag_id').val() },
+            'DELETED_TAG_SUCCESSFUL', 'ERROR_WHILE_DELETING');
     });
     $('#tag_merge').on('click', function() {
-        var tagobject = new Object();
-        tagobject.id = $('#tag_id').val();
-        merge_tagname = $('#merge_tag_edit')[0].__tagify.value.map((tag) => tag.value)[0];
+        var mergeTagname = mergeTagify.value.map((tag) => tag.value)[0];
         var result = $.grep(tagList,
-            function(e) { return html_entity_decode(e.name) === merge_tagname; });
+            function(e) { return html_entity_decode(e.name) === mergeTagname; });
         if (result.length == 0 || result.length > 1)
         {
             alert("Found no tag or more than one tag with that name, aborting merge!");
             return false;
         }
-        tagobject.merge_id = result[0].id;
-        $.ajax( {
-            type: 'POST',
-            url: 'queries/merge-tag.php',
-            data: tagobject,
-            success: function(returnValue) {
-                if (isInt(returnValue)) {
-                    log($T('MERGE_TAG_SUCCESSFUL'));
-                    $('#tag_dialog').dialog('close');
-                    reloadTagList();
-                    refresh();
-                } else {
-                    log($T('ERROR_WHILE_MODIFYING')+returnValue);
-                    alert($T('ERROR_WHILE_MODIFYING')+returnValue);
-                }
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                alert($T('TRANSMISSION_ERROR'));
-            }
-        });
-        return false;
+        return tagDialogAction('queries/merge-tag.php',
+            { id: $('#tag_id').val(), merge_id: result[0].id },
+            'MERGE_TAG_SUCCESSFUL', 'ERROR_WHILE_MODIFYING');
     });
-    var filterTagEdit = $('#filter_tag_edit');
+    filterTagify = new Tagify($('#filter_tag_edit')[0]);
     // tagList not set yet here ...
-    var tagify = new Tagify(filterTagEdit[0]);
-    tagify.on('change', function() {
+    filterTagify.on('change', function() {
         renderTable();
     } );
-    var modifyTagEdit = $('#modify_tag_edit');
-    var mergeTagEdit = $('#merge_tag_edit');
-    var mergeTagEditTagify = new Tagify(mergeTagEdit[0], {
+    modifyTagify = new Tagify($('#modify_tag_edit')[0]);
+    mergeTagify = new Tagify($('#merge_tag_edit')[0], {
         enforceWhitelist: true,
         mode: "select"
     });
-    /*
-        autocomplete: {
-            source: function( search, showChoices) {
-                onlyTags = new Array();
-                for (var i=0; i<tagList.length; ++i)
-                {
-                    if (tagList[i].name.toLowerCase().indexOf(search.term.toLowerCase()) != -1)
-                    {
-                        onlyTags.push(tagList[i].name);
-                    }
-                }
-                showChoices(this._subtractArray(onlyTags, this.assignedTags()));
-            },
-            delay: 2, minLength: 2
-        },
-        mode: select,
-        singleFieldNode: $('#merge_tag'),
-        tagLimit: 1
-    });
-    */
     $('#modify_recurrenceMode').on('change', function(e) {
         toggleRecurrenceAnchor();
     });

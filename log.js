@@ -1,6 +1,7 @@
 // needs lang-js.php (for $T) loaded before it, and escapeHtml() of todo.js when logging
 var logItems = [$T('STARTING_LOG')];
-var logLines = 3; /* const, but IE doesn't support that keyword */
+// number of lines of the small log in the sidebar
+var logLines = 3;
 var logVisible = true;
 
 function updateLog(element, maxCount) {
