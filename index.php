@@ -30,7 +30,7 @@
             <input id="filter_tag_edit" />
           </div>
           <div id="emptytrashlink"><a href="#" id="emptyTrash"><?php echo(TodoLang::_("EMPTY_TRASH"));?></a></div>
-          <div id="statistiklink"><a href="statistik.php"><?php echo(TodoLang::_("SHOW_STATISTICS"));?></a></div>
+          <div id="statisticslink"><a href="statistics.php"><?php echo(TodoLang::_("SHOW_STATISTICS"));?></a></div>
         </div>
         <div id="progress"><span id="progress_done">&nbsp;</span><span id="progress_todo">&nbsp;</span></div>
         <form method="POST" id="inputform">

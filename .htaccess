@@ -26,8 +26,12 @@ RedirectMatch 404 ^.*/(sql|scripts|secrets|tests|node_modules|lang|\.git|\.githu
 <FilesMatch "(^\.|~$|\.(sql|sh|ini|bak|swp|orig|md|yml|neon|lock|sample)$|^config.*\.php$|^package(-lock)?\.json$|^session\.php$|^todo-core\.php$|^lang\.php$)">
     Require all denied
 </FilesMatch>
+# the page was called statistik.php: old bookmarks keep working (redirected here, not by a PHP file,
+# which would be one more file to protect)
+RedirectMatch 301 ^(.*/)statistik\.php$ $1statistics.php
+
 # helper scripts which are only included by the query endpoints
-<FilesMatch "^(db|date|tags|todo-list-query|recurrence|db-connect|endpoint|response|todo-input|limits)\.php$">
+<FilesMatch "^(db|date|tags|todo-list-query|recurrence|db-connect|endpoint|response|todo-input|limits|statistics-data)\.php$">
     Require all denied
 </FilesMatch>
 

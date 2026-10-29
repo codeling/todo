@@ -24,8 +24,9 @@ function todoUserId() {
 
 // pages and data of the application (and the CSRF token) must not be kept by browsers or proxies
 header("Cache-Control: private, no-store");
-// inline styles are still used (statistics bars, jQuery UI), inline scripts are not
-header("Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-inline'; ".
+// neither inline scripts nor inline styles (style attributes and <style> elements): the statistics
+// charts are SVG with attributes, jQuery UI and Tagify set styles with JavaScript (allowed)
+header("Content-Security-Policy: default-src 'self'; style-src 'self'; ".
     "img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'");
 header("X-Content-Type-Options: nosniff");
 header("X-Frame-Options: DENY");

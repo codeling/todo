@@ -99,6 +99,14 @@ done
 for name in $endpoints; do
     check "queries/$name.php" 401 200
 done
+# the page was renamed from statistik.php: old bookmarks are redirected permanently by .htaccess (after the
+# authentication, like every request), not by a PHP file
+check statistik.php 401 301
+location=$(curl -s -H 'X-Test-TLS: on' -u alice:secret -D - -o /dev/null "$URL/statistik.php" | tr -d '\r' | sed -n 's/^[Ll]ocation: //p')
+case "$location" in
+    */todo/statistics.php) echo "ok   statistik.php redirects to $location" ;;
+    *) echo "FAIL statistik.php: Location is '$location', expected one ending in /todo/statistics.php"; FAIL=1 ;;
+esac
 check vendor/jquery/jquery.min.js 401 200
 check todo.css 401 200
 for denied in sql/install.sql lang/en-US.ini config.php config.sample.php package.json \

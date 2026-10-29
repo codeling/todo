@@ -24,6 +24,10 @@ new migration needs a change of `install.sql` (and its `db.version`) too.
 request reads (the `Handler_read_*` counters, not the time, which is unreliable); a missing index
 shows as a number close to the size of the table. It needs the database to be used by this test only.
 
+`tests/statistics.test.js` checks the charts of the statistics page against a small known set of entries (and
+the periods and the SQL keys of the buckets around new year with the `php` command line); every bar of the
+SVG charts has `data-key` and `data-count` for that. It uses the date of the database, so it can run on any day.
+
 `tests/ignore-files.test.js` checks that everything in `.gitignore` is also in `.dockerignore`, so that
 passwords and database dumps are not copied into the container image (no server or database needed).
 
@@ -41,7 +45,8 @@ an authenticated user.
 `sh tests/apache-access.sh` checks the access rules of `.htaccess`
 with a temporary Apache instance (run as root, needs `apache2` and `htpasswd`). It derives the
 helpers, the endpoints and the include-only files of the root with the same rules as
-`tests/deny-lists.test.js`: the helpers must give 403, the endpoints 401 (200 with the password).
+`tests/deny-lists.test.js`: the helpers must give 403, the endpoints 401 (200 with the password). It also checks that the old
+`statistik.php` is redirected (301) to `statistics.php`.
 
 `sh tests/container.sh [image]` tests the container image (`Dockerfile`) with a throwaway MariaDB
 container: HTTPS and authentication, hidden files, database connection, `scripts/migrate.php`. It needs

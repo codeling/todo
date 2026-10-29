@@ -363,7 +363,7 @@ test('a database error answers 500: JSON for the endpoints, plain text for the p
         assertError(await post('reactivate-due.php', {}, sess), 500, 'Database error!');
         assertError(await get('query-todos.php?list_id=0'), 500, 'Database error!');
         // the statistics page is for people: no JSON
-        const res = await answer(await fetch(BASE + '/statistik.php'));
+        const res = await answer(await fetch(BASE + '/statistics.php'));
         assert.equal(res.status, 500);
         assert.doesNotMatch(res.type, /json/);
         assert.match(res.text, /Database error!/);
@@ -387,6 +387,9 @@ test('pages send security headers', async () => {
     const res = await fetch(BASE + '/index.php');
     assert.match(res.headers.get('content-security-policy'), /default-src 'self'/);
     assert.match(res.headers.get('content-security-policy'), /frame-ancestors 'none'/);
+    // no inline styles or scripts: the statistics page draws its charts as SVG with attributes
+    assert.match(res.headers.get('content-security-policy'), /style-src 'self';/);
+    assert.doesNotMatch(res.headers.get('content-security-policy'), /unsafe-/);
     assert.equal(res.headers.get('x-content-type-options'), 'nosniff');
     assert.match(res.headers.get('set-cookie'), /HttpOnly; SameSite=Strict/i);
     // the page holds the CSRF token and all data: no caching; and no PHP version
@@ -404,7 +407,7 @@ test('the statistics page works without and with entries', async () => {
             sql("INSERT INTO todo (creationDate, description, startDate, completed, completionDate, list_id) VALUES " +
                 "(UTC_TIMESTAMP(), 'open', UTC_DATE(), 0, NULL, 0), (UTC_TIMESTAMP(), 'done', UTC_DATE(), 1, UTC_TIMESTAMP(), 0)");
         }
-        const res = await fetch(BASE + '/statistik.php');
+        const res = await fetch(BASE + '/statistics.php');
         assert.equal(res.status, 200);
         const html = await res.text();
         assert.doesNotMatch(html, /Database error/);

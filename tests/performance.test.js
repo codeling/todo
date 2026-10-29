@@ -144,7 +144,7 @@ test('completing and trashing a single entry reads a few rows', async (t) => {
 
 test('the statistics page counts per period without a scan per day', async (t) => {
     // the yearly charts have to read every entry once (2 charts), the others use the index of the date
-    const res = await assertRowsRead(t, 'statistik', 3 * TODOS + 5000, async () => fetch(BASE + '/statistik.php'));
+    const res = await assertRowsRead(t, 'statistics', 3 * TODOS + 5000, async () => fetch(BASE + '/statistics.php'));
     assert.equal(res.status, 200);
-    assert.match(await res.text(), /class="statbar"/);
+    assert.match(await res.text(), /<rect class="statbar" data-key="[^"]+" data-count="[1-9]/);
 });

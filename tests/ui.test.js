@@ -12,8 +12,8 @@ test.before(async () => {
 });
 test.after(() => browser.close());
 
-// opens the page, records JS errors, CSP violations and dialogs
-async function openPage() {
+// opens the page (the main page, or another one which is ready when the function says so), records JS errors, CSP violations and dialogs
+async function openPage(path = '/index.php', ready = () => typeof itemList !== 'undefined' && Array.isArray(itemList)) {
     const page = await browser.newPage();
     page.errors = [];
     page.on('console', (m) => { if (m.type() === 'error') page.errors.push(m.text()); });
@@ -21,8 +21,8 @@ async function openPage() {
     page.on('dialog', (d) => d.accept());
     await page.addInitScript(() => document.addEventListener('securitypolicyviolation',
         (e) => console.error('CSP violation: ' + e.violatedDirective + ' ' + e.blockedURI)));
-    await page.goto(BASE + '/index.php');
-    await page.waitForFunction(() => typeof itemList !== 'undefined' && Array.isArray(itemList));
+    await page.goto(BASE + path);
+    await page.waitForFunction(ready);
     return page;
 }
 
@@ -453,4 +453,40 @@ test('reactivating reports the answer of the server in the log, also if it refus
     assert.deepEqual(alerts, ['Transmission error.']);
     assert.equal(sql('SELECT COUNT(*) FROM todo').trim(), '2');
     await page.close();
+});
+
+test('the statistics page draws its charts as SVG without violating the Content-Security-Policy', async () => {
+    resetDb();
+    sql(`INSERT INTO todo (creationDate, description, startDate, completed, completionDate, list_id) VALUES
+        (TIMESTAMP(UTC_DATE() - INTERVAL 3 DAY, '10:00:00'), 'one', UTC_DATE(), 1, TIMESTAMP(UTC_DATE()), 0),
+        (TIMESTAMP(UTC_DATE(), '00:00:01'), 'two', UTC_DATE(), 1, TIMESTAMP(UTC_DATE(), '23:59:59'), 0),
+        (TIMESTAMP(UTC_DATE() - INTERVAL 8 DAY, '08:00:00'), 'three', UTC_DATE(), 1, TIMESTAMP(UTC_DATE() - INTERVAL 8 DAY, '12:00:00'), 0),
+        (TIMESTAMP(UTC_DATE() - INTERVAL 2 YEAR, '12:00:00'), 'open', UTC_DATE(), 0, NULL, 0)`);
+    const page = await openPage('/statistics.php', () => document.querySelectorAll('.stat_chart').length === 8);
+    // there is no style attribute (a CSP violation without 'unsafe-inline'), the colors are in the stylesheet
+    assert.equal(await page.locator('[style]').count(), 0);
+    assert.equal(await page.locator('.stat_chart svg').count(), 8);
+    const bar = page.locator('[data-chart="completion-day"] .statbar[data-count="2"]');
+    assert.equal(await bar.count(), 1);
+    const box = await bar.boundingBox();
+    // the highest bar is 100 pixels high, the 30 bars have 800 pixels together
+    assert.ok(Math.abs(box.height - 100) < 0.5, 'height ' + box.height);
+    assert.ok(Math.abs(box.width - (800 - 4 * 30) / 30) < 0.5, 'width ' + box.width);
+    const fill = (selector) => page.locator(selector).first().evaluate((e) => getComputedStyle(e).fill);
+    assert.equal(await fill('[data-chart="completion-day"] .statbar[data-count="2"]'), 'rgb(0, 0, 255)');
+    assert.equal(await fill('[data-chart="completion-day"] .emptystatbar'), 'rgba(0, 0, 0, 0)');
+    // the number in the bar, the label below it, and the maximum, average and minimum next to the chart
+    assert.deepEqual(await page.locator('[data-chart="completion-day"] .statcount').allTextContents().then((c) => c.slice(-1)), ['2']);
+    assert.equal((await page.locator('[data-chart="completion-day"] .statlabel').allTextContents()).length, 30);
+    assert.match(await page.locator('[data-chart="completion-day"] .stat_characteristics').textContent(), /Maximum: 2\s+Average: 0\.1\d\s+Minimum: 0/);
+    assert.ok((await page.locator('[data-chart="completion-year"] .statlabel').allTextContents()).includes('not finished'));
+
+    // on a narrow screen the page does not scroll sideways: each chart scrolls in its own box
+    await page.setViewportSize({ width: 400, height: 800 });
+    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), 'the page is wider than the screen');
+    const scroll = await page.locator('[data-chart="completion-day"] .stat_scroll').evaluate((e) => [e.clientWidth, e.scrollWidth]);
+    assert.ok(scroll[0] <= 400 && scroll[1] > scroll[0], 'the chart scrolls: ' + scroll);
+    assert.deepEqual(page.errors, []);
+    await page.close();
+    resetDb();
 });

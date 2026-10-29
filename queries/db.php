@@ -3,7 +3,7 @@
 require_once(__DIR__."/../todo-core.php");
 
 // log details server-side only, don't leak them to the client; an endpoint (TODO_API_REQUEST is
-// defined, see response.php) answers with a JSON error, a page (statistik.php) with plain text
+// defined, see response.php) answers with a JSON error, a page (statistics.php) with plain text
 /** @return never */
 function failRequest($detail) {
     error_log("todo: ".$detail);

@@ -64,6 +64,11 @@ that the first versions used as a default: the migrations 012 and 013 work aroun
 
 A database on another host should be reached over TLS: see `$db_ssl` in `config.sample.php`.
 
+The statistics page is `statistics.php` (it was `statistik.php`): `.htaccess` and `nginx.conf.sample`
+redirect the old address, so bookmarks keep working. If you copied their rules into your own server
+configuration, add that redirect, and the new include-only file `queries/statistics-data.php` to the files
+which are denied.
+
 ## Security: deployment
 
 The application has **no login of its own**. It relies on the web server's HTTP authentication

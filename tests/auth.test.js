@@ -50,7 +50,7 @@ test.after(() => {
 });
 
 const HTTPS = { 'X-Forwarded-Proto': 'https' };
-const pages = ['index.php', 'statistik.php', 'lang-js.php', 'queries/query-lists.php', 'queries/query-todos.php?list_id=0'];
+const pages = ['index.php', 'statistics.php', 'lang-js.php', 'queries/query-lists.php', 'queries/query-todos.php?list_id=0'];
 
 test('requests the web server did not authenticate are rejected', async () => {
     const srv = await startServer(dir, []);
