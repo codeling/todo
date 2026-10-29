@@ -37,10 +37,11 @@ function parseTags($tagString)
 }
 
 // $encodedTags: result of parseTags()
+// The caller runs this in a transaction (withTransaction): it deletes the old assignments first,
+// which must not become visible without the new ones.
 function updateTags($db, $todo_id, $encodedTags)
 {
     $todo_id = (int)$todo_id;
-    $db->begin_transaction();
     dbExec($db, "DELETE FROM todo_tags WHERE todo_id=?", array($todo_id));
     foreach ($encodedTags as $encodedTag)
     {
@@ -51,5 +52,4 @@ function updateTags($db, $todo_id, $encodedTags)
         $tag_id = $db->insert_id;
         dbExec($db, "INSERT IGNORE INTO todo_tags (todo_id, tag_id) VALUES (?, ?)", array($todo_id, $tag_id));
     }
-    $db->commit();
 }

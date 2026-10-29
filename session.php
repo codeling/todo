@@ -1,14 +1,14 @@
 <?php
 // session is only used to hold the CSRF token
 require_once(__DIR__."/webauth/webauth.php");
+require_once(__DIR__."/queries/db-connect.php");
 
 // whether the HTTPS checks believe X-Forwarded-Proto: it is set by the client
 // unless a proxy overwrites it, so it is only believed if $trust_forwarded_proto
 // is set in config.php (only do that if the web server can only be reached through
 // the proxy which terminates TLS)
 function todoTrustsForwardedProto() {
-    global $trust_forwarded_proto;
-    return isset($trust_forwarded_proto) && $trust_forwarded_proto === true;
+    return todoConfig('trust_forwarded_proto') === true;
 }
 
 function todoStartSession($readOnly) {

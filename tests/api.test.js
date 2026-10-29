@@ -209,6 +209,9 @@ test('tags of other users, or shared with them, can not be changed', async () =>
 test('invalid input is rejected', async () => {
     const sess = await session();
     assert.equal((await post('enter.php', { todo: 'a', due: '2026-01-10x', start: '', list_id: 0 }, sess)).text, 'Invalid due date!');
+    // ($ in a regular expression would match before a trailing newline)
+    assert.equal((await post('enter.php', { todo: 'a', due: '2026-01-10\n', start: '', list_id: 0 }, sess)).text, 'Invalid due date!');
+    assert.equal(sql('SELECT COUNT(*) FROM todo').trim(), '0');
     assert.equal((await post('enter.php', { todo: 'a', due: '2026-01-01', start: '2026-01-05', list_id: 0 }, sess)).text,
         'Due date is earlier than start date!');
     const id = (await post('enter.php', { todo: 'a', due: '', start: '', list_id: 0 }, sess)).text;
@@ -225,6 +228,48 @@ test('invalid input is rejected', async () => {
     for (const [over, msg] of bad) {
         assert.equal((await post('update.php', todoFields(Object.assign({ id, version: 1 }, over)), sess)).text, msg);
     }
+});
+
+test('a version conflict changes neither the entry nor its tags', async () => {
+    const sess = await session();
+    const id = (await post('enter.php', { todo: 'first', due: '', start: '', tags: 'a,b', list_id: 0 }, sess)).text;
+    const res = await post('update.php', todoFields({ id, version: 7, todo: 'changed', tags: 'c' }), sess);
+    assert.match(res.text, /^The database contains a different version/);
+    assert.deepEqual(sqlRows(`SELECT description, version FROM todo WHERE id=${id}`), [['first', '1']]);
+    assert.deepEqual(sqlRows(`SELECT t.name FROM todo_tags r JOIN tags t ON t.id=r.tag_id WHERE todo_id=${id} ORDER BY 1`),
+        [['a'], ['b']]);
+    assert.equal(sql('SELECT COUNT(*) FROM tags').trim(), '2');
+});
+
+test('a database error while saving the tags leaves the new entry out as well', async () => {
+    const sess = await session();
+    sql('RENAME TABLE tags TO tags_hidden');
+    try {
+        const res = await post('enter.php', { todo: 'x', due: '', start: '', tags: 'a', list_id: 0 }, sess);
+        assert.equal(res.status, 500);
+        assert.equal(res.text, 'Database error!');
+        assert.equal(sql('SELECT COUNT(*) FROM todo').trim(), '0');
+    } finally {
+        sql('RENAME TABLE tags_hidden TO tags');
+    }
+});
+
+test('reactivating an entry which is not completed does not mark it as copied', async () => {
+    const sess = await session();
+    const id = (await post('enter.php', { todo: 'x', due: '2026-01-10', start: '2026-01-08', tags: 't', list_id: 0 }, sess)).text;
+    const notPossible = 'Either item is not completed, not recurring, or there is already a reactivated entry!';
+    // not recurring, then recurring but not completed:
+    assert.equal((await post('reactivate-one.php', { id }, sess)).text, notPossible);
+    await post('update.php', todoFields({ id, version: 1, todo: 'x', due: '2026-01-10', start: '2026-01-08',
+        recurrenceMode: 2, recurrenceInterval: 1, recurrenceAnchor: 1, tags: 't' }), sess);
+    assert.equal((await post('reactivate-one.php', { id }, sess)).text, notPossible);
+    assert.equal(sql('SELECT COUNT(*) FROM recurringCopied').trim(), '0');
+    // completed: copied once
+    await post('complete.php', { id, completed: 1, version: 2 }, sess);
+    assert.equal((await post('reactivate-one.php', { id }, sess)).text, 'Reactivated entry...');
+    assert.equal((await post('reactivate-one.php', { id }, sess)).text, notPossible);
+    assert.equal(sql('SELECT COUNT(*) FROM todo').trim(), '2');
+    assert.equal(sql('SELECT COUNT(*) FROM recurringCopied').trim(), '1');
 });
 
 test('database errors are not shown to the client', async () => {

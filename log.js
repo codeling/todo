@@ -1,7 +1,5 @@
-<?php
-header('Content-type: application/x-javascript');
-include("todo-core.php"); ?>
-var logItems = new Array('<?php echo(TodoLang::_("STARTING_LOG"));?>');
+// needs lang-js.php (for $T) loaded before it, and escapeHtml() of todo.js when logging
+var logItems = [$T('STARTING_LOG')];
 var logLines = 3; /* const, but IE doesn't support that keyword */
 var logVisible = true;
 

@@ -1,5 +1,6 @@
 <?php
     require("db.php");
+    $db = todoDb();
     require("todo-list-query.php");
 
     $list_id = (int)(isset($_GET["list_id"]) ? $_GET["list_id"] : 0);

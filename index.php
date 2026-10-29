@@ -1,6 +1,6 @@
 <?php include "todo-core.php"; $csrfToken = csrfToken(); ?>
 <!DOCTYPE html>
-<html lang="<?php echo htmlspecialchars($language); ?>">
+<html lang="<?php echo htmlspecialchars(todoConfig('language')); ?>">
   <head>
     <meta charset="UTF-8">
     <meta name="csrf-token" content="<?php echo htmlspecialchars($csrfToken); ?>">
@@ -8,11 +8,11 @@
     <!-- JQuery & JQuery UI -->
     <script src="<?php echo(assetUrl("vendor/jquery/jquery.min.js")); ?>"></script>
     <script src="<?php echo(assetUrl("vendor/jquery-ui/jquery-ui.min.js")); ?>"></script>
-    <script src="log.js.php"></script>
+    <script src="lang-js.php"></script>
+    <script src="<?php echo(assetUrl("log.js")); ?>"></script>
     <script src="<?php echo(assetUrl("todo.js")); ?>"></script>
     <script src="<?php echo(assetUrl("init.js")); ?>"></script>
     <script src="<?php echo(assetUrl("vendor/tagify/tagify.js")); ?>"></script>
-    <script src="lang-js.php"></script>
     <link rel="stylesheet" type="text/css" href="<?php echo(assetUrl("vendor/tagify/tagify.css")); ?>" />
     <link rel="stylesheet" type="text/css" href="<?php echo(assetUrl("todo.css")); ?>" />
     <link rel="stylesheet" type="text/css" href="<?php echo(assetUrl("vendor/jquery-ui/jquery-ui.min.css")); ?>"/>

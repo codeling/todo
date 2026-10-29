@@ -22,6 +22,7 @@ require_once(__DIR__."/../queries/db-connect.php");
 // the oldest version the migrations start from (earlier ones: sql/legacy/README.md)
 const OLDEST_SUPPORTED_VERSION = 11;
 
+/** @return never */
 function fail($message) {
     fwrite(STDERR, "migrate: ".$message."\n");
     exit(1);
@@ -82,14 +83,13 @@ $config = todoConfigPath();
 if (!is_readable($config)) {
     fail("cannot read the configuration ".$config);
 }
-require($config);
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 try {
-    $db = todoDbConnect($db_host,
-        getenv('TODO_MIGRATE_USER') !== false ? getenv('TODO_MIGRATE_USER') : $db_user,
-        getenv('TODO_MIGRATE_PASSWORD') !== false ? getenv('TODO_MIGRATE_PASSWORD') : $db_password,
-        isset($options['database']) ? $options['database'] : $db_database,
-        isset($db_ssl) ? $db_ssl : null);
+    $db = todoDbConnect(todoConfig('db_host'),
+        getenv('TODO_MIGRATE_USER') !== false ? getenv('TODO_MIGRATE_USER') : todoConfig('db_user'),
+        getenv('TODO_MIGRATE_PASSWORD') !== false ? getenv('TODO_MIGRATE_PASSWORD') : todoConfig('db_password'),
+        isset($options['database']) ? $options['database'] : todoConfig('db_database'),
+        todoConfig('db_ssl'));
 } catch (mysqli_sql_exception $e) {
     fail("cannot connect to the database: ".$e->getMessage());
 }

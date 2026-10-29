@@ -2,12 +2,13 @@
 
     require_once("todo-core.php");
     require_once("queries/db.php");
+    // (connects before the page starts, so that a database error still answers 500)
+    $db = todoDb();
 
-    function printPeriodicStat($periodName, $maxHeight, $valCount,
+    function printPeriodicStat($db, $periodName, $maxHeight, $valCount,
         $checkedDate='completionDate', $groupName=null)
     {
 //        $start = microtime(true);
-        global $db, $curUserID;
         if ($groupName == null) {
             $groupName = $periodName;
         }
@@ -19,7 +20,7 @@
             throw new InvalidArgumentException("invalid statistic: $periodName, $groupName, $checkedDate");
         }
         $valCount = (int)$valCount;
-        $userID = (int)$curUserID;
+        $userID = (int)todoUserId();
         // only todos in lists of the current user (one parameter, the user ID):
         $ownTodo = "t.list_id IN (SELECT id FROM list WHERE user_id=?)";
         $ChartWidth = 800;
@@ -147,7 +148,7 @@
     <?php
     }
 ?><!DOCTYPE html>
-<html lang="<?php echo htmlspecialchars($language); ?>">
+<html lang="<?php echo htmlspecialchars(todoConfig('language')); ?>">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -168,16 +169,16 @@
         <h2><?php echo(TodoLang::_("STATS_PERIODIC_".strtoupper($dateName))); ?></h2>
   
         <h3><?php echo(TodoLang::_("STATS_DAILY")); ?></h3>
-        <?php printPeriodicStat('DAY', 100, 30, $dateName.'Date', 'DATE'); ?>
+        <?php printPeriodicStat($db, 'DAY', 100, 30, $dateName.'Date', 'DATE'); ?>
   
         <h3><?php echo(TodoLang::_("STATS_WEEKLY")); ?></h3>
-        <?php printPeriodicStat('WEEK', 100, 26, $dateName.'Date'); ?>
+        <?php printPeriodicStat($db, 'WEEK', 100, 26, $dateName.'Date'); ?>
   
         <h3><?php echo(TodoLang::_("STATS_MONTHLY")); ?></h3>
-        <?php printPeriodicStat('MONTH', 100, 24, $dateName.'Date'); ?>
+        <?php printPeriodicStat($db, 'MONTH', 100, 24, $dateName.'Date'); ?>
   
         <h3><?php echo(TodoLang::_("STATS_YEARLY")); ?></h3>
-        <?php printPeriodicStat('YEAR', 100, 14, $dateName.'Date'); ?>
+        <?php printPeriodicStat($db, 'YEAR', 100, 14, $dateName.'Date'); ?>
 <?php
     }
 ?>

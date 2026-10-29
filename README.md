@@ -87,11 +87,11 @@ HTTPS (`$require_https`). This is done by the shared library in `webauth/` (see 
 
   ```sql
   CREATE USER 'todo'@'localhost' IDENTIFIED BY '<password>';
-  GRANT SELECT, INSERT, UPDATE, DELETE, CREATE TEMPORARY TABLES ON todo.* TO 'todo'@'localhost';
+  GRANT SELECT, INSERT, UPDATE, DELETE ON todo.* TO 'todo'@'localhost';
   ```
 
-  (`CREATE TEMPORARY TABLES` is used when recurring entries are copied.) Apply `sql/update-*.sql`
-  with an administrative account.
+  Upgrade the database with the migration runner `scripts/migrate.php` and an administrative
+  account (`TODO_MIGRATE_USER`), not with this user (see *Upgrading and backups*).
 * PHP: `expose_php = Off` and `display_errors = Off` (the application also sets the latter for its
   own pages).
 

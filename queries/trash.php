@@ -1,5 +1,6 @@
 <?php
     require(__DIR__."/endpoint.php");
+    $db = todoDb();
     $id = (int)postParam('id');
     requireOwnTodo($db, $id);
     $trash = ((int)postParam('trash') == 1) ? 1 : 0;

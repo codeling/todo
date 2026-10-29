@@ -1,5 +1,6 @@
 <?php
     require(__DIR__."/endpoint.php");
+    $db = todoDb();
     require("tags.php");
     $id   = (int)postParam('id');
     $name = encodeInput(trim(postParam('tag_name')));

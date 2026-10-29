@@ -16,8 +16,11 @@ require_once(__DIR__."/webauth/webauth.php");
 function assetUrl($file) {
     return $file."?v=".filemtime(__DIR__."/".$file);
 }
+// the ID of the user whose lists and entries are shown
 // TODO: get that from the current user account
-$curUserID = TodoConstants::DefaultUserID;
+function todoUserId() {
+    return TodoConstants::DefaultUserID;
+}
 
 // pages and data of the application (and the CSRF token) must not be kept by browsers or proxies
 header("Cache-Control: private, no-store");
@@ -32,8 +35,8 @@ header("Referrer-Policy: same-origin");
 // server over HTTPS. Refuse to run if the request did not meet that, so that a missing
 // or ignored .htaccess / nginx setting does not leave all data open.
 WebAuth\ServerAuth::guard(array(
-    'require_https' => !(isset($require_https) && $require_https === false),
-    'require_auth' => !(isset($require_http_auth) && $require_http_auth === false),
+    'require_https' => todoConfig('require_https') !== false,
+    'require_auth' => todoConfig('require_http_auth') !== false,
     'trust_forwarded_proto' => todoTrustsForwardedProto(),
     'log_prefix' => 'todo',
     'messages' => array(
