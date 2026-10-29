@@ -27,13 +27,21 @@ shows as a number close to the size of the table. It needs the database to be us
 `tests/ignore-files.test.js` checks that everything in `.gitignore` is also in `.dockerignore`, so that
 passwords and database dumps are not copied into the container image (no server or database needed).
 
+`tests/deny-lists.test.js` checks that `.htaccess` and `nginx.conf.sample` deny exactly the files which
+are only included by other scripts: the `queries/*.php` files which the client JavaScript does not call
+(`queries/<name>.php` URLs in `*.js` in the root and in `js/`) and the root `.php` files which are neither
+referenced by `index.php` nor `config*.php`. A new helper which is not in both lists fails the test, and so
+does a stale name (no server or database needed).
+
 `tests/webauth.test.js` tests the guard of the `webauth/` library on its own (the library's
 own PHPUnit tests are in `webauth/tests`, run in its repository), `tests/auth.test.js` the
 check in the application. Both start its own PHP servers (no database needed) to test the check for
 an authenticated user.
 
 `sh tests/apache-access.sh` checks the access rules of `.htaccess`
-with a temporary Apache instance (run as root, needs `apache2` and `htpasswd`).
+with a temporary Apache instance (run as root, needs `apache2` and `htpasswd`). It derives the
+helpers, the endpoints and the include-only files of the root with the same rules as
+`tests/deny-lists.test.js`: the helpers must give 403, the endpoints 401 (200 with the password).
 
 `sh tests/container.sh [image]` tests the container image (`Dockerfile`) with a throwaway MariaDB
 container: HTTPS and authentication, hidden files, database connection, `scripts/migrate.php`. It needs
