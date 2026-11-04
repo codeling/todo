@@ -3,7 +3,7 @@ import { state } from './state.js';
 import { notify } from './toast.js';
 import { log } from './log.js';
 import { postAction, reportLoadFailure } from './api.js';
-import { renderLists, refreshView, fillTagList } from './render.js';
+import { renderLists, refreshView } from './render.js';
 
 function toggleWorking(show) {
     $('#working').css('display', show? 'block':'none');
@@ -83,7 +83,6 @@ export function reloadTagList() {
         dataType: 'json',
         success: function (tags) {
             state.tagList = tags;
-            fillTagList(state.tagList);
         },
         error: reportLoadFailure,
         cache: false
