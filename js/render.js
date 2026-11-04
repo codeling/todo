@@ -16,6 +16,14 @@ import { reload, reloadTagList } from './load.js';
 export function refreshView() {
     renderTable();
     updateProgress();
+    updateMenu();
+}
+
+
+// "Empty trash" is only there if there is something in the trash
+function updateMenu() {
+    var hasTrash = state.itemList.some(function(item) { return item.deleted == 1; });
+    $('#emptyTrash').prop('hidden', !hasTrash);
 }
 
 
@@ -65,37 +73,41 @@ export function renderTable() {
 }
 
 
-function renderList(listItem)
-{
-    var liItem = $('<li></li>').text(listItem.name).data('list_id', listItem.id);
-    $('#lists ul').append(liItem);
-}
-
+// the lists: a button for each (a tab), the one which is shown is marked
 export function renderLists() {
-    $('#lists ul').empty();
+    $('#lists').empty();
     for (var i=0; i<state.lists.length; ++i) {
-        renderList(state.lists[i]);
+        $('<button type="button" class="listTab"></button>').text(state.lists[i].name)
+            .attr('aria-current', state.lists[i].id == state.reloadData.list_id ? 'true' : 'false')
+            .attr('data-list-id', state.lists[i].id).appendTo('#lists');
     }
-    $('#lists ul li').on('click', function(event) { 
-        state.reloadData.list_id = $(this).data('list_id');
+    $('#lists .listTab').on('click', function() {
+        var id = $(this).attr('data-list-id');
+        if (id == state.reloadData.list_id) {
+            return;
+        }
+        state.reloadData.list_id = id;
+        // (the tags of the other list are other tags)
+        state.filterTags = [];
+        $('#lists .listTab').attr('aria-current', 'false');
+        $(this).attr('aria-current', 'true');
         reload();
         reloadTagList();
     });
 
     $('#modify_list').empty();
-    for (var i=0; i<state.lists.length; ++i) {
-        $('#modify_list').append($('<option></option>').val(state.lists[i].id).text(state.lists[i].name));
+    for (var j=0; j<state.lists.length; ++j) {
+        $('#modify_list').append($('<option></option>').val(state.lists[j].id).text(state.lists[j].name));
     }
 }
 
 
 function filterList() {
     var result;
-    var filterTags = state.filterTagify.value.map((tag) => tag.value);
-    if (filterTags.length == 0) {
+    if (state.filterTags.length == 0) {
         result = state.itemList.slice(0);
     } else {
-        result = getTodoWithTag(filterTags);
+        result = getTodoWithTag(state.filterTags);
     }
     result.sort(ItemSort);
     return result;
@@ -133,21 +145,14 @@ function clearTable()
 }
 
 
-// Shows the tags (an array of names) of a todo in an empty input field.
-// They are added one by one and not as the value of the input: Tagify parses a value which
-// looks like JSON and writes the keys of the objects into the tag element as attribute
-// names, without escaping them, so a tag named like that could inject HTML.
-export function showReadOnlyTags(inputElem, tags) {
-    var tagify = new Tagify(inputElem, { readOnly: true });
-    tagify.addTags(tags.map(function(tag) {
-        return tag.trim();
-    }).filter(function(tag) {
-        return tag != '';
-    }));
+// the tags of an entry as plain chips (text only; the names are escaped like all texts of the page)
+function tagChipsHtml(tags) {
+    return tags.map(function(tag) { return tag.trim(); }).filter(function(tag) { return tag != ''; })
+        .map(function(tag) { return '<span class="tagChip">'+escapeHtml(tag)+'</span>'; }).join('');
 }
 
 
-export function getTodoTitleHtml(it, lineNr, tagbasename, spanCssClass, baseElem, checkbox) {
+export function getTodoTitleHtml(it, lineNr, spanCssClass, baseElem, checkbox) {
     var isRecurring = it.recurrenceMode != 0;
     var hasNote = it.notes != null && it.notes != '';
     var hasTags = it.tags.length > 0;
@@ -170,7 +175,7 @@ export function getTodoTitleHtml(it, lineNr, tagbasename, spanCssClass, baseElem
             (hasNote ? '<span class="note" title="'+textToHtml(it.notes)+'">'+icon('note')+'</span>':'')+
             (isRecurring ? '<span class="recurring" title="'+repetition+'">'+icon('repeat')+'</span>':'');
     if (hasTags) {
-        line += ' <input id="'+tagbasename+it.id+'" class="todo_item_tags" readonly>';
+        line += ' <span class="todo_item_tags">'+tagChipsHtml(it.tags)+'</span>';
     }
     line += '</'+baseElem+'>';
     return line;
@@ -214,8 +219,7 @@ function renderItem(it, lineNr) {
         ((it.deleted==1)?' todo_deleted':'')+
             '" id="todo'+it.id+'">';
     var overdue = isOverdue ? ' <span class="exclamation">'+icon('warning')+'</span>':'';
-    var tagbasename = 'todo_tags_';
-    line += getTodoTitleHtml(it, lineNr, tagbasename, 'todo', 'td', true);
+    line += getTodoTitleHtml(it, lineNr, 'todo', 'td', true);
     line +=  '<td class="start">'+((it.start == null)?'undef':formatDate(parseDay(it.start)))+'</td>'+
         '<td class="due'+(isOverdue ? ' overdue' : '')+'">'+ dueHtml+overdue+'</td>'+
         '<td class="effort">'+it.effort+'</td>'+
@@ -232,10 +236,6 @@ function renderItem(it, lineNr) {
     }
     line += '</td></tr>';
     $('#todoTable tbody').append(line);
-    var elem = $('#'+tagbasename+it.id);
-    if (it.tags.length > 0) {
-        showReadOnlyTags(elem[0], it.tags);
-    }
     // a just added todo has no id yet, it is rendered again when it got one
     if (it.id != -1) {
         setListener(it.id);
@@ -249,14 +249,38 @@ function renderItem(it, lineNr) {
 }
 
 
+// the chips above the table: one for each tag of the list, which filters the table when it is pressed
 export function fillTagList(choices)
 {
-    if (state.tagListTagify) {
-        state.tagListTagify.removeAllTags();
-    } else {
-        state.tagListTagify = new Tagify($('#taglist input')[0], { readonly: true } );
-    }
+    // (a tag which was deleted, renamed or merged is no filter any more)
+    var names = choices.map(function(tag) { return tag.name; });
+    state.filterTags = state.filterTags.filter(function(name) { return names.indexOf(name) != -1; });
+    $('#tagbar').empty();
     for (var i=0; i<choices.length; i++) {
-        state.tagListTagify.addTags([ choices[i].name ]);
+        $('<button type="button" class="tagChip tagFilter"></button>')
+            .text(choices[i].name)
+            .append($('<span class="tagCount"></span>').text(choices[i].tagCount))
+            .attr('aria-pressed', state.filterTags.indexOf(choices[i].name) != -1 ? 'true' : 'false')
+            .attr('data-tag', choices[i].name)
+            .appendTo('#tagbar');
     }
+    // (the entries may not be there yet; they are shown when they arrive)
+    if (state.itemList !== undefined) {
+        renderTable();
+    }
+}
+
+
+// a chip of the tag bar was pressed: the tag is a filter, or not any more
+export function toggleTagFilter(name) {
+    var index = state.filterTags.indexOf(name);
+    if (index == -1) {
+        state.filterTags.push(name);
+    } else {
+        state.filterTags.splice(index, 1);
+    }
+    $('#tagbar .tagFilter').each(function() {
+        $(this).attr('aria-pressed', state.filterTags.indexOf($(this).attr('data-tag')) != -1 ? 'true' : 'false');
+    });
+    renderTable();
 }

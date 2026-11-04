@@ -12,6 +12,18 @@ test.before(async () => {
 });
 test.after(() => browser.close());
 
+// the menu in the header (a popover), and the dialog of a tag, which the menu leads to ("Manage tags")
+async function openMenu(page) {
+    await page.click('#menu_button');
+    await page.waitForSelector('#main_menu:popover-open');
+}
+async function openTagDialogFor(page, name) {
+    await openMenu(page);
+    await page.click('#manageTags');
+    await page.locator('#tags_dialog_list .tagManage', name === undefined ? {} : { hasText: name }).first().click();
+    await page.waitForSelector('#tag_dialog[open]');
+}
+
 // opens the page (the main page, or another one which is ready when the function says so), records JS errors, CSP violations and dialogs
 async function openPage(path = '/index.php', ready = () => typeof todoApp !== 'undefined' && Array.isArray(todoApp.state.itemList)) {
     const page = await browser.newPage();
@@ -44,10 +56,12 @@ test('HTML stored in the database is shown as text, not executed', async () => {
     assert.ok(texts.includes('<img src=x onerror=window.__xss=1>'), texts.join('|'));
     assert.ok(texts.includes('Tom & Jerry <b>'), texts.join('|'));
     assert.ok(texts.includes('&amp;'), texts.join('|'));
-    assert.deepEqual(await page.locator('#lists li').allTextContents(), ['Main', 'Work<img src=x onerror=window.__xss=4>']);
-    await page.locator('#taglist .tagify__tag').first().click();
+    assert.deepEqual(await page.locator('#lists .listTab').allTextContents(), ['Main', 'Work<img src=x onerror=window.__xss=4>']);
+    await openTagDialogFor(page);
     await page.keyboard.press('Escape');  // tag dialog is modal
-    await page.click('#smallLog');
+    await openMenu(page);
+    await page.click('#showLog');
+    await page.keyboard.press('Escape');
     assert.equal(await page.evaluate(() => window.__xss), undefined);
     assert.deepEqual(page.errors, []);
     await page.close();
@@ -71,7 +85,7 @@ test('main workflows work (and do not violate the Content-Security-Policy)', asy
     assert.equal(sql(`SELECT notes FROM todo WHERE id=${id}`).trim(), 'a note');
 
     // tags are only listed while a todo of the current list has them
-    await page.locator('#taglist .tagify__tag').first().click();
+    await openTagDialogFor(page);
     assert.equal(await page.locator('#tag_dialog').isVisible(), true);
     assert.equal(await page.inputValue('#tag_name'), 'tag1');
     await page.click('#tag_delete');
@@ -82,6 +96,7 @@ test('main workflows work (and do not violate the Content-Security-Policy)', asy
     await page.waitForFunction(() => todoApp.state.itemList[0].version == 3);
     await page.click('#trash' + id);
     await page.waitForFunction(() => todoApp.state.itemList[0].deleted == 1);
+    await openMenu(page);
     await page.click('#emptyTrash');
     await page.waitForFunction(() => todoApp.state.itemList.length == 0);
     assert.equal(sql('SELECT COUNT(*) FROM todo').trim(), '0');
@@ -109,8 +124,8 @@ test('special characters are stored as typed and shown as typed: in the list, af
     await page.reload();
     await page.waitForSelector('#todo' + id);
     assert.equal(await shown(), text);
-    assert.equal(await page.locator('#todo' + id + ' .tagify__tag').first().evaluate((t) => t.__tagifyTagData.value), tag);
-    assert.equal(await page.locator('#taglist .tagify__tag').first().evaluate((t) => t.__tagifyTagData.value), tag);
+    assert.equal(await page.locator('#todo' + id + ' .tagChip').first().textContent(), tag);
+    assert.equal(await page.locator('#tagbar .tagFilter').first().getAttribute('data-tag'), tag);
 
     // the dialog shows the same text, and saving it unchanged keeps it
     await page.click('#modify' + id);
@@ -133,7 +148,7 @@ test('special characters are stored as typed and shown as typed: in the list, af
     await page.click('#enter_save');
     await page.waitForFunction(() => todoApp.state.itemList.length == 2 && todoApp.state.itemList.every((i) => i.id > 0));
     await page.waitForFunction(() => todoApp.state.tagList.length == 2);
-    await page.locator('#taglist .tagify__tag', { hasText: tag }).click();
+    await openTagDialogFor(page, tag);
     assert.equal(await page.inputValue('#tag_name'), tag);
     assert.equal(await page.inputValue('#tag_count'), '1');
     assert.equal(await page.locator('#tag_todo_table .todo').count(), 1);
@@ -160,13 +175,15 @@ test('a tag named like JSON is shown as a plain tag, it cannot inject HTML', asy
             `INSERT INTO tags (name) VALUES (${quote(name)}); INSERT INTO todo_tags VALUES (@t, LAST_INSERT_ID())`);
     }
     const page = await openPage();
-    await page.waitForSelector('#todoTable tbody tr .tagify__tag');
-    const values = await page.locator('#todoTable tbody tr .tagify__tag').evaluateAll(
-        (tags) => tags.map((t) => t.__tagifyTagData.value));
+    await page.waitForSelector('#todoTable tbody tr .tagChip');
+    const values = await page.locator('#todoTable tbody tr .tagChip').allTextContents();
     assert.ok(values.length > 0 && values.every((v) => typeof v === 'string'), JSON.stringify(values));
     assert.ok(values.some((v) => v.includes('onmouseover=window.__xss=1')), JSON.stringify(values));
+    // the tag bar shows the same names, as text
+    const names = await page.locator('#tagbar .tagFilter').evaluateAll((chips) => chips.map((c) => c.getAttribute('data-tag')));
+    assert.ok(names.some((v) => v.includes('onmouseover=window.__xss=1')), JSON.stringify(names));
     // not a single attribute or element came from the JSON
-    assert.equal(await page.locator('tag[onmouseover], tag[a], meta[http-equiv]').count(), 0);
+    assert.equal(await page.locator('.tagChip[onmouseover], .tagChip[a], meta[http-equiv]').count(), 0);
     assert.equal(await page.evaluate(() => window.__xss), undefined);
     assert.equal(new URL(page.url()).pathname, '/index.php');
     assert.deepEqual(page.errors, []);
@@ -416,10 +433,10 @@ test('failed requests for data are reported, and the list works again afterwards
     await page.unroute('**/queries/query-todos.php*');
     await page.unroute('**/queries/query-lists.php*');
     await page.click('#refresh');
-    await page.waitForFunction(() => document.querySelector('#lists li'));
+    await page.waitForFunction(() => document.querySelector('#lists .listTab'));
     await loaded();
     assert.deepEqual(await page.evaluate(() => todoApp.state.itemList.map((i) => i.todo)), ['one']);
-    assert.deepEqual(await page.locator('#lists li').allTextContents(), ['Main', 'Work']);
+    assert.deepEqual(await page.locator('#lists .listTab').allTextContents(), ['Main', 'Work']);
     assert.equal(alerts.length, 2);
     await page.close();
 });

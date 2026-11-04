@@ -23,6 +23,9 @@
     --hover-bg: light-dark(#DDD, #3a3a3e);
     --icon-fg: light-dark(#444, #e0e0e0);
     --focus: light-dark(#4466cc, #8ab4ff);
+    --accent: light-dark(#3a5fc0, #8ab4ff);
+    --on-accent: light-dark(white, #111);
+    --chip-bg: light-dark(#E5E5E5, #3a3a3e);
     --chart-bar: light-dark(blue, #3d6fd8);
     --chart-on-bar: white;
     --chart-off-label: light-dark(black, #e4e4e4);
@@ -51,21 +54,34 @@ h2 {
     font-size: 14pt;
     font-weight: bold;
 }
-.linkblock {
-    float:right;
-    white-space: nowrap;
-    margin-right: 10px;
-}
+
 
 /*************/
 /* ToDo List */
 #todo_content, #headerLine {
     display: flex;
 }
+/* the page of the list: one column */
+#todo_content.todo_page {
+    display: block;
+    max-width: 960px;
+    margin: 0 auto;
+}
 #headerLine {
-    align-items: flex-end;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+#headerLine h1 {
+    margin-right: auto;
+}
+#headerActions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 #todoTable {
+    width: 100%;
     border: 1px solid var(--border);
     border-radius: 4px;
     border-spacing: 0;
@@ -75,9 +91,6 @@ div.line,tr.line_odd {
 }
 #todoTable td {
     padding: 1px 0;
-}
-#mainContent {
-    margin-left: auto;
 }
 .line_input span,
 .line_header span {
@@ -135,17 +148,11 @@ td.start, td.due {
 .todo_deleted span:not(.date_year) {
     text-decoration: line-through;
 }
-ul.todo_item_tags {
-    margin: 0 !important;
-    padding: 0 !important;
-    display: inline-block;
-    border-width: 0 !important;
-    font-size: 1em;
-    vertical-align: bottom;
-}
-ul.todo_item_tags li {
-    padding: 1px 2px !important;
-    margin: 1px 2px !important;
+.todo_item_tags {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    vertical-align: middle;
 }
 input[disabled="disabled"] {
     display: none;
@@ -171,16 +178,6 @@ input[disabled="disabled"] {
     margin: 2px;
     background-color:var(--surface);
     float: right;
-}
-#smallLog {
-    font-size: 6pt;
-    background-color:var(--surface);
-    margin-left: 2px;
-    margin-right: 2px;
-    margin-bottom: 10px;
-}
-#logLink {
-    display: none;
 }
 span.modify_desc {
     display: inline-block;
@@ -254,36 +251,119 @@ span.modify_desc {
 #tag_merge {
     vertical-align: middle;
 }
-#sidebar {
-    width: 20%;
-    margin-left: 10px;
-    margin-right: auto;
-}
-#taglist {
-    font-size: 8pt;
-}
-#taglist,
+/* the lists: tabs which scroll sideways if there are many */
 #lists {
+    display: flex;
+    gap: 4px;
+    margin: 4px 0;
+    overflow-x: auto;
+}
+.listTab {
+    flex: none;
+    min-height: 36px;
+    padding: 4px 14px;
     border: 1px solid var(--border);
+    border-radius: 18px;
+    background: transparent;
+    color: var(--page-fg);
+    font: inherit;
+    cursor: pointer;
+}
+.listTab[aria-current="true"] {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--on-accent);
+    font-weight: bold;
+}
+.listTab:focus-visible,
+.tagFilter:focus-visible,
+.tagManage:focus-visible,
+.menuItem:focus-visible {
+    outline: 2px solid var(--focus);
+}
+/* the tags: chips (in a row they are plain, above the table they filter) */
+#tagbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 4px 0 6px;
+}
+#tagbar:empty {
+    display: none;
+}
+.tagChip {
+    display: inline-block;
+    padding: 1px 8px;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    background: var(--chip-bg);
+    color: var(--page-fg);
+    font: inherit;
+    line-height: 1.5;
+}
+button.tagChip {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+    padding: 4px 10px;
+    cursor: pointer;
+}
+.tagFilter[aria-pressed="true"] {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--on-accent);
+}
+.tagCount {
+    margin-left: 6px;
+    font-size: .85em;
+    opacity: .75;
+}
+#tags_dialog_list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+/* the menu: a popover under its button */
+#main_menu {
+    position: fixed;
+    inset: auto;
+    margin: 0;
+    padding: 4px;
+    min-width: 200px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--page-bg);
+    color: var(--page-fg);
+}
+#main_menu:popover-open {
+    display: flex;
+    flex-direction: column;
+}
+.menuItem {
+    display: flex;
+    flex: none;
+    box-sizing: border-box;
+    align-items: center;
+    gap: 8px;
+    height: 40px;
+    padding: 0 10px;
+    border: 0;
     border-radius: 4px;
-    margin-top: 10px;
-    padding: 5px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
 }
-#lists ul {
-    list-style-type: none;
-    margin: 0;
-    padding: 2px;
+.menuItem[hidden] {
+    display: none;
 }
-#emptytrashlink,
-#statisticslink,
-#filter {
-    margin-left: 5px;
-    margin-right: 5px;
-    margin-bottom: 3px;
-}
-#filter ul {
-    margin: 0;
-    padding: 0;
+@media (hover: hover)
+{
+    .menuItem:hover {
+        background: var(--hover-bg);
+    }
 }
 #loadMoreBox {
     margin-top: 10px;
@@ -363,14 +443,6 @@ svg.icon {
 
 /*******************/
 /* Color scheme button */
-#themelink {
-    margin-left: 5px;
-    margin-right: 5px;
-    margin-bottom: 3px;
-}
-.linkblock .themeswitch {
-    vertical-align: middle;
-}
 .themeswitch {
     padding: 2px;
     border: 0;
@@ -545,19 +617,6 @@ svg.icon {
 		width: 100%;
 		margin-left: 0;
 	}
-	/* header: title and links in first line, tag filter full width below */
-	#headerLine {
-		flex-wrap: wrap;
-		align-items: center;
-	}
-	#filter {
-		order: 1;
-		flex-basis: 100%;
-	}
-	#filter .tagify {
-		width: 100%;
-		box-sizing: border-box;
-	}
 	/* modify / tag dialog: labels above full-width fields */
 	span.modify_desc {
 		display: block;
@@ -597,18 +656,6 @@ svg.icon {
 	/* font size of at least 16px prevents iOS from zooming in on focus */
 	input, input[type="text"], input[type="date"], select, textarea, .tagify__input {
 		font-size: 16px;
-	}
-}
-@media (max-width: 950px)
-{
-	#todo_content {
-		display: block;
-		margin-right: auto;
-	}
-	#sidebar {
-		width: 100%;
-		margin-left: auto;
-		margin-right: auto;
 	}
 }
 /********************/

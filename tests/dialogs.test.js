@@ -39,6 +39,13 @@ function seed() {
 }
 
 const isOpen = (page, selector) => page.locator(selector).evaluate((d) => d.open && d.matches(':modal'));
+// the dialog of a tag: the menu, "Manage tags", and the tag in that list
+async function openTagDialogFor(page, name) {
+    await page.click('#menu_button');
+    await page.click('#manageTags');
+    await page.locator('#tags_dialog_list .tagManage', { hasText: name }).first().click();
+    await page.waitForSelector('#tag_dialog[open]');
+}
 const edit = (page) => page.locator('#todoTable tbody tr').first().locator('.editButton').click();
 
 test('jQuery UI is gone: no script, no style sheet, no $.ui', async () => {
@@ -129,7 +136,7 @@ test('the suggestions of the tag fields in the dialogs are shown above them, nex
     assert.equal(await page.locator('#modify_dialog').isVisible(), false);
 
     // the tag dialog: the target of a merge
-    await page.locator('#taglist .tagify__tag', { hasText: 'work' }).click();
+    await openTagDialogFor(page, 'work');
     assert.equal(await isOpen(page, '#tag_dialog'), true);
     assert.equal(await page.inputValue('#tag_name'), 'work');
     const mergeBox = await page.locator('#tag_dialog .modify_line tags.tagify').boundingBox();
@@ -144,13 +151,14 @@ test('the suggestions of the tag fields in the dialogs are shown above them, nex
 test('the log and the tag dialog open and close', async () => {
     seed();
     const page = await openPage();
-    await page.click('#smallLog');
+    await page.click('#menu_button');
+    await page.click('#showLog');
     assert.equal(await isOpen(page, '#log_dialog'), true);
     assert.match(await page.locator('#log_dialog_text').textContent(), /Loading finished/);
     assert.equal(await page.locator('#log_dialog_title').textContent(), 'Log');
     await page.keyboard.press('Escape');
     assert.equal(await page.locator('#log_dialog').isVisible(), false);
-    await page.locator('#taglist .tagify__tag', { hasText: 'home' }).click();
+    await openTagDialogFor(page, 'home');
     assert.equal(await isOpen(page, '#tag_dialog'), true);
     await page.click('#tag_dialog .dialog_close');
     assert.equal(await page.locator('#tag_dialog').isVisible(), false);

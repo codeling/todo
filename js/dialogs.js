@@ -2,9 +2,9 @@
 import { state } from './state.js';
 import { findItem, ItemSort, getTodoWithTag } from './items.js';
 import { parseDate, parseDay, formatDate } from './dates.js';
-import { log, logItems, updateLog, toggleLog } from './log.js';
+import { log, logItems, updateLog } from './log.js';
 import { postAction, reportFailure } from './api.js';
-import { showReadOnlyTags, getTodoTitleHtml } from './render.js';
+import { getTodoTitleHtml } from './render.js';
 import { reloadTagList, refresh } from './load.js';
 
 // The dialogs are <dialog> elements (index.php) which are opened with showModal(): the browser keeps
@@ -150,12 +150,8 @@ export function openTagDialog(tagname)
     $('#tag_todo_table').empty();
     var filtered = getTodoWithTag(new Array(tagname));
     filtered.sort(ItemSort);
-    var tagbase = 'tag_todo_tags_';
     for (var i=0; i<filtered.length; i++) {
-        var line = getTodoTitleHtml(filtered[i], i, tagbase, 'todo', 'div', false);
-        $('#tag_todo_table').append(line);
-        var elem = $('#'+tagbase+filtered[i].id);
-        showReadOnlyTags(elem[0], filtered[i].tags);
+        $('#tag_todo_table').append(getTodoTitleHtml(filtered[i], i, 'todo', 'div', false));
     }
 }
 
@@ -177,10 +173,20 @@ export function tagDialogAction(url, data, successKey, errorKey) {
 
 export function showLogDialog() {
     updateLog('#log_dialog_text', logItems.length);
-    $('#log_dialog_text').append('<br />',
-        $('<a href="#"></a>').text($T('LOG_ONOFF')).on('click', function(e) {
-            e.preventDefault();
-            toggleLog();
-        }));
     openDialog('#log_dialog');
+}
+
+
+// the tags of the list, to change one of them (the dialog of the tag, with its name, rename, merge and delete)
+export function showTagsDialog() {
+    var list = $('#tags_dialog_list').empty();
+    if (state.tagList.length == 0) {
+        list.text($T('NO_TAGS'));
+    }
+    state.tagList.forEach(function(tag) {
+        $('<button type="button" class="tagChip tagManage"></button>').text(tag.name)
+            .append($('<span class="tagCount"></span>').text(tag.tagCount))
+            .attr('data-tag', tag.name).appendTo(list);
+    });
+    openDialog('#tags_dialog');
 }

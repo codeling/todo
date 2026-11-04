@@ -254,8 +254,8 @@ for (const scheme of ['light', 'dark']) {
             'a completed entry': '.todo_completed td.todo > span:not([class])',
             'an overdue date': 'td.due.overdue',
             'a date': 'td.due:not(.overdue)',
-            'a link': '#statisticslink a',
-            'a list in the sidebar': '#lists li',
+            'a link': '#loadMoreBox a',
+            'a list': '#lists .listTab[aria-current="false"]',
             'the entry field': '#enter_todo',
         };
         for (const [name, selector] of Object.entries(checks)) {
@@ -263,19 +263,15 @@ for (const scheme of ['light', 'dark']) {
             const ratio = contrast(c.text, c.background);
             assert.ok(ratio >= 4.5, `${name} (${selector}): ${ratio.toFixed(2)} ${JSON.stringify(c)}`);
         }
-        // the text in a tag, on the color of the tag (which is drawn by a ::before with the custom property --tag-bg;
-        // a probe element resolves it, light-dark() and all, to a color)
-        const tag = await page.locator('#todoTable .tagify__tag').first().evaluate((e) => {
-            const probe = document.createElement('span');
-            probe.style.backgroundColor = 'var(--tag-bg)';
-            e.appendChild(probe);
-            const background = getComputedStyle(probe).backgroundColor;
-            probe.remove();
-            return { text: getComputedStyle(e.querySelector('.tagify__tag-text')).color, background };
-        });
-        const rgbOf = (value) => value.match(/[\d.]+/g).slice(0, 3).map(Number);
-        const tagRatio = contrast(rgbOf(tag.text), rgbOf(tag.background));
-        assert.ok(tagRatio >= 4.5, 'a tag ' + tagRatio.toFixed(2) + ' ' + JSON.stringify(tag));
+        // a tag which is pressed (a filter), and the menu, which is a layer of its own
+        await page.click('#tagbar .tagFilter');
+        const pressed = await textAndBackground(page, '#tagbar .tagFilter[aria-pressed="true"]');
+        assert.ok(contrast(pressed.text, pressed.background) >= 4.5, 'a tag which filters ' + JSON.stringify(pressed));
+        await page.click('#menu_button');
+        await page.waitForSelector('#main_menu:popover-open');
+        const menu = await textAndBackground(page, '#manageTags');
+        assert.ok(contrast(menu.text, menu.background) >= 4.5, 'the menu ' + JSON.stringify(menu));
+        await page.keyboard.press('Escape');
         // the border of the table is visible against the page (a graphical object needs 3:1)
         const border = await page.locator('#todoTable').evaluate((e) => getComputedStyle(e).borderTopColor);
         const page_ = await textAndBackground(page, 'body');

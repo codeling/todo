@@ -128,9 +128,14 @@
     <script src="<?php echo(assetUrl("js/theme.js")); ?>" defer></script>
   </head>
   <body>
-    <div id="todo_content">
-      <div class="linkblock"><a href="index.php"><?php echo(statEscape(TodoLang::_("TO_TODO")));?></a> <?php echo(themeButtonHtml());?></div>
-      <h1><?php echo(statEscape(TodoLang::_("STATISTICS"))); ?></h1>
+    <div id="todo_content" class="todo_page">
+      <div id="headerLine">
+        <h1><?php echo(statEscape(TodoLang::_("STATISTICS"))); ?></h1>
+        <div id="headerActions">
+          <a href="index.php"><?php echo(statEscape(TodoLang::_("TO_TODO")));?></a>
+          <?php echo(themeButtonHtml());?>
+        </div>
+      </div>
       <div id="main_content">
 <?php
     foreach ($dates as $dateName => $dateColumn)

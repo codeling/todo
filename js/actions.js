@@ -74,7 +74,7 @@ function emptyTrashLocally() {
             state.itemList.splice(idx, 1);
         }
     }
-    renderTable();
+    refreshView();
 }
 
 

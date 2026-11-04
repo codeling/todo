@@ -21,18 +21,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
   </head>
   <body>
-    <div id="todo_content">
+    <div id="todo_content" class="todo_page">
       <div id="mainContent">
         <div id="headerLine">
           <h1><?php echo(TodoConstants::AppTitle); ?></h1>
           <div id="working"><?php echo(TodoLang::_("WORKING"));?></div>
-          <div id="filter">
-            <input id="filter_tag_edit" />
+          <div id="headerActions">
+            <?php echo(themeButtonHtml());?>
+            <button type="button" id="menu_button" class="iconButton" popovertarget="main_menu" title="<?php echo(htmlspecialchars(TodoLang::_("MENU")));?>" aria-label="<?php echo(htmlspecialchars(TodoLang::_("MENU")));?>"><?php echo(iconSvg("menu"));?></button>
+            <div id="main_menu" popover>
+              <button type="button" id="emptyTrash" class="menuItem" hidden><?php echo(iconSvg("delete"));?><?php echo(TodoLang::_("EMPTY_TRASH"));?></button>
+              <button type="button" id="manageTags" class="menuItem"><?php echo(iconSvg("tag"));?><?php echo(TodoLang::_("MANAGE_TAGS"));?></button>
+              <a href="statistics.php" id="statisticsLink" class="menuItem"><?php echo(iconSvg("chart"));?><?php echo(TodoLang::_("SHOW_STATISTICS"));?></a>
+              <button type="button" id="showLog" class="menuItem"><?php echo(iconSvg("note"));?><?php echo(TodoLang::_("SHOW_LOG"));?></button>
+            </div>
           </div>
-          <div id="emptytrashlink"><a href="#" id="emptyTrash"><?php echo(TodoLang::_("EMPTY_TRASH"));?></a></div>
-          <div id="statisticslink"><a href="statistics.php"><?php echo(TodoLang::_("SHOW_STATISTICS"));?></a></div>
-          <div id="themelink"><?php echo(themeButtonHtml());?></div>
         </div>
+        <nav id="lists" aria-label="<?php echo(htmlspecialchars(TodoLang::_("LISTS")));?>"></nav>
+        <div id="tagbar" role="group" aria-label="<?php echo(htmlspecialchars(TodoLang::_("TAG_FILTER")));?>"></div>
         <div id="progress"><span id="progress_done">&nbsp;</span><span id="progress_todo">&nbsp;</span></div>
         <form method="POST" id="inputform">
           <table id="todoTable">
@@ -58,16 +64,6 @@
             <a href="#" id="loadIncomplete"><?php echo(TodoLang::_("LOAD_INCOMPLETE"));?></a>
             <a href="#" id="loadLessCompleted"><?php echo(TodoLang::_("LOAD_LESS_COMPLETED"));?></a>
             <a href="#" id="loadMoreCompleted"><?php echo(TodoLang::_("LOAD_MORE_COMPLETED"));?></a>
-        </div>
-      </div>
-      <div id="sidebar">
-        <div id="smallLog"><?php echo(TodoLang::_("STARTING_LOG"));?></div>
-        <div id="logLink"><a href="#" id="showLog"><?php echo(TodoLang::_("SHOW_LOG"));?></a></div>
-        <div id="lists">
-          <ul></ul>
-        </div>
-        <div id="taglist">
-          <input value="">
         </div>
       </div>
     </div>
@@ -126,6 +122,10 @@
     <dialog id="log_dialog" aria-labelledby="log_dialog_title">
       <?php echo(dialogHeaderHtml("log_dialog_title", "Log")); ?>
       <div class="dialog_body" tabindex="-1" autofocus id="log_dialog_text"></div>
+    </dialog>
+    <dialog id="tags_dialog" aria-labelledby="tags_dialog_title">
+      <?php echo(dialogHeaderHtml("tags_dialog_title", TodoLang::_("MANAGE_TAGS"))); ?>
+      <div class="dialog_body" tabindex="-1" autofocus id="tags_dialog_list"></div>
     </dialog>
     <dialog id="tag_dialog" aria-labelledby="tag_dialog_title">
       <?php echo(dialogHeaderHtml("tag_dialog_title", TodoLang::_("EDIT_TAG"))); ?>

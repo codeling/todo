@@ -42,6 +42,12 @@ and filled. Until then step 0 can only be prepared as files in a scratch directo
   the overrides in `todo.css`). A modal dialog covers everything else on the page, so Tagify's lists of suggestions are put into
   the dialog and placed by `keepSuggestionsInDialog()` (Tagify's own placement is wrong inside a dialog). `tests/dialogs.test.js`.
 
+* Step 5a (header and tags): no sidebar and no small log. The header has the title, the color scheme button and a menu (a popover:
+  Empty trash (only if there is something in the trash), Manage tags, Statistics, Show log); the lists are tabs (buttons,
+  `aria-current`); the tags are chips above the table which filter it (any of the pressed ones), in the rows they are plain
+  chips (no Tagify there any more); "Manage tags" is a dialog which leads to the dialog of a tag. The statistics page has the
+  same header. `tests/layout.test.js`.
+
 ## 1. Findings
 
 ### Structure and usability
