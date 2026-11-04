@@ -30,11 +30,14 @@
           <h1><?php echo(TodoConstants::AppTitle); ?></h1>
           <div id="working"><?php echo(TodoLang::_("WORKING"));?></div>
           <div id="headerActions">
+            <?php echo(iconButton("loadIncomplete", "toggleButton", "peek", TodoLang::_("LOAD_INCOMPLETE")));?>
             <?php echo(iconButton("refresh", "refreshButton", "refresh", TodoLang::_("REFRESH")));?>
             <?php echo(themeButtonHtml());?>
             <button type="button" id="menu_button" class="iconButton" popovertarget="main_menu" title="<?php echo(htmlspecialchars(TodoLang::_("MENU")));?>" aria-label="<?php echo(htmlspecialchars(TodoLang::_("MENU")));?>"><?php echo(iconSvg("menu"));?></button>
             <div id="main_menu" popover>
               <button type="button" id="emptyTrash" class="menuItem" hidden><?php echo(iconSvg("delete"));?><?php echo(TodoLang::_("EMPTY_TRASH"));?></button>
+              <button type="button" id="loadMoreCompleted" class="menuItem"><?php echo(iconSvg("show-more"));?><?php echo(TodoLang::_("LOAD_MORE_COMPLETED"));?></button>
+              <button type="button" id="loadLessCompleted" class="menuItem" disabled><?php echo(iconSvg("show-less"));?><?php echo(TodoLang::_("LOAD_LESS_COMPLETED"));?></button>
               <button type="button" id="manageTags" class="menuItem"><?php echo(iconSvg("tag"));?><?php echo(TodoLang::_("MANAGE_TAGS"));?></button>
               <a href="statistics.php" id="statisticsLink" class="menuItem"><?php echo(iconSvg("chart"));?><?php echo(TodoLang::_("SHOW_STATISTICS"));?></a>
               <button type="button" id="showLog" class="menuItem"><?php echo(iconSvg("note"));?><?php echo(TodoLang::_("SHOW_LOG"));?></button>
@@ -53,11 +56,6 @@
           </div>
         </form>
         <ul id="todoList"></ul>
-        <div id="loadMoreBox">
-            <a href="#" id="loadIncomplete"><?php echo(TodoLang::_("LOAD_INCOMPLETE"));?></a>
-            <a href="#" id="loadLessCompleted"><?php echo(TodoLang::_("LOAD_LESS_COMPLETED"));?></a>
-            <a href="#" id="loadMoreCompleted"><?php echo(TodoLang::_("LOAD_MORE_COMPLETED"));?></a>
-        </div>
       </div>
     </div>
     <!-- messages (js/toast.js) -->

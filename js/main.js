@@ -142,24 +142,20 @@ $('#emptyTrash').on('click', emptyTrash);
 $('#showLog').on('click', showLogDialog);
 $('#manageTags').on('click', showTagsDialog);
 
-$('#loadMoreCompleted').on('click', function(e) {
-    e.preventDefault();
-    state.reloadData.age += 10;
+// the completed entries of the last days are loaded, more days on request (the menu); "less" only while there are more
+function loadCompletedAge(change) {
+    state.reloadData.age = Math.max(0, state.reloadData.age + change);
+    $('#loadLessCompleted').prop('disabled', state.reloadData.age == 0);
     reload();
-});
-$('#loadLessCompleted').on('click', function(e) {
-    e.preventDefault();
-    state.reloadData.age -= 10;
-    if (state.reloadData.age < 0)
-    {
-        state.reloadData.age = 0;
-    }
-    reload();
-});
-$('#loadIncomplete').on('click', function(e) {
-    e.preventDefault();
+}
+$('#loadMoreCompleted').on('click', function() { loadCompletedAge(10); });
+$('#loadLessCompleted').on('click', function() { loadCompletedAge(-10); });
+// entries which start later are shown on request ("peek upcoming"): a toggle button in the header
+$('#loadIncomplete').attr('aria-pressed', 'false');
+$('#loadIncomplete').on('click', function() {
     state.reloadData.incomplete = !state.reloadData.incomplete;
-    $('#loadIncomplete').text(state.reloadData.incomplete?$T('LOAD_INCOMPLETE_HIDE'):$T('LOAD_INCOMPLETE'));
+    var label = $T(state.reloadData.incomplete ? 'LOAD_INCOMPLETE_HIDE' : 'LOAD_INCOMPLETE');
+    $(this).attr({ 'aria-pressed': state.reloadData.incomplete, title: label, 'aria-label': label });
     reload();
 });
 

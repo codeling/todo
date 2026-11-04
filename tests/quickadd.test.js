@@ -97,8 +97,6 @@ test('on a phone the bar to enter an entry is at the bottom and stays there whil
     assert.ok(Math.abs(box.y + box.height - 640) < 1, 'still at the bottom after scrolling: ' + JSON.stringify(box));
     // the last entry is not hidden behind it
     const last = await page.locator('#todoList > li').last().boundingBox();
-    const links = await page.locator('#loadMoreBox').boundingBox();
-    assert.ok(links.y + links.height <= box.y + 1, 'the links below the list are above the bar: ' + JSON.stringify([links, box]));
     assert.ok(last.y + last.height <= box.y + 1);
     // the field, the due date and the button are one row in it, and big enough
     for (const selector of ['#enter_todo', '.due_picker', '#enter_save']) {

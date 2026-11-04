@@ -481,12 +481,9 @@ button.tagChip {
         background: var(--hover-bg);
     }
 }
-#loadMoreBox {
-    margin-top: 10px;
-    margin-bottom: 5px;
-}
-#loadMoreBox a {
-    margin-right: 10px;
+.menuItem[disabled] {
+    opacity: .5;
+    cursor: default;
 }
 /*******************/
 /* Icons           */
@@ -513,6 +510,11 @@ svg.icon {
 }
 .iconButton:focus-visible {
     outline: 2px solid var(--focus);
+}
+/* a button which switches something on (the pressed state is the one which is on) */
+.iconButton[aria-pressed="true"] {
+    background-color: var(--hover-bg);
+    outline: 1px solid var(--icon-fg);
 }
 /* only on devices with real hover, else the highlight sticks after a tap */
 @media (hover: hover)

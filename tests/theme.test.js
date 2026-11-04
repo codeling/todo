@@ -255,7 +255,6 @@ for (const scheme of ['light', 'dark']) {
             'an overdue date': '.todoItem.overdue .todoDue',
             'a date': '.todoItem:not(.overdue) .todoDue',
             'a date shown as a caption': '#enterLine .date_caption',
-            'a link': '#loadMoreBox a',
             'a list': '#lists .listTab[aria-current="false"]',
             'the list which is shown': '#lists .listTab[aria-current="true"]',
             'a tag which filters': '#tagbar .tagFilter[aria-pressed="false"]',
