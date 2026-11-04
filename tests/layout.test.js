@@ -23,7 +23,7 @@ async function openPage(pagePath = '/index.php', options = {}) {
     await page.goto(BASE + pagePath);
     if (pagePath.startsWith('/index.php')) {
         await page.waitForFunction(() => typeof todoApp !== 'undefined' && Array.isArray(todoApp.state.itemList) && todoApp.state.tagList);
-        await page.waitForSelector('#todoTable tbody tr');
+        await page.waitForSelector('#todoList > li');
         await page.waitForTimeout(200);
     }
     return page;
@@ -42,7 +42,7 @@ function seed({ trash = false } = {}) {
     if (trash) sql("UPDATE todo SET deleted=1 WHERE description='Untagged'");
 }
 
-const titles = (page) => page.locator('#todoTable tbody td.todo > span:not([class])').allTextContents();
+const titles = (page) => page.locator('#todoList .todoTitle').allTextContents();
 const chips = (page) => page.locator('#tagbar .tagFilter').evaluateAll((c) => c.map((e) => [e.getAttribute('data-tag'), e.getAttribute('aria-pressed'), e.querySelector('.tagCount').textContent]));
 const openMenu = async (page) => {
     await page.click('#menu_button');
@@ -103,10 +103,10 @@ test('the tags are chips above the table: a pressed chip filters, any of the pre
     await page.click('#tagbar .tagFilter[data-tag="home"]');
     assert.deepEqual((await titles(page)).sort(), ['Buy milk', 'Call Bob', 'Untagged', 'Write report']);
     // the tags of an entry are plain chips too, which do not filter
-    assert.deepEqual(await page.locator('#todoTable tbody tr', { hasText: 'Call Bob' }).locator('.tagChip').allTextContents(), ['home', 'work']);
-    assert.equal(await page.locator('#todoTable .tagChip').first().evaluate((e) => e.tagName), 'SPAN');
+    assert.deepEqual(await page.locator('#todoList > li', { hasText: 'Call Bob' }).locator('.tagChip').allTextContents(), ['home', 'work']);
+    assert.equal(await page.locator('#todoList .tagChip').first().evaluate((e) => e.tagName), 'SPAN');
     // there is no Tagify in the rows any more: it is only in the fields of the dialogs
-    assert.equal(await page.locator('#todoTable .tagify, #tagbar .tagify').count(), 0);
+    assert.equal(await page.locator('#todoList .tagify, #tagbar .tagify').count(), 0);
     assert.deepEqual(page.errors, []);
     await page.context().close();
 });

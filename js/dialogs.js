@@ -4,7 +4,7 @@ import { findItem, ItemSort, getTodoWithTag } from './items.js';
 import { parseDate, parseDay, formatDate } from './dates.js';
 import { log, logItems, updateLog } from './log.js';
 import { postAction, reportFailure } from './api.js';
-import { getTodoTitleHtml } from './render.js';
+import { tagTodoHtml } from './render.js';
 import { reloadTagList, refresh } from './load.js';
 
 // The dialogs are <dialog> elements (index.php) which are opened with showModal(): the browser keeps
@@ -127,6 +127,15 @@ function fillModifyForm(id) {
     $('#modify_list option:selected').prop('selected', false);
     $('#modify_list option[value="'+item.list_id+'"]').prop('selected', true);
     toggleRecurrenceAnchor();
+    // the actions which only make sense for this entry: starting it today (if it did not start yet, and is open),
+    // reactivating a recurring one which is done, moving it to the trash or back; a deleted entry cannot be changed
+    var start = parseDay(item.start);
+    var open = item.completed == 0 && item.deleted == 0;
+    $('#modify_dotoday').prop('hidden', !(open && (start == null || start > new Date())));
+    $('#modify_reactivate').prop('hidden', !(item.recurrenceMode != 0 && item.completed != 0));
+    $('#modify_trash').prop('hidden', item.deleted != 0);
+    $('#modify_restore').prop('hidden', item.deleted == 0);
+    $('#modify_save').prop('disabled', item.deleted != 0);
 }
 
 
@@ -151,7 +160,7 @@ export function openTagDialog(tagname)
     var filtered = getTodoWithTag(new Array(tagname));
     filtered.sort(ItemSort);
     for (var i=0; i<filtered.length; i++) {
-        $('#tag_todo_table').append(getTodoTitleHtml(filtered[i], i, 'todo', 'div', false));
+        $('#tag_todo_table').append(tagTodoHtml(filtered[i]));
     }
 }
 

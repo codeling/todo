@@ -50,9 +50,9 @@ test('HTML stored in the database is shown as text, not executed', async () => {
         "INSERT INTO todo (creationDate, description, startDate, list_id) VALUES " +
         "(UTC_TIMESTAMP(), 'Tom & Jerry <b>', UTC_DATE(), 0), (UTC_TIMESTAMP(), '&amp;', UTC_DATE(), 0)");
     const page = await openPage();
-    await page.waitForSelector('#todoTable tbody tr');
+    await page.waitForSelector('#todoList > li');
     await page.waitForTimeout(500);
-    const texts = await page.locator('#todoTable tbody td.todo > span:not([class])').allTextContents();
+    const texts = await page.locator('#todoList .todoTitle').allTextContents();
     assert.ok(texts.includes('<img src=x onerror=window.__xss=1>'), texts.join('|'));
     assert.ok(texts.includes('Tom & Jerry <b>'), texts.join('|'));
     assert.ok(texts.includes('&amp;'), texts.join('|'));
@@ -76,9 +76,9 @@ test('main workflows work (and do not violate the Content-Security-Policy)', asy
     await page.click('#enter_save');
     await page.waitForFunction(() => todoApp.state.itemList.length == 1 && todoApp.state.itemList[0].id > 0);
     const id = await page.evaluate(() => todoApp.state.itemList[0].id);
-    assert.equal(await page.locator('#todo' + id + ' td.todo > span:not([class])').textContent(), 'new <i>item</i>');
+    assert.equal(await page.locator('#todo' + id + ' .todoTitle').textContent(), 'new <i>item</i>');
 
-    await page.click('#modify' + id);
+    await page.click('#open' + id);
     await page.fill('#modify_notes', 'a note');
     await page.click('#modify_save');
     await page.waitForFunction(() => todoApp.state.itemList[0].version == 2);
@@ -118,7 +118,7 @@ test('special characters are stored as typed and shown as typed: in the list, af
     // plain text in the database, not HTML entities
     assert.equal(sql(`SELECT description FROM todo WHERE id=${id}`).trim(), text);
     assert.equal(sql('SELECT name FROM tags').trim(), tag);
-    const shown = () => page.locator('#todo' + id + ' td.todo > span:not([class])').textContent();
+    const shown = () => page.locator('#todo' + id + ' .todoTitle').textContent();
     assert.equal(await shown(), text);
 
     await page.reload();
@@ -128,7 +128,7 @@ test('special characters are stored as typed and shown as typed: in the list, af
     assert.equal(await page.locator('#tagbar .tagFilter').first().getAttribute('data-tag'), tag);
 
     // the dialog shows the same text, and saving it unchanged keeps it
-    await page.click('#modify' + id);
+    await page.click('#open' + id);
     assert.equal(await page.inputValue('#modify_todo'), text);
     assert.deepEqual(await page.evaluate(() => todoApp.state.modifyTagify.value.map((t) => t.value)), [tag]);
     await page.fill('#modify_notes', notes);
@@ -136,7 +136,7 @@ test('special characters are stored as typed and shown as typed: in the list, af
     await page.waitForFunction(() => todoApp.state.itemList[0].version == 2);
     assert.deepEqual(sqlRows(`SELECT description, notes FROM todo WHERE id=${id}`), [[text, notes]]);
     assert.equal(sql('SELECT name FROM tags').trim(), tag);
-    await page.click('#modify' + id);
+    await page.click('#open' + id);
     assert.equal(await page.inputValue('#modify_todo'), text);
     assert.equal(await page.inputValue('#modify_notes'), notes);
     assert.equal(await page.locator('#todo' + id + ' .note').getAttribute('title'), notes);
@@ -151,8 +151,8 @@ test('special characters are stored as typed and shown as typed: in the list, af
     await openTagDialogFor(page, tag);
     assert.equal(await page.inputValue('#tag_name'), tag);
     assert.equal(await page.inputValue('#tag_count'), '1');
-    assert.equal(await page.locator('#tag_todo_table .todo').count(), 1);
-    assert.match(await page.locator('#tag_todo_table .todo').textContent(), /Tom & Jerry <b> mit ä/);
+    assert.equal(await page.locator('#tag_todo_table .tagTodo').count(), 1);
+    assert.match(await page.locator('#tag_todo_table .tagTodo').textContent(), /Tom & Jerry <b> mit ä/);
     await page.evaluate((name) => todoApp.state.mergeTagify.addTags([name]), other);
     await page.click('#tag_merge');
     await page.waitForFunction(() => todoApp.state.tagList.length == 1);
@@ -175,8 +175,8 @@ test('a tag named like JSON is shown as a plain tag, it cannot inject HTML', asy
             `INSERT INTO tags (name) VALUES (${quote(name)}); INSERT INTO todo_tags VALUES (@t, LAST_INSERT_ID())`);
     }
     const page = await openPage();
-    await page.waitForSelector('#todoTable tbody tr .tagChip');
-    const values = await page.locator('#todoTable tbody tr .tagChip').allTextContents();
+    await page.waitForSelector('#todoList .tagChip');
+    const values = await page.locator('#todoList .tagChip').allTextContents();
     assert.ok(values.length > 0 && values.every((v) => typeof v === 'string'), JSON.stringify(values));
     assert.ok(values.some((v) => v.includes('onmouseover=window.__xss=1')), JSON.stringify(values));
     // the tag bar shows the same names, as text
@@ -203,9 +203,9 @@ test('completed entries with the same completion date and start are ordered by d
         "(@c, 'no start', NULL, 1, @c, 0); " +
         "INSERT INTO todo (creationDate, description, startDate, list_id) VALUES (@c, 'open', UTC_DATE(), 0)");
     const page = await openPage();
-    await page.waitForSelector('#todoTable tbody tr');
+    await page.waitForSelector('#todoList > li');
     // open before completed, then the most recently completed, a missing start is last
-    assert.deepEqual(await page.locator('#todoTable tbody td.todo > span:not([class])').allTextContents(),
+    assert.deepEqual(await page.locator('#todoList .todoTitle').allTextContents(),
         ['open', 'newest', 'apple', 'banana', 'cherry', 'no start']);
     const violations = await page.evaluate(() => {
         const bad = [];
@@ -235,22 +235,26 @@ test('a todo just added can be started today and tapped to edit without reloadin
     await page.click('#enter_save');
     await page.waitForFunction(() => todoApp.state.itemList.length == 1 && todoApp.state.itemList[0].id > 0);
     const first = await page.evaluate(() => todoApp.state.itemList[0].id);
+    // (the dialog of the entry has the action; it closes the dialog)
+    await page.click('#open' + first);
+    assert.equal(await page.locator('#modify_dotoday').isVisible(), true);
     const [response] = await Promise.all([
         page.waitForResponse((r) => r.url().includes('queries/update.php'), { timeout: 5000 }),
-        page.click('#dotoday' + first)
+        page.click('#modify_dotoday')
     ]);
+    assert.equal(await page.locator('#modify_dialog').isVisible(), false);
     assert.deepEqual(await response.json(), { ok: true, version: 2 });
     await page.waitForFunction(() => todoApp.state.itemList[0].version == 2);
     assert.equal(sql(`SELECT startDate = UTC_DATE() FROM todo WHERE id=${first}`).trim(), '1');
 
-    // the edit button is hidden on narrow screens, a tap on the todo opens the dialog
+    // a tap on the todo opens the dialog, on a narrow screen too
     await page.setViewportSize({ width: 400, height: 800 });
     await page.fill('#enter_todo', 'second');
     await page.click('#enter_save');
     await page.waitForFunction(() => todoApp.state.itemList.length == 2 && todoApp.state.itemList.every((i) => i.id > 0));
     const second = await page.evaluate(() => todoApp.state.itemList.find((i) => i.todo == 'second').id);
     assert.equal(await page.locator('#modify_dialog').isVisible(), false);
-    await page.click(`#todo${second} td.todo`);
+    await page.click(`#todo${second} .todoMain`);
     assert.equal(await page.locator('#modify_dialog').isVisible(), true);
     assert.equal(await page.inputValue('#modify_id'), String(second));
     assert.equal(await page.inputValue('#modify_todo'), 'second');
@@ -262,7 +266,7 @@ test('the checkbox is unchecked again when completing an entry fails', async () 
     resetDb();
     sql("INSERT INTO todo (creationDate, description, startDate, list_id) VALUES (UTC_TIMESTAMP(), 'open', UTC_DATE(), 0)");
     const page = await openPage();
-    await page.waitForSelector('#todoTable tbody tr');
+    await page.waitForSelector('#todoList > li');
     const id = await page.evaluate(() => todoApp.state.itemList[0].id);
     const alerts = [];
     page.on('dialog', (d) => alerts.push(d.message()));
@@ -327,7 +331,7 @@ test('an entry moved to the trash or back is shown as before when that fails, al
     resetDb();
     sql("INSERT INTO todo (creationDate, description, startDate, list_id) VALUES (UTC_TIMESTAMP(), 'open', UTC_DATE(), 0)");
     const page = await openPage();
-    await page.waitForSelector('#todoTable tbody tr');
+    await page.waitForSelector('#todoList > li');
     const id = await page.evaluate(() => todoApp.state.itemList[0].id);
     const alerts = collectAlerts(page);
     const deleted = () => page.evaluate(() => todoApp.state.itemList[0].deleted);
@@ -448,16 +452,20 @@ test('reactivating reports the answer of the server in the log, also if it refus
         "recurrenceMode, recurrenceInterval, recurrenceAnchor, list_id) VALUES " +
         "(UTC_TIMESTAMP(), 'yearly', UTC_DATE() - INTERVAL 2 DAY, UTC_DATE(), 1, UTC_TIMESTAMP(), 4, 1, 1, 0)");
     const page = await openPage();
-    await page.waitForSelector('.reactivateButton');
+    await page.waitForSelector('#todoList > li');
+    const reactivate = async (click) => {
+        await page.click('#open' + await page.evaluate(() => todoApp.state.itemList[0].id));
+        await click('#modify_reactivate');
+    };
     const alerts = collectAlerts(page);
 
     const loaded = () => page.waitForFunction(() => todoApp.logItems[todoApp.logItems.length - 1] == 'Loading finished');
-    await page.click('.reactivateButton');
+    await reactivate((selector) => page.click(selector));
     await page.waitForFunction(() => todoApp.logItems.includes('Result: Reactivated entry...'));
     await loaded();
     assert.equal(sql('SELECT COUNT(*) FROM todo').trim(), '2');
     // the second time there is a reactivated entry already: no alert, the answer is in the log
-    await page.click('.reactivateButton');
+    await reactivate((selector) => page.click(selector));
     await page.waitForFunction(() => todoApp.logItems.some((l) => l.startsWith('Result: Either item is not completed')));
     await loaded();
     assert.equal(sql('SELECT COUNT(*) FROM todo').trim(), '2');
@@ -465,7 +473,7 @@ test('reactivating reports the answer of the server in the log, also if it refus
 
     // no answer: the only case with an alert
     await page.route('**/queries/reactivate-one.php', (r) => r.abort());
-    await clickForAlert(page, '.reactivateButton');
+    await reactivate((selector) => clickForAlert(page, selector));
     assert.deepEqual(alerts, ['Transmission error.']);
     assert.equal(sql('SELECT COUNT(*) FROM todo').trim(), '2');
     await page.close();

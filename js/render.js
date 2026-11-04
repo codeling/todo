@@ -4,11 +4,11 @@
 // lists reloads (load.js); they call back here to show the result. So render.js, actions.js, dialogs.js
 // and load.js import each other, which is fine as long as they only call each other's functions when
 // an event happens, and not while the modules are loaded.
-import { state, narrowScreenQuery } from './state.js';
+import { state } from './state.js';
 import { parseDate, parseDay, formatDate } from './dates.js';
 import { escapeHtml, textToHtml, icon, iconButton } from './html.js';
 import { ItemSort, getTodoWithTag } from './items.js';
-import { toggleCompleted, setTrashed, doToday, reactivate } from './actions.js';
+import { toggleCompleted, setTrashed } from './actions.js';
 import { modifyItem } from './dialogs.js';
 import { reload, reloadTagList } from './load.js';
 
@@ -27,28 +27,20 @@ function updateMenu() {
 }
 
 
+// the checkbox completes the entry, a tap on the entry opens its dialog (which has all other actions: change,
+// do today, reactivate), the button at the right moves it to the trash or back
 function setListener(id) {
     $('#completed'+id).on('click', function() {
         toggleCompleted(id);
     });
-    if ($('#modify'+id).length !== 0) {
-        $('#modify'+id).on('click', function() {
-            modifyItem(id);
-        });
-    }
-    if ($('#dotoday'+id).length !== 0) {
-        $('#dotoday'+id).on('click', function() {
-            doToday(id);
-        });
-    }
+    $('#open'+id).on('click', function() {
+        modifyItem(id);
+    });
     $('#trash'+id).on('click', function() {
         setTrashed(id, true);
     });
     $('#restore'+id).on('click', function() {
         setTrashed(id, false);
-    });
-    $('#reactivate'+id).on('click', function() {
-        reactivate(id);
     });
 }
 
@@ -68,7 +60,7 @@ export function renderTable() {
     clearTable();
     var filtered = filterList();
     for (var i=0; i<filtered.length; i++) {
-        renderItem(filtered[i], i);
+        renderItem(filtered[i]);
     }
 }
 
@@ -141,7 +133,7 @@ function updateProgress() {
 
 function clearTable()
 {
-    $("#todoTable tbody").empty();
+    $("#todoList").empty();
 }
 
 
@@ -152,39 +144,41 @@ function tagChipsHtml(tags) {
 }
 
 
-export function getTodoTitleHtml(it, lineNr, spanCssClass, baseElem, checkbox) {
-    var isRecurring = it.recurrenceMode != 0;
-    var hasNote = it.notes != null && it.notes != '';
-    var hasTags = it.tags.length > 0;
+// the tooltip of an entry: when it was created, how it recurs, when it was done
+function todoTooltip(it) {
     var createDate = parseDate(it.creationDate);
+    var complDate = parseDate(it.completionDate);
     // label of the recurrence option (DOM text), goes into an HTML attribute:
     var repetition = escapeHtml(getRecurrenceString(it.recurrenceMode, it.recurrenceInterval));
-    var complDate = parseDate(it.completionDate);
-    var line = '<'+baseElem+' class="'+spanCssClass+'" title="'+$T('CREATED')+': '+formatDate(createDate, true)+
-            '; '+$T('RECURRENCE')+': '+repetition+
-        ((it.completed != 0)? '; '+$T('DONE')+': '+formatDate(complDate, true):'')+
-            '">';
-    if (checkbox)
-    {
-        // deleted todos cannot be completed or reopened
-        line += '<span class="completed"><input type="checkbox" id="completed'+it.id+'" '+
-            ((it.completed==1)?'checked="true" ':'')+((it.deleted==1)?'disabled ':'')+'/></span>';
-    }
-    line += '<span class="todo_lineNr">'+(lineNr+1)+'.</span> '+
-            '<span>'+textToHtml(it.todo)+'</span>'+
-            (hasNote ? '<span class="note" title="'+textToHtml(it.notes)+'">'+icon('note')+'</span>':'')+
-            (isRecurring ? '<span class="recurring" title="'+repetition+'">'+icon('repeat')+'</span>':'');
-    if (hasTags) {
-        line += ' <span class="todo_item_tags">'+tagChipsHtml(it.tags)+'</span>';
-    }
-    line += '</'+baseElem+'>';
-    return line;
+    return $T('CREATED')+': '+formatDate(createDate, true)+'; '+$T('RECURRENCE')+': '+repetition+
+        ((it.completed != 0)? '; '+$T('DONE')+': '+formatDate(complDate, true):'');
 }
 
 
-// action button; the label is shown as tooltip and read by screen readers
-function actionButton(spanClass, id, buttonClass, iconName, label) {
-    return '<span class="'+spanClass+'">'+iconButton(id, buttonClass, iconName, label)+'</span>';
+// the text of an entry and, below it, what else there is to know: a note, that it recurs, when it starts (if that
+// is still to come), its tags
+function todoTitleHtml(it) {
+    var meta = '';
+    if (it.notes != null && it.notes != '') {
+        meta += '<span class="note" title="'+textToHtml(it.notes)+'">'+icon('note')+'</span>';
+    }
+    if (it.recurrenceMode != 0) {
+        meta += '<span class="recurring" title="'+escapeHtml(getRecurrenceString(it.recurrenceMode, it.recurrenceInterval))+'">'+icon('repeat')+'</span>';
+    }
+    var start = parseDay(it.start);
+    if (it.completed == 0 && start != null && start > new Date()) {
+        meta += '<span class="todoStart">'+escapeHtml($T('START'))+' '+formatDate(start)+'</span>';
+    }
+    if (it.tags.length > 0) {
+        meta += '<span class="todo_item_tags">'+tagChipsHtml(it.tags)+'</span>';
+    }
+    return '<span class="todoTitle">'+textToHtml(it.todo)+'</span>'+(meta == '' ? '' : '<span class="todoMeta">'+meta+'</span>');
+}
+
+
+// an entry in the dialog of a tag
+export function tagTodoHtml(it) {
+    return '<div class="tagTodo" title="'+todoTooltip(it)+'">'+todoTitleHtml(it)+'</div>';
 }
 
 
@@ -206,45 +200,35 @@ export function updateEnterDueLabel() {
 }
 
 
-function renderItem(it, lineNr) {
+function renderItem(it) {
     var today   = new Date();
     var dueDate = parseDay(it.due);
     var complDate = parseDate(it.completionDate);
     // due date for open, completion date for completed todos
     var dueHtml = (it.completed == 0) ? dateHtml(dueDate): dateHtml(complDate);
     var isOverdue = it.completed==0 && dueDate != null && (today - dueDate) > 0;
-    var line = '<tr class="line'+
-        ((lineNr%2!=0)?' line_odd':'')+
+    var line = '<li class="todoItem'+
         ((it.completed==1)?' todo_completed':'')+
         ((it.deleted==1)?' todo_deleted':'')+
-            '" id="todo'+it.id+'">';
-    var overdue = isOverdue ? ' <span class="exclamation">'+icon('warning')+'</span>':'';
-    line += getTodoTitleHtml(it, lineNr, 'todo', 'td', true);
-    line +=  '<td class="start">'+((it.start == null)?'undef':formatDate(parseDay(it.start)))+'</td>'+
-        '<td class="due'+(isOverdue ? ' overdue' : '')+'">'+ dueHtml+overdue+'</td>'+
-        '<td class="effort">'+it.effort+'</td>'+
-        '<td class="actions">';
-    if (it.recurrenceMode != 0 && it.completed != 0) {
-        line += actionButton('reactivate', 'reactivate'+it.id, 'reactivateButton', 'repeat', $T('REACTIVATE'));
-    }
-    line += actionButton('modify', 'modify'+it.id, 'editButton', 'edit', $T('EDIT'))+
-        actionButton('dotoday', 'dotoday'+it.id, 'todayButton', 'today', $T('DOTODAY'));
+        (isOverdue ? ' overdue' : '')+
+        '" id="todo'+it.id+'">';
+    // deleted todos cannot be completed or reopened
+    line += '<span class="completed"><input type="checkbox" id="completed'+it.id+'" '+
+        ((it.completed==1)?'checked="true" ':'')+((it.deleted==1)?'disabled ':'')+
+        'aria-label="'+escapeHtml($T('DONE'))+'" /></span>';
+    line += '<button type="button" class="todoMain" id="open'+it.id+'" title="'+todoTooltip(it)+'">'+todoTitleHtml(it)+'</button>';
+    line += '<span class="todoDue">'+dueHtml+(isOverdue ? ' <span class="exclamation">'+icon('warning')+'</span>':'')+'</span>';
+    line += '<span class="todoActions">';
     if (it.deleted == 0) {
-        line += actionButton('trash', 'trash'+it.id, 'deleteButton', 'delete', $T('DELETE'));
+        line += iconButton('trash'+it.id, 'deleteButton', 'delete', $T('DELETE'));
     } else {
-        line += actionButton('restore', 'restore'+it.id, 'undeleteButton', 'restore', $T('RESTORE'));
+        line += iconButton('restore'+it.id, 'undeleteButton', 'restore', $T('RESTORE'));
     }
-    line += '</td></tr>';
-    $('#todoTable tbody').append(line);
+    line += '</span></li>';
+    $('#todoList').append(line);
     // a just added todo has no id yet, it is rendered again when it got one
     if (it.id != -1) {
         setListener(it.id);
-        // on narrow screens the edit button is hidden, a tap on the todo opens the dialog instead
-        $('#todo'+it.id+' td.todo').on('click', function(e) {
-            if (window.matchMedia(narrowScreenQuery).matches && $(e.target).closest('.completed').length == 0) {
-                modifyItem(it.id);
-            }
-        });
     }
 }
 

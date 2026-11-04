@@ -9,7 +9,7 @@ import { formatDate, parseDay, dateDiffInDays, addDays } from './dates.js';
 import { logItems } from './log.js';
 import { ItemSort } from './items.js';
 import { setupAjax } from './api.js';
-import { enter, emptyTrash, storeItem } from './actions.js';
+import { enter, emptyTrash, storeItem, doToday, reactivate, setTrashed } from './actions.js';
 import { toggleTagFilter, updateEnterDueLabel } from './render.js';
 import { reload, refresh, reloadTagList } from './load.js';
 import { setupDialogs, keepSuggestionsInDialog, showLogDialog, showTagsDialog, toggleRecurrenceAnchor, openTagDialog, tagDialogAction } from './dialogs.js';
@@ -38,6 +38,19 @@ function shiftDueWithStart(startSel, dueSel, fillEmptyDue) {
 }
 
 setupDialogs();
+
+// the actions of the dialog of an entry: they close it
+function onEntryAction(selector, action) {
+    $(selector).on('click', function() {
+        var id = parseInt($('#modify_id').val());
+        $('#modify_dialog')[0].close();
+        action(id);
+    });
+}
+onEntryAction('#modify_dotoday', doToday);
+onEntryAction('#modify_reactivate', reactivate);
+onEntryAction('#modify_trash', function(id) { setTrashed(id, true); });
+onEntryAction('#modify_restore', function(id) { setTrashed(id, false); });
 
 $('#modify_save').on('click', function() {
     // store...

@@ -48,6 +48,12 @@ and filled. Until then step 0 can only be prepared as files in a scratch directo
   chips (no Tagify there any more); "Manage tags" is a dialog which leads to the dialog of a tag. The statistics page has the
   same header. `tests/layout.test.js`.
 
+* Step 5b (rows): the table is a list (`<ul id="todoList">`). A row has the checkbox, the text with a note, the recurrence, a start
+  which is to come and the tag chips below it, the date, and the trash/restore button; **a tap or click on the text opens the
+  dialog at every width** (it was the pencil on a wide and a tap on a narrow screen), and the dialog has the actions which were
+  hidden on phones: do today, reactivate, delete, restore. No effort, line number or start column in the row (the dialog has
+  them). `tests/rows.test.js`.
+
 ## 1. Findings
 
 ### Structure and usability

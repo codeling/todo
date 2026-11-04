@@ -80,61 +80,120 @@ h2 {
     align-items: center;
     gap: 4px;
 }
-#todoTable {
-    width: 100%;
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    border-spacing: 0;
-}
-div.line,tr.line_odd {
-    background-color: var(--surface);
-}
-#todoTable td {
-    padding: 1px 0;
-}
-.line_input span,
-.line_header span {
-    padding-top: 3px !important;
-    padding-bottom: 2px !important;
-}
-.line_header {
-    background-color: var(--surface);
-}
 input[type="text"], input[type="date"] {
     font-family:Tahoma,sans-serif;
     font-size: 9pt;
 }
-input[type="image"] {
-    vertical-align: text-bottom;
-    height: 16px;
-}
-.todo {
-    text-align: left;
-}
-.todo img {
-    vertical-align: text-bottom;
-    margin-left: 5px;
-}
-.due,
-.actions {
-    white-space: nowrap;
+/* the line to enter an entry: the text, the start and due date, and the button */
+#enterLine {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
 }
 #enter_todo,#enter_start,#enter_due {
     border: 1px solid var(--border);
     border-radius: 3px;
-    padding: 2px;
+    padding: 4px;
     box-sizing: border-box;
 }
-td.start, td.due {
-	width: 110px;
-}
-.todo,
 #enter_todo {
-    padding-left: 4px !important;
+    flex: 1 1 auto;
+    min-width: 0;
 }
-#enter_todo {
-    margin-left: 5px;
-    width: 95%;
+#enterLine .start, #enterLine .due {
+    flex: none;
+    white-space: nowrap;
+}
+.date_caption {
+    color: var(--muted);
+}
+/* the entries: one row for each, the checkbox, the text with what else there is to know below it, the date, and the
+   button for the trash; a tap on the text opens the dialog with everything else */
+#todoList {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+}
+#todoList:empty {
+    display: none;
+}
+.todoItem {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 44px;
+    padding: 0 4px;
+}
+.todoItem:nth-child(even) {
+    background-color: var(--surface);
+}
+.completed {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 44px;
+}
+.completed input[type="checkbox"] {
+    width: 22px;
+    height: 22px;
+    margin: 0;
+    cursor: pointer;
+}
+.todoMain {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 6px 4px;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+.todoMain:focus-visible {
+    outline: 2px solid var(--focus);
+}
+/* (a title of two lines at most) */
+.todoTitle {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+}
+.todoMeta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
+    margin-top: 2px;
+}
+.todoStart {
+    color: var(--muted);
+    font-size: .9em;
+}
+.todoDue {
+    flex: none;
+    min-width: 5.5em;
+    text-align: right;
+    white-space: nowrap;
+    color: var(--muted);
+}
+.todoItem.overdue .todoDue {
+    color: var(--danger);
+    font-weight: bold;
+}
+.todoActions {
+    flex: none;
+}
+.todo_deleted .todoTitle {
+    text-decoration: line-through;
 }
 .todo_completed {
     color: var(--muted);
@@ -145,9 +204,6 @@ td.start, td.due {
 .todo_deleted {
     color: var(--muted);
 }
-.todo_deleted span:not(.date_year) {
-    text-decoration: line-through;
-}
 .todo_item_tags {
     display: inline-flex;
     flex-wrap: wrap;
@@ -156,22 +212,6 @@ td.start, td.due {
 }
 input[disabled="disabled"] {
     display: none;
-}
-.todo_lineNr {
-    display:inline-block;
-    width: 20px;
-    text-align:right;
-}
-.todo_tags {
-    font-style: italic;
-}
-.due, .start {
-    text-align: left;
-    padding-left: 5px;
-    padding-right: 5px;
-}
-.start {
-    margin-left: 5px;
 }
 #working {
     padding: 3px;
@@ -234,10 +274,6 @@ span.modify_desc {
     background-color: var(--ok);
     width: 50%;
     display: inline-block;
-}
-.effort {
-    width: 20px;
-    text-align: right;
 }
 #tag_dialog .tagify {
     width: 280px;
@@ -417,12 +453,6 @@ svg.icon {
     display: inline-block;
     line-height: 0;
 }
-.recurring {
-    margin-left: 4px;
-}
-.note {
-    margin-left: 10px;
-}
 
 /*********/
 /* Tagify */
@@ -530,44 +560,33 @@ svg.icon {
 /* Responsive design */
 @media (max-width: 575px)
 {
-	/* one line per todo: number, start date and effort hidden, a long title is cut off */
-	th.start, td.start, td.effort, .todo_lineNr {
+	/* the line to enter an entry: the text on a line of its own, then the dates and the button; the start date is
+	   left out (today), the due date of a new todo is the label (a calendar icon if empty) with the native
+	   date input on top of it, invisible, which opens the picker on tap */
+	#enterLine {
+		flex-wrap: wrap;
+	}
+	#enter_todo {
+		flex-basis: 100%;
+		width: 100%;
+	}
+	#enterLine .start, #enterLine .date_caption {
 		display: none;
 	}
-	#todoTable tbody tr {
-		font-size: 14px;
+	#enterLine .due {
+		display: inline-flex;
+		align-items: center;
+		margin-left: auto;
 	}
-	#todoTable tbody td {
-		height: 34px;
-		white-space: nowrap;
+	#enterLine .due .date_caption {
+		display: none;
 	}
-	td.todo {
-		width: 100%;
-		max-width: 0;
-		overflow: hidden;
-		text-overflow: ellipsis;
-	}
-	#todoTable tbody td.todo {
-		cursor: pointer;
-	}
-	.note, .recurring {
-		margin-left: 4px;
-	}
-	/* due date small and without the current year; overdue in red instead of the icon;
-	   right-aligned so that dates with and without year line up */
-	th.due, td.due {
-		width: auto;
-		padding: 0 4px;
-		text-align: right;
-	}
-	/* due date of a new todo: the label (calendar icon if empty) is shown,
-	   the native date input lies invisibly on top of it and opens the picker on tap */
 	.due_picker {
 		position: relative;
 		display: inline-block;
-		min-width: 28px;
-		height: 28px;
-		line-height: 28px;
+		min-width: 44px;
+		height: 36px;
+		line-height: 36px;
 		vertical-align: middle;
 	}
 	#enter_due {
@@ -582,40 +601,24 @@ svg.icon {
 	}
 	#enter_due_label {
 		display: block;
-		font-size: 11px;
+		font-size: 13px;
+		text-align: center;
 		color: var(--muted);
 	}
 	/* the calendar icon of the files, drawn with the color of the icons */
 	#enter_due_label:empty {
 		background-color: var(--icon-fg);
-		-webkit-mask: url('webicons/icons/today.svg') center / contain no-repeat;
-		mask: url('webicons/icons/today.svg') center / contain no-repeat;
-		height: 28px;
+		-webkit-mask: url('webicons/icons/today.svg') center / 28px no-repeat;
+		mask: url('webicons/icons/today.svg') center / 28px no-repeat;
+		height: 36px;
 	}
-	td.due {
-		font-size: 11px;
-		color: var(--muted);
+	/* a date is small and has no year if it is the current one; an overdue one is red, without the icon */
+	.todoDue {
+		min-width: 0;
+		font-size: 13px;
 	}
-	td.due.overdue {
-		color: var(--danger);
-		font-weight: bold;
-	}
-	td.due .exclamation, .date_year {
+	.todoDue .exclamation, .date_year {
 		display: none;
-	}
-	/* the edit dialog opens with a tap on the todo; "do today" is useless for completed ones */
-	td.actions .modify, .todo_completed td.actions .dotoday {
-		display: none;
-	}
-	td.actions {
-		text-align: right;
-	}
-	#todoTable {
-		width: 100%;
-	}
-	#enter_todo {
-		width: 100%;
-		margin-left: 0;
 	}
 	/* modify / tag dialog: labels above full-width fields */
 	span.modify_desc {
@@ -647,11 +650,6 @@ svg.icon {
 	.themeswitch svg.icon {
 		width: 24px;
 		height: 24px;
-	}
-	.completed input[type="checkbox"] {
-		width: 22px;
-		height: 22px;
-		vertical-align: middle;
 	}
 	/* font size of at least 16px prevents iOS from zooming in on focus */
 	input, input[type="text"], input[type="date"], select, textarea, .tagify__input {
@@ -738,6 +736,22 @@ dialog::backdrop {
 }
 .dialogButton:focus-visible {
 	outline: 2px solid var(--focus);
+}
+.dialog_actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-top: 12px;
+}
+.dialog_actions .dialogButton[hidden] {
+	display: none;
+}
+.dialogButton.danger svg.icon {
+	color: var(--danger);
+}
+.dialogButton[disabled] {
+	opacity: .5;
+	cursor: default;
 }
 .dialogButton.primary {
 	border-color: var(--ok);

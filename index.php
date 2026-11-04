@@ -27,6 +27,7 @@
           <h1><?php echo(TodoConstants::AppTitle); ?></h1>
           <div id="working"><?php echo(TodoLang::_("WORKING"));?></div>
           <div id="headerActions">
+            <?php echo(iconButton("refresh", "refreshButton", "refresh", TodoLang::_("REFRESH")));?>
             <?php echo(themeButtonHtml());?>
             <button type="button" id="menu_button" class="iconButton" popovertarget="main_menu" title="<?php echo(htmlspecialchars(TodoLang::_("MENU")));?>" aria-label="<?php echo(htmlspecialchars(TodoLang::_("MENU")));?>"><?php echo(iconSvg("menu"));?></button>
             <div id="main_menu" popover>
@@ -41,25 +42,14 @@
         <div id="tagbar" role="group" aria-label="<?php echo(htmlspecialchars(TodoLang::_("TAG_FILTER")));?>"></div>
         <div id="progress"><span id="progress_done">&nbsp;</span><span id="progress_todo">&nbsp;</span></div>
         <form method="POST" id="inputform">
-          <table id="todoTable">
-            <thead>
-            <tr>
-              <th class="todo"><?php echo(TodoLang::_("TODO"));?> <?php echo(iconButton("refresh", "refreshButton", "refresh", TodoLang::_("REFRESH")));?></th>
-              <th class="start"><?php echo(TodoLang::_("START"));?></th>
-              <th class="due"><?php echo(TodoLang::_("DUE"));?></th>
-              <th class="actions" colspan="2"><?php echo(TodoLang::_("ACTIONS"));?></th>
-            </tr>
-            <tr class="line line_input">
-              <td><input type="text" id="enter_todo" name="enter_todo" maxlength="255" /></td>
-              <td class="start"><input type="date" id="enter_start" name="enter_start" /></td>
-              <td class="due"><label class="due_picker"><input type="date" id="enter_due" name="enter_due" /><span id="enter_due_label"></span></label></td>
-              <td class="actions" colspan="2"><?php echo(iconButton("enter_save", "addButton", "add", TodoLang::_("SAVE")));?></td>
-            </tr>
-            </thead>
-            <tbody>
-            </tbody>
-          </table>
+          <div id="enterLine">
+            <input type="text" id="enter_todo" name="enter_todo" maxlength="255" />
+            <span class="start"><span class="date_caption"><?php echo(TodoLang::_("START"));?></span> <input type="date" id="enter_start" name="enter_start" /></span>
+            <span class="due"><span class="date_caption"><?php echo(TodoLang::_("DUE"));?></span> <label class="due_picker"><input type="date" id="enter_due" name="enter_due" /><span id="enter_due_label"></span></label></span>
+            <?php echo(iconButton("enter_save", "addButton", "add", TodoLang::_("SAVE")));?>
+          </div>
         </form>
+        <ul id="todoList"></ul>
         <div id="loadMoreBox">
             <a href="#" id="loadIncomplete"><?php echo(TodoLang::_("LOAD_INCOMPLETE"));?></a>
             <a href="#" id="loadLessCompleted"><?php echo(TodoLang::_("LOAD_LESS_COMPLETED"));?></a>
@@ -113,6 +103,12 @@
           </select>
         </div>
       </form>
+      <div class="dialog_actions">
+        <?php echo(dialogButtonHtml("modify_dotoday", "", TodoLang::_("DOTODAY"), "today")); ?>
+        <?php echo(dialogButtonHtml("modify_reactivate", "", TodoLang::_("REACTIVATE"), "repeat")); ?>
+        <?php echo(dialogButtonHtml("modify_trash", "danger", TodoLang::_("DELETE"), "delete")); ?>
+        <?php echo(dialogButtonHtml("modify_restore", "", TodoLang::_("RESTORE"), "restore")); ?>
+      </div>
       </div>
       <div class="dialog_footer">
         <?php echo(dialogCancelButtonHtml().dialogButtonHtml("modify_save", "primary", TodoLang::_("SAVE"), "check")); ?>

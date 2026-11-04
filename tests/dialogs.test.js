@@ -23,7 +23,7 @@ async function openPage(options = {}) {
         (e) => console.error('CSP violation: ' + e.violatedDirective + ' ' + e.blockedURI)));
     await page.goto(BASE + '/index.php');
     await page.waitForFunction(() => typeof todoApp !== 'undefined' && Array.isArray(todoApp.state.itemList));
-    await page.waitForSelector('#todoTable tbody tr');
+    await page.waitForSelector('#todoList > li');
     await page.waitForTimeout(300);
     return page;
 }
@@ -46,7 +46,7 @@ async function openTagDialogFor(page, name) {
     await page.locator('#tags_dialog_list .tagManage', { hasText: name }).first().click();
     await page.waitForSelector('#tag_dialog[open]');
 }
-const edit = (page) => page.locator('#todoTable tbody tr').first().locator('.editButton').click();
+const edit = (page) => page.locator('#todoList > li').first().locator('.todoMain').click();
 
 test('jQuery UI is gone: no script, no style sheet, no $.ui', async () => {
     seed();
@@ -74,7 +74,7 @@ test('the entry dialog is modal, closes with Escape, Cancel and the close button
     await page.keyboard.press('Escape');
     assert.equal(await page.locator('#modify_dialog').isVisible(), false);
     await edit(page);
-    await page.click('#modify_dialog .dialogButton:not(.primary)');   // Cancel
+    await page.click('#modify_dialog .dialog_footer [data-dialog-close]');   // Cancel
     assert.equal(await page.locator('#modify_dialog').isVisible(), false);
     await edit(page);
     await page.click('#modify_dialog .dialog_close');
@@ -88,7 +88,7 @@ test('the entry dialog is modal, closes with Escape, Cancel and the close button
     await page.fill('#modify_todo', 'First entry, changed');
     await page.click('#modify_save');
     await page.waitForFunction(() => document.querySelector('#modify_dialog').open === false);
-    assert.equal(await page.locator('#todoTable tbody tr td.todo > span:not([class])').first().textContent(), 'First entry, changed');
+    assert.equal(await page.locator('#todoList .todoTitle').first().textContent(), 'First entry, changed');
     assert.deepEqual(page.errors, []);
     await page.context().close();
 });
@@ -169,7 +169,7 @@ test('the log and the tag dialog open and close', async () => {
 test('on a narrow screen a dialog fills the screen, its body scrolls and the footer stays in view', async () => {
     seed();
     const page = await openPage({ viewport: { width: 400, height: 700 } });
-    await page.locator('#todoTable tbody tr').first().locator('td.todo').click();   // a tap on the entry
+    await page.locator('#todoList > li').first().locator('.todoMain').click();   // a tap on the entry
     assert.equal(await isOpen(page, '#modify_dialog'), true);
     const box = await page.locator('#modify_dialog').boundingBox();
     assert.deepEqual([box.x, box.y, box.width, box.height], [0, 0, 400, 700]);
@@ -194,7 +194,7 @@ test('on a wide screen a dialog is centered, not wider than its size and not wid
     await page.keyboard.press('Escape');
     // rotating or resizing a phone: the dialog is never wider than the screen
     await page.setViewportSize({ width: 450, height: 700 });
-    await page.locator('#todoTable tbody tr').first().locator('td.todo').click();   // (the edit button is not shown on a narrow screen)
+    await page.locator('#todoList > li').first().locator('.todoMain').click();
     assert.ok((await page.locator('#modify_dialog').boundingBox()).width <= 450);
     assert.deepEqual(page.errors, []);
     await page.context().close();

@@ -246,16 +246,19 @@ for (const scheme of ['light', 'dark']) {
         sql("UPDATE todo SET completed=1, completionDate=UTC_TIMESTAMP() WHERE description='Done entry'; " +
             "INSERT INTO tags (name) VALUES ('work'); INSERT INTO todo_tags SELECT t.id, g.id FROM todo t, tags g WHERE t.description='Plain entry'");
         const page = await openPage('/index.php?', { colorScheme: scheme, viewport: { width: 420, height: 800 } });
-        await page.waitForSelector('#todoTable tbody tr');
+        await page.waitForSelector('#todoList > li');
         const checks = {
             'the page': 'body',
-            'the header of the table': 'th.todo',
-            'an entry': '#todoTable tbody td.todo > span:not([class])',
-            'a completed entry': '.todo_completed td.todo > span:not([class])',
-            'an overdue date': 'td.due.overdue',
-            'a date': 'td.due:not(.overdue)',
+            'an entry': '#todoList .todoTitle',
+            'a completed entry': '.todo_completed .todoTitle',
+            'a tag in a row': '#todoList .tagChip',
+            'an overdue date': '.todoItem.overdue .todoDue',
+            'a date': '.todoItem:not(.overdue) .todoDue',
+            'a date shown as a caption': '#enterLine .date_caption',
             'a link': '#loadMoreBox a',
             'a list': '#lists .listTab[aria-current="false"]',
+            'the list which is shown': '#lists .listTab[aria-current="true"]',
+            'a tag which filters': '#tagbar .tagFilter[aria-pressed="false"]',
             'the entry field': '#enter_todo',
         };
         for (const [name, selector] of Object.entries(checks)) {
@@ -272,8 +275,8 @@ for (const scheme of ['light', 'dark']) {
         const menu = await textAndBackground(page, '#manageTags');
         assert.ok(contrast(menu.text, menu.background) >= 4.5, 'the menu ' + JSON.stringify(menu));
         await page.keyboard.press('Escape');
-        // the border of the table is visible against the page (a graphical object needs 3:1)
-        const border = await page.locator('#todoTable').evaluate((e) => getComputedStyle(e).borderTopColor);
+        // the border of the list is visible against the page (a graphical object needs 3:1)
+        const border = await page.locator('#todoList').evaluate((e) => getComputedStyle(e).borderTopColor);
         const page_ = await textAndBackground(page, 'body');
         const rgb = border.match(/[\d.]+/g).slice(0, 3).map(Number);
         assert.ok(contrast(rgb, page_.background) >= 3, 'table border ' + border);
