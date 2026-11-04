@@ -111,6 +111,26 @@ test('the tags are chips above the table: a pressed chip filters, any of the pre
     await page.context().close();
 });
 
+test('the tag chips are only those of the entries which are shown, with their counts', async () => {
+    seed();
+    // a tag of a completed entry which is too old to be shown, and of a second entry which is shown
+    sql("INSERT INTO todo (creationDate, description, startDate, list_id, completed, completionDate) VALUES " +
+        "(UTC_TIMESTAMP(), 'Ancient', UTC_DATE(), 0, 1, UTC_TIMESTAMP() - INTERVAL 100 DAY); " +
+        "INSERT INTO tags (name) VALUES ('archive'); " +
+        "INSERT INTO todo_tags SELECT t.id, g.id FROM todo t, tags g WHERE t.description='Ancient' AND g.name IN ('archive', 'home')");
+    const page = await openPage();
+    assert.deepEqual((await titles(page)).sort(), ['Buy milk', 'Call Bob', 'Untagged', 'Write report']);
+    // (the count of 'home' is of the shown entries, too: 'Ancient' is not one of them)
+    assert.deepEqual(await chips(page), [['home', 'false', '2'], ['work', 'false', '2']]);
+    // after "load more", the entry and its tag are there
+    await page.evaluate(() => { todoApp.state.reloadData.age = 200; });
+    await page.evaluate(() => document.querySelector('#loadMoreCompleted').click());
+    await page.waitForFunction(() => document.querySelector('#tagbar .tagFilter[data-tag="archive"]'));
+    assert.deepEqual(await chips(page), [['home', 'false', '3'], ['work', 'false', '2'], ['archive', 'false', '1']]);
+    assert.deepEqual(page.errors, []);
+    await page.context().close();
+});
+
 test('a tag which is deleted is no filter any more', async () => {
     seed();
     const page = await openPage();

@@ -7,7 +7,7 @@ export const state = {
     // holds all lists of current user
     lists: undefined,
 
-    // the tags of the current list with their counts
+    // the tags of the current list with their counts (for the dialogs; the chips above the table are made from the entries)
     tagList: undefined,
 
     // the names of the tags which the table is filtered by (the chips above it): entries with any of them are

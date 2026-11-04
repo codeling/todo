@@ -12,8 +12,9 @@ import { toggleCompleted, setTrashed } from './actions.js';
 import { modifyItem } from './dialogs.js';
 import { reload, reloadTagList } from './load.js';
 
-// shows the table and the progress bar again after the list changed
+// shows the tags, the table and the progress bar again after the list changed
 export function refreshView() {
+    renderTagBar();
     renderTable();
     updateProgress();
     updateMenu();
@@ -233,25 +234,37 @@ function renderItem(it) {
 }
 
 
-// the chips above the table: one for each tag of the list, which filters the table when it is pressed
-export function fillTagList(choices)
+// the chips above the table: one for each tag of the entries which are shown (not of all entries of the list, as
+// that are too many chips on a narrow screen), with the number of those entries; a chip filters the table when it
+// is pressed. The filter itself does not hide tags (any of the pressed tags counts), so they are taken from all
+// loaded entries, not just from the filtered ones.
+export function renderTagBar()
 {
-    // (a tag which was deleted, renamed or merged is no filter any more)
-    var names = choices.map(function(tag) { return tag.name; });
-    state.filterTags = state.filterTags.filter(function(name) { return names.indexOf(name) != -1; });
-    $('#tagbar').empty();
-    for (var i=0; i<choices.length; i++) {
-        $('<button type="button" class="tagChip tagFilter"></button>')
-            .text(choices[i].name)
-            .append($('<span class="tagCount"></span>').text(choices[i].tagCount))
-            .attr('aria-pressed', state.filterTags.indexOf(choices[i].name) != -1 ? 'true' : 'false')
-            .attr('data-tag', choices[i].name)
-            .appendTo('#tagbar');
-    }
     // (the entries may not be there yet; they are shown when they arrive)
-    if (state.itemList !== undefined) {
-        renderTable();
+    if (state.itemList === undefined) {
+        return;
     }
+    var counts = {};
+    state.itemList.forEach(function(item) {
+        item.tags.forEach(function(name) {
+            counts[name] = (counts[name] || 0) + 1;
+        });
+    });
+    // (a tag which was deleted, renamed or merged, or whose entries are not shown any more, is no filter any more)
+    state.filterTags = state.filterTags.filter(function(name) { return counts[name] !== undefined; });
+    // the most used first, tags with the same count by name
+    var names = Object.keys(counts).sort(function(a, b) {
+        return (counts[b] - counts[a]) || (a < b ? -1 : (a > b ? 1 : 0));
+    });
+    $('#tagbar').empty();
+    names.forEach(function(name) {
+        $('<button type="button" class="tagChip tagFilter"></button>')
+            .text(name)
+            .append($('<span class="tagCount"></span>').text(counts[name]))
+            .attr('aria-pressed', state.filterTags.indexOf(name) != -1 ? 'true' : 'false')
+            .attr('data-tag', name)
+            .appendTo('#tagbar');
+    });
 }
 
 
