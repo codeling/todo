@@ -25,7 +25,42 @@ and filled. Until then step 0 can only be prepared as files in a scratch directo
 * Step 0: `codeling/webicons` has 30 icons, `check.js`, `preview.html`, README (convention), CI. w2wiki uses it
   (PR #105). The icons were drawn new in one outline style (lines of 1.25), because the origin of the old
   w2wiki icons is not recorded; only the three `theme-*` circles are the old ones.
-* Step 1: the colors of `todo.css` are custom properties (this repo, same PR as this file).
+* Step 1: the colors of `todo.css` are custom properties (todo #47, merged; w2wiki #105 merged).
+* Step 2: todo uses the icons of `webicons/` (subtree): `iconSvg()`/`iconButton()` in `todo-core.php`, `icon()`/`iconButton()`
+  in `js/html.js`, buttons are `<button>`s with an inline SVG, the data-URI backgrounds are gone, `tests/icons.test.js`
+  checks the files and that every icon the code uses exists. Layout unchanged (compared in screenshots against the
+  version before). "Restore" (undelete) is the `restore` icon (a counter-clockwise arrow with a clock), not the old
+  bin with an arrow; the save buttons are `check` instead of the pencil. Two-tone icons (note, undelete) are one color.
+
+* Step 3: dark mode: `light-dark()` tokens in `todo.css`, cookie `todo_theme` (`queries/theme.php`), `js/theme.js`, the button
+  on the list and the statistics page (`themeButtonHtml()`), Tagify variables, favicon, `tests/theme.test.js` (endpoint, cookie,
+  button, persistence, contrast of the texts in both schemes). The light red (`--danger`) is a little darker (`#C3283A`) so that
+  the overdue date has 4.5:1; the muted grey is `#666`.
+
+* Step 4: native `<dialog>` elements (`showModal()`, header with the title and the close button, scrolling body, footer
+  with Cancel and Save; a full-screen sheet on narrow screens), jQuery UI removed (`package.json`, `scripts/vendor.sh`, `vendor/`,
+  the overrides in `todo.css`). A modal dialog covers everything else on the page, so Tagify's lists of suggestions are put into
+  the dialog and placed by `keepSuggestionsInDialog()` (Tagify's own placement is wrong inside a dialog). `tests/dialogs.test.js`.
+
+* Step 5a (header and tags): no sidebar and no small log. The header has the title, the color scheme button and a menu (a popover:
+  Empty trash (only if there is something in the trash), Manage tags, Statistics, Show log); the lists are tabs (buttons,
+  `aria-current`); the tags are chips above the table which filter it (any of the pressed ones), in the rows they are plain
+  chips (no Tagify there any more); "Manage tags" is a dialog which leads to the dialog of a tag. The statistics page has the
+  same header. `tests/layout.test.js`.
+
+* Step 5b (rows): the table is a list (`<ul id="todoList">`). A row has the checkbox, the text with a note, the recurrence, a start
+  which is to come and the tag chips below it, the date, and the trash/restore button; **a tap or click on the text opens the
+  dialog at every width** (it was the pencil on a wide and a tap on a narrow screen), and the dialog has the actions which were
+  hidden on phones: do today, reactivate, delete, restore. No effort, line number or start column in the row (the dialog has
+  them). `tests/rows.test.js`.
+
+* Step 5c (adding, messages, home screen): Enter adds the entry (the form had no submit button and three fields, so it did not),
+  with a placeholder which says how tags are entered; on a phone the line to enter an entry is a bar at the bottom (thumb, stays
+  while the list scrolls, safe area of the screen); `alert()` is replaced by messages (`js/toast.js`; a failure is `role="alert"`;
+  one inside an open dialog, because everything outside a modal dialog is inert), moving an entry to the trash has an Undo; a web
+  app manifest with icons so that the page can be put on the home screen (`crossorigin="use-credentials"`: the login of the web
+  server). Not done: `pt` to `rem` for all sizes (the sizes of the new elements are in px, the body is 15px on phones).
+  `tests/quickadd.test.js`.
 
 ## 1. Findings
 

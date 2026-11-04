@@ -4,11 +4,11 @@
 // lists reloads (load.js); they call back here to show the result. So render.js, actions.js, dialogs.js
 // and load.js import each other, which is fine as long as they only call each other's functions when
 // an event happens, and not while the modules are loaded.
-import { state, narrowScreenQuery } from './state.js';
+import { state } from './state.js';
 import { parseDate, parseDay, formatDate } from './dates.js';
-import { escapeHtml, textToHtml } from './html.js';
+import { escapeHtml, textToHtml, icon, iconButton } from './html.js';
 import { ItemSort, getTodoWithTag } from './items.js';
-import { toggleCompleted, setTrashed, doToday, reactivate } from './actions.js';
+import { toggleCompleted, setTrashed } from './actions.js';
 import { modifyItem } from './dialogs.js';
 import { reload, reloadTagList } from './load.js';
 
@@ -16,31 +16,31 @@ import { reload, reloadTagList } from './load.js';
 export function refreshView() {
     renderTable();
     updateProgress();
+    updateMenu();
 }
 
 
+// "Empty trash" is only there if there is something in the trash
+function updateMenu() {
+    var hasTrash = state.itemList.some(function(item) { return item.deleted == 1; });
+    $('#emptyTrash').prop('hidden', !hasTrash);
+}
+
+
+// the checkbox completes the entry, a tap on the entry opens its dialog (which has all other actions: change,
+// do today, reactivate), the button at the right moves it to the trash or back
 function setListener(id) {
     $('#completed'+id).on('click', function() {
         toggleCompleted(id);
     });
-    if ($('#modify'+id).length !== 0) {
-        $('#modify'+id).on('click', function() {
-            modifyItem(id);
-        });
-    }
-    if ($('#dotoday'+id).length !== 0) {
-        $('#dotoday'+id).on('click', function() {
-            doToday(id);
-        });
-    }
+    $('#open'+id).on('click', function() {
+        modifyItem(id);
+    });
     $('#trash'+id).on('click', function() {
         setTrashed(id, true);
     });
     $('#restore'+id).on('click', function() {
         setTrashed(id, false);
-    });
-    $('#reactivate'+id).on('click', function() {
-        reactivate(id);
     });
 }
 
@@ -60,42 +60,46 @@ export function renderTable() {
     clearTable();
     var filtered = filterList();
     for (var i=0; i<filtered.length; i++) {
-        renderItem(filtered[i], i);
+        renderItem(filtered[i]);
     }
 }
 
 
-function renderList(listItem)
-{
-    var liItem = $('<li></li>').text(listItem.name).data('list_id', listItem.id);
-    $('#lists ul').append(liItem);
-}
-
+// the lists: a button for each (a tab), the one which is shown is marked
 export function renderLists() {
-    $('#lists ul').empty();
+    $('#lists').empty();
     for (var i=0; i<state.lists.length; ++i) {
-        renderList(state.lists[i]);
+        $('<button type="button" class="listTab"></button>').text(state.lists[i].name)
+            .attr('aria-current', state.lists[i].id == state.reloadData.list_id ? 'true' : 'false')
+            .attr('data-list-id', state.lists[i].id).appendTo('#lists');
     }
-    $('#lists ul li').on('click', function(event) { 
-        state.reloadData.list_id = $(this).data('list_id');
+    $('#lists .listTab').on('click', function() {
+        var id = $(this).attr('data-list-id');
+        if (id == state.reloadData.list_id) {
+            return;
+        }
+        state.reloadData.list_id = id;
+        // (the tags of the other list are other tags)
+        state.filterTags = [];
+        $('#lists .listTab').attr('aria-current', 'false');
+        $(this).attr('aria-current', 'true');
         reload();
         reloadTagList();
     });
 
     $('#modify_list').empty();
-    for (var i=0; i<state.lists.length; ++i) {
-        $('#modify_list').append($('<option></option>').val(state.lists[i].id).text(state.lists[i].name));
+    for (var j=0; j<state.lists.length; ++j) {
+        $('#modify_list').append($('<option></option>').val(state.lists[j].id).text(state.lists[j].name));
     }
 }
 
 
 function filterList() {
     var result;
-    var filterTags = state.filterTagify.value.map((tag) => tag.value);
-    if (filterTags.length == 0) {
+    if (state.filterTags.length == 0) {
         result = state.itemList.slice(0);
     } else {
-        result = getTodoWithTag(filterTags);
+        result = getTodoWithTag(state.filterTags);
     }
     result.sort(ItemSort);
     return result;
@@ -129,58 +133,52 @@ function updateProgress() {
 
 function clearTable()
 {
-    $("#todoTable tbody").empty();
+    $("#todoList").empty();
 }
 
 
-// Shows the tags (an array of names) of a todo in an empty input field.
-// They are added one by one and not as the value of the input: Tagify parses a value which
-// looks like JSON and writes the keys of the objects into the tag element as attribute
-// names, without escaping them, so a tag named like that could inject HTML.
-export function showReadOnlyTags(inputElem, tags) {
-    var tagify = new Tagify(inputElem, { readOnly: true });
-    tagify.addTags(tags.map(function(tag) {
-        return tag.trim();
-    }).filter(function(tag) {
-        return tag != '';
-    }));
+// the tags of an entry as plain chips (text only; the names are escaped like all texts of the page)
+function tagChipsHtml(tags) {
+    return tags.map(function(tag) { return tag.trim(); }).filter(function(tag) { return tag != ''; })
+        .map(function(tag) { return '<span class="tagChip">'+escapeHtml(tag)+'</span>'; }).join('');
 }
 
 
-export function getTodoTitleHtml(it, lineNr, tagbasename, spanCssClass, baseElem, checkbox) {
-    var isRecurring = it.recurrenceMode != 0;
-    var hasNote = it.notes != null && it.notes != '';
-    var hasTags = it.tags.length > 0;
+// the tooltip of an entry: when it was created, how it recurs, when it was done
+function todoTooltip(it) {
     var createDate = parseDate(it.creationDate);
+    var complDate = parseDate(it.completionDate);
     // label of the recurrence option (DOM text), goes into an HTML attribute:
     var repetition = escapeHtml(getRecurrenceString(it.recurrenceMode, it.recurrenceInterval));
-    var complDate = parseDate(it.completionDate);
-    var line = '<'+baseElem+' class="'+spanCssClass+'" title="'+$T('CREATED')+': '+formatDate(createDate, true)+
-            '; '+$T('RECURRENCE')+': '+repetition+
-        ((it.completed != 0)? '; '+$T('DONE')+': '+formatDate(complDate, true):'')+
-            '">';
-    if (checkbox)
-    {
-        // deleted todos cannot be completed or reopened
-        line += '<span class="completed"><input type="checkbox" id="completed'+it.id+'" '+
-            ((it.completed==1)?'checked="true" ':'')+((it.deleted==1)?'disabled ':'')+'/></span>';
-    }
-    line += '<span class="todo_lineNr">'+(lineNr+1)+'.</span> '+
-            '<span>'+textToHtml(it.todo)+'</span>'+
-            (hasNote ? '<span class="note" title="'+textToHtml(it.notes)+'"></span>':'')+
-            (isRecurring ? '<span class="recurring" title="'+repetition+'"></span>':'');
-    if (hasTags) {
-        line += ' <input id="'+tagbasename+it.id+'" class="todo_item_tags" readonly>';
-    }
-    line += '</'+baseElem+'>';
-    return line;
+    return $T('CREATED')+': '+formatDate(createDate, true)+'; '+$T('RECURRENCE')+': '+repetition+
+        ((it.completed != 0)? '; '+$T('DONE')+': '+formatDate(complDate, true):'');
 }
 
 
-// action button; the label is shown as tooltip and read by screen readers
-function actionButton(spanClass, id, buttonClass, label) {
-    return '<span class="'+spanClass+'"><input type="button" id="'+id+'" class="iconButton '+buttonClass+
-        '" title="'+escapeHtml(label)+'" aria-label="'+escapeHtml(label)+'" /></span>';
+// the text of an entry and, below it, what else there is to know: a note, that it recurs, when it starts (if that
+// is still to come), its tags
+function todoTitleHtml(it) {
+    var meta = '';
+    if (it.notes != null && it.notes != '') {
+        meta += '<span class="note" title="'+textToHtml(it.notes)+'">'+icon('note')+'</span>';
+    }
+    if (it.recurrenceMode != 0) {
+        meta += '<span class="recurring" title="'+escapeHtml(getRecurrenceString(it.recurrenceMode, it.recurrenceInterval))+'">'+icon('repeat')+'</span>';
+    }
+    var start = parseDay(it.start);
+    if (it.completed == 0 && start != null && start > new Date()) {
+        meta += '<span class="todoStart">'+escapeHtml($T('START'))+' '+formatDate(start)+'</span>';
+    }
+    if (it.tags.length > 0) {
+        meta += '<span class="todo_item_tags">'+tagChipsHtml(it.tags)+'</span>';
+    }
+    return '<span class="todoTitle">'+textToHtml(it.todo)+'</span>'+(meta == '' ? '' : '<span class="todoMeta">'+meta+'</span>');
+}
+
+
+// an entry in the dialog of a tag
+export function tagTodoHtml(it) {
+    return '<div class="tagTodo" title="'+todoTooltip(it)+'">'+todoTitleHtml(it)+'</div>';
 }
 
 
@@ -202,62 +200,71 @@ export function updateEnterDueLabel() {
 }
 
 
-function renderItem(it, lineNr) {
+function renderItem(it) {
     var today   = new Date();
     var dueDate = parseDay(it.due);
     var complDate = parseDate(it.completionDate);
     // due date for open, completion date for completed todos
     var dueHtml = (it.completed == 0) ? dateHtml(dueDate): dateHtml(complDate);
     var isOverdue = it.completed==0 && dueDate != null && (today - dueDate) > 0;
-    var line = '<tr class="line'+
-        ((lineNr%2!=0)?' line_odd':'')+
+    var line = '<li class="todoItem'+
         ((it.completed==1)?' todo_completed':'')+
         ((it.deleted==1)?' todo_deleted':'')+
-            '" id="todo'+it.id+'">';
-    var overdue = isOverdue ? ' <span class="exclamation"></span>':'';
-    var tagbasename = 'todo_tags_';
-    line += getTodoTitleHtml(it, lineNr, tagbasename, 'todo', 'td', true);
-    line +=  '<td class="start">'+((it.start == null)?'undef':formatDate(parseDay(it.start)))+'</td>'+
-        '<td class="due'+(isOverdue ? ' overdue' : '')+'">'+ dueHtml+overdue+'</td>'+
-        '<td class="effort">'+it.effort+'</td>'+
-        '<td class="actions">';
-    if (it.recurrenceMode != 0 && it.completed != 0) {
-        line += actionButton('reactivate', 'reactivate'+it.id, 'reactivateButton', $T('REACTIVATE'));
-    }
-    line += actionButton('modify', 'modify'+it.id, 'editButton', $T('EDIT'))+
-        actionButton('dotoday', 'dotoday'+it.id, 'todayButton', $T('DOTODAY'));
+        (isOverdue ? ' overdue' : '')+
+        '" id="todo'+it.id+'">';
+    // deleted todos cannot be completed or reopened
+    line += '<span class="completed"><input type="checkbox" id="completed'+it.id+'" '+
+        ((it.completed==1)?'checked="true" ':'')+((it.deleted==1)?'disabled ':'')+
+        'aria-label="'+escapeHtml($T('DONE'))+'" /></span>';
+    line += '<button type="button" class="todoMain" id="open'+it.id+'" title="'+todoTooltip(it)+'">'+todoTitleHtml(it)+'</button>';
+    line += '<span class="todoDue">'+dueHtml+(isOverdue ? ' <span class="exclamation">'+icon('warning')+'</span>':'')+'</span>';
+    line += '<span class="todoActions">';
     if (it.deleted == 0) {
-        line += actionButton('trash', 'trash'+it.id, 'deleteButton', $T('DELETE'));
+        line += iconButton('trash'+it.id, 'deleteButton', 'delete', $T('DELETE'));
     } else {
-        line += actionButton('restore', 'restore'+it.id, 'undeleteButton', $T('RESTORE'));
+        line += iconButton('restore'+it.id, 'undeleteButton', 'restore', $T('RESTORE'));
     }
-    line += '</td></tr>';
-    $('#todoTable tbody').append(line);
-    var elem = $('#'+tagbasename+it.id);
-    if (it.tags.length > 0) {
-        showReadOnlyTags(elem[0], it.tags);
-    }
+    line += '</span></li>';
+    $('#todoList').append(line);
     // a just added todo has no id yet, it is rendered again when it got one
     if (it.id != -1) {
         setListener(it.id);
-        // on narrow screens the edit button is hidden, a tap on the todo opens the dialog instead
-        $('#todo'+it.id+' td.todo').on('click', function(e) {
-            if (window.matchMedia(narrowScreenQuery).matches && $(e.target).closest('.completed').length == 0) {
-                modifyItem(it.id);
-            }
-        });
     }
 }
 
 
+// the chips above the table: one for each tag of the list, which filters the table when it is pressed
 export function fillTagList(choices)
 {
-    if (state.tagListTagify) {
-        state.tagListTagify.removeAllTags();
-    } else {
-        state.tagListTagify = new Tagify($('#taglist input')[0], { readonly: true } );
-    }
+    // (a tag which was deleted, renamed or merged is no filter any more)
+    var names = choices.map(function(tag) { return tag.name; });
+    state.filterTags = state.filterTags.filter(function(name) { return names.indexOf(name) != -1; });
+    $('#tagbar').empty();
     for (var i=0; i<choices.length; i++) {
-        state.tagListTagify.addTags([ choices[i].name ]);
+        $('<button type="button" class="tagChip tagFilter"></button>')
+            .text(choices[i].name)
+            .append($('<span class="tagCount"></span>').text(choices[i].tagCount))
+            .attr('aria-pressed', state.filterTags.indexOf(choices[i].name) != -1 ? 'true' : 'false')
+            .attr('data-tag', choices[i].name)
+            .appendTo('#tagbar');
     }
+    // (the entries may not be there yet; they are shown when they arrive)
+    if (state.itemList !== undefined) {
+        renderTable();
+    }
+}
+
+
+// a chip of the tag bar was pressed: the tag is a filter, or not any more
+export function toggleTagFilter(name) {
+    var index = state.filterTags.indexOf(name);
+    if (index == -1) {
+        state.filterTags.push(name);
+    } else {
+        state.filterTags.splice(index, 1);
+    }
+    $('#tagbar .tagFilter').each(function() {
+        $(this).attr('aria-pressed', state.filterTags.indexOf($(this).attr('data-tag')) != -1 ? 'true' : 'false');
+    });
+    renderTable();
 }

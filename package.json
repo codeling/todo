@@ -8,8 +8,7 @@
   },
   "dependencies": {
     "@yaireo/tagify": "4.39.0",
-    "jquery": "4.0.0",
-    "jquery-ui": "1.14.2"
+    "jquery": "4.0.0"
   },
   "devDependencies": {
     "playwright": "1.64.1"

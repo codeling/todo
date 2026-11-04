@@ -35,6 +35,9 @@ RedirectMatch 301 ^(.*/)statistik\.php$ $1statistics.php
     Require all denied
 </FilesMatch>
 
+# the manifest of the web app (a home screen icon on a phone); not every server knows the extension
+AddType application/manifest+json .webmanifest
+
 <IfModule mod_headers.c>
     Header always set X-Content-Type-Options "nosniff"
     Header always set X-Frame-Options "DENY"

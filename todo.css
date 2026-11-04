@@ -1,23 +1,50 @@
 /**********/
 /* Colors */
-/* every color of the page is one of these; the dark scheme only has to give them other values */
+/* every color of the page is one of the custom properties below, with a value for each of the two color schemes */
 :root {
-    --page-bg: #F8F8F8;
-    --page-fg: black;
-    --surface: #EEE;
-    --border: black;
-    --muted: #777;
-    --ok: #0A0;
-    --danger: #D45;
-    --hover-bg: #DDD;
-    --chart-bar: blue;
+    color-scheme: light dark;
+}
+/* the scheme which the visitor chose with the button (a cookie, see todo-core.php and js/theme.js), else the system's */
+:root[data-theme="light"] {
+    color-scheme: light;
+}
+:root[data-theme="dark"] {
+    color-scheme: dark;
+}
+/* (light-dark() takes the first color in the light scheme and the second in the dark one) */
+:root {
+    --page-bg: light-dark(#F8F8F8, #1c1c1e);
+    --page-fg: light-dark(black, #e4e4e4);
+    --surface: light-dark(#EEE, #2a2a2d);
+    --border: light-dark(black, #8a8a8e);
+    --muted: light-dark(#666, #a0a0a5);
+    --ok: light-dark(#0A0, #4cc764);
+    --danger: light-dark(#C3283A, #ff6b7a);
+    --hover-bg: light-dark(#DDD, #3a3a3e);
+    --icon-fg: light-dark(#444, #e0e0e0);
+    --focus: light-dark(#4466cc, #8ab4ff);
+    --accent: light-dark(#3a5fc0, #8ab4ff);
+    --on-accent: light-dark(white, #111);
+    --chip-bg: light-dark(#E5E5E5, #3a3a3e);
+    --toast-bg: light-dark(#333333, #3a3a3e);
+    --toast-fg: light-dark(#ffffff, #f0f0f0);
+    --toast-action: #8ab4ff;
+    --chart-bar: light-dark(blue, #3d6fd8);
     --chart-on-bar: white;
-    --chart-off-label: black;
+    --chart-off-label: light-dark(black, #e4e4e4);
+    --backdrop: light-dark(rgba(0, 0, 0, .4), rgba(0, 0, 0, .65));
+    /* Tagify (vendor/tagify/tagify.css) takes its colors from these */
+    --tagify-dd-text-color: var(--page-fg);
+    --tagify-dd-bg-color: light-dark(white, #2c2c2e);
 }
 
 /**************/
 /* Common CSS */
 
+/* (no delay and no zoom by a double tap on the controls) */
+button, a, input, select, label, summary {
+    touch-action: manipulation;
+}
 body {
     font-family:Tahoma,sans-serif;
     background-color: var(--page-bg);
@@ -34,75 +61,146 @@ h2 {
     font-size: 14pt;
     font-weight: bold;
 }
-.linkblock {
-    float:right;
-} 
+
 
 /*************/
 /* ToDo List */
 #todo_content, #headerLine {
     display: flex;
 }
+/* the page of the list: one column */
+#todo_content.todo_page {
+    display: block;
+    max-width: 960px;
+    margin: 0 auto;
+}
 #headerLine {
-    align-items: flex-end;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
 }
-#todoTable {
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    border-spacing: 0;
+#headerLine h1 {
+    margin-right: auto;
 }
-div.line,tr.line_odd {
-    background-color: var(--surface);
-}
-#todoTable td {
-    padding: 1px 0;
-}
-#mainContent {
-    margin-left: auto;
-}
-.line_input span,
-.line_header span {
-    padding-top: 3px !important;
-    padding-bottom: 2px !important;
-}
-.line_header {
-    background-color: var(--surface);
+#headerActions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 input[type="text"], input[type="date"] {
     font-family:Tahoma,sans-serif;
     font-size: 9pt;
 }
-input[type="image"] {
-    vertical-align: text-bottom;
-    height: 16px;
-}
-.todo {
-    text-align: left;
-}
-.todo img {
-    vertical-align: text-bottom;
-    margin-left: 5px;
-}
-.due,
-.actions {
-    white-space: nowrap;
+/* the line to enter an entry: the text, the start and due date, and the button */
+#enterLine {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
 }
 #enter_todo,#enter_start,#enter_due {
     border: 1px solid var(--border);
     border-radius: 3px;
-    padding: 2px;
+    padding: 4px;
     box-sizing: border-box;
 }
-td.start, td.due {
-	width: 110px;
-}
-.todo,
 #enter_todo {
-    padding-left: 4px !important;
+    flex: 1 1 auto;
+    min-width: 0;
 }
-#enter_todo {
-    margin-left: 5px;
-    width: 95%;
+#enterLine .start, #enterLine .due {
+    flex: none;
+    white-space: nowrap;
+}
+.date_caption {
+    color: var(--muted);
+}
+/* the entries: one row for each, the checkbox, the text with what else there is to know below it, the date, and the
+   button for the trash; a tap on the text opens the dialog with everything else */
+#todoList {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+}
+#todoList:empty {
+    display: none;
+}
+.todoItem {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 44px;
+    padding: 0 4px;
+}
+.todoItem:nth-child(even) {
+    background-color: var(--surface);
+}
+.completed {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 44px;
+}
+.completed input[type="checkbox"] {
+    width: 22px;
+    height: 22px;
+    margin: 0;
+    cursor: pointer;
+}
+.todoMain {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 6px 4px;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+.todoMain:focus-visible {
+    outline: 2px solid var(--focus);
+}
+/* (a title of two lines at most) */
+.todoTitle {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+}
+.todoMeta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
+    margin-top: 2px;
+}
+.todoStart {
+    color: var(--muted);
+    font-size: .9em;
+}
+.todoDue {
+    flex: none;
+    min-width: 5.5em;
+    text-align: right;
+    white-space: nowrap;
+    color: var(--muted);
+}
+.todoItem.overdue .todoDue {
+    color: var(--danger);
+    font-weight: bold;
+}
+.todoActions {
+    flex: none;
+}
+.todo_deleted .todoTitle {
+    text-decoration: line-through;
 }
 .todo_completed {
     color: var(--muted);
@@ -113,55 +211,20 @@ td.start, td.due {
 .todo_deleted {
     color: var(--muted);
 }
-.todo_deleted span:not(.date_year) {
-    text-decoration: line-through;
-}
-ul.todo_item_tags {
-    margin: 0 !important;
-    padding: 0 !important;
-    display: inline-block;
-    border-width: 0 !important;
-    font-size: 1em;
-    vertical-align: bottom;
-}
-ul.todo_item_tags li {
-    padding: 1px 2px !important;
-    margin: 1px 2px !important;
+.todo_item_tags {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    vertical-align: middle;
 }
 input[disabled="disabled"] {
     display: none;
-}
-.todo_lineNr {
-    display:inline-block;
-    width: 20px;
-    text-align:right;
-}
-.todo_tags {
-    font-style: italic;
-}
-.due, .start {
-    text-align: left;
-    padding-left: 5px;
-    padding-right: 5px;
-}
-.start {
-    margin-left: 5px;
 }
 #working {
     padding: 3px;
     margin: 2px;
     background-color:var(--surface);
     float: right;
-}
-#smallLog {
-    font-size: 6pt;
-    background-color:var(--surface);
-    margin-left: 2px;
-    margin-right: 2px;
-    margin-bottom: 10px;
-}
-#logLink {
-    display: none;
 }
 span.modify_desc {
     display: inline-block;
@@ -219,10 +282,6 @@ span.modify_desc {
     width: 50%;
     display: inline-block;
 }
-.effort {
-    width: 20px;
-    text-align: right;
-}
 #tag_dialog .tagify {
     width: 280px;
 }
@@ -235,36 +294,184 @@ span.modify_desc {
 #tag_merge {
     vertical-align: middle;
 }
-#sidebar {
-    width: 20%;
-    margin-left: 10px;
-    margin-right: auto;
-}
-#taglist {
-    font-size: 8pt;
-}
-#taglist,
+/* the lists: tabs which scroll sideways if there are many */
 #lists {
+    display: flex;
+    gap: 4px;
+    margin: 4px 0;
+    overflow-x: auto;
+}
+.listTab {
+    flex: none;
+    min-height: 36px;
+    padding: 4px 14px;
     border: 1px solid var(--border);
+    border-radius: 18px;
+    background: transparent;
+    color: var(--page-fg);
+    font: inherit;
+    cursor: pointer;
+}
+.listTab[aria-current="true"] {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--on-accent);
+    font-weight: bold;
+}
+.listTab:focus-visible,
+.tagFilter:focus-visible,
+.tagManage:focus-visible,
+.menuItem:focus-visible {
+    outline: 2px solid var(--focus);
+}
+/* the tags: chips (in a row they are plain, above the table they filter) */
+#tagbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 4px 0 6px;
+}
+#tagbar:empty {
+    display: none;
+}
+.tagChip {
+    display: inline-block;
+    padding: 1px 8px;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    background: var(--chip-bg);
+    color: var(--page-fg);
+    font: inherit;
+    line-height: 1.5;
+}
+button.tagChip {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+    padding: 4px 10px;
+    cursor: pointer;
+}
+.tagFilter[aria-pressed="true"] {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--on-accent);
+}
+.tagCount {
+    margin-left: 6px;
+    font-size: .85em;
+    opacity: .75;
+}
+#tags_dialog_list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+/* the menu: a popover under its button */
+#main_menu {
+    position: fixed;
+    inset: auto;
+    margin: 0;
+    padding: 4px;
+    min-width: 200px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--page-bg);
+    color: var(--page-fg);
+}
+#main_menu:popover-open {
+    display: flex;
+    flex-direction: column;
+}
+.menuItem {
+    display: flex;
+    flex: none;
+    box-sizing: border-box;
+    align-items: center;
+    gap: 8px;
+    height: 40px;
+    padding: 0 10px;
+    border: 0;
     border-radius: 4px;
-    margin-top: 10px;
-    padding: 5px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
 }
-#lists ul {
-    list-style-type: none;
+.menuItem[hidden] {
+    display: none;
+}
+/* messages (js/toast.js): at the bottom, in the top layer (a popover) so that a modal dialog does not cover them */
+.toasts {
+    position: fixed;
+    inset: auto 0 12px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    width: auto;
+    height: auto;
     margin: 0;
-    padding: 2px;
+    padding: 0 12px;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    overflow: visible;
 }
-#emptytrashlink,
-#statisticslink,
-#filter {
-    margin-left: 5px;
-    margin-right: 5px;
-    margin-bottom: 3px;
+/* (the area of the page is a popover; an area in a dialog is above the footer of the dialog) */
+#toasts:not(:popover-open) {
+    display: none;
 }
-#filter ul {
-    margin: 0;
-    padding: 0;
+.dialog_toasts {
+    bottom: 72px;
+}
+.toasts:empty {
+    display: none;
+}
+.toast {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-sizing: border-box;
+    max-width: min(520px, 100%);
+    padding: 6px 6px 6px 14px;
+    border: 1px solid var(--toast-bg);
+    border-radius: 6px;
+    background: var(--toast-bg);
+    color: var(--toast-fg);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .35);
+}
+.toast.error {
+    border-color: var(--danger);
+}
+.toast_action, .toast_close {
+    min-width: 36px;
+    min-height: 36px;
+    padding: 0 8px;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    font: inherit;
+    cursor: pointer;
+}
+.toast_action {
+    color: var(--toast-action);
+    font-weight: bold;
+}
+.toast_close {
+    color: var(--toast-fg);
+    font-size: 1.4em;
+    line-height: 1;
+}
+.toast_action:focus-visible, .toast_close:focus-visible {
+    outline: 2px solid var(--toast-action);
+}
+@media (hover: hover)
+{
+    .menuItem:hover {
+        background: var(--hover-bg);
+    }
 }
 #loadMoreBox {
     margin-top: 10px;
@@ -274,13 +481,30 @@ span.modify_desc {
     margin-right: 10px;
 }
 /*******************/
-/* Button images   */
+/* Icons           */
+/* the icons are inline SVGs which use the files of webicons/icons/ (iconSvg() in todo-core.php, icon() in
+   js/html.js); the files have no colors, so an icon has the color of its element */
+svg.icon {
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
+    color: var(--icon-fg);
+}
 .iconButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     width: 20px;
     height: 20px;
-    background-size: cover;
+    padding: 0;
     border: 0;
     background-color: transparent;
+    color: var(--icon-fg);
+    cursor: pointer;
+    vertical-align: middle;
+}
+.iconButton:focus-visible {
+    outline: 2px solid var(--focus);
 }
 /* only on devices with real hover, else the highlight sticks after a tap */
 @media (hover: hover)
@@ -290,45 +514,66 @@ span.modify_desc {
         background-color: var(--hover-bg);
     }
 }
-.addButton {
-    background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="m16 4c-7 0-12 5-12 12s5 12 12 12 12-5 12-12-5-12-12-12zm0 5c1 0 2 1 2 2v3h3c1 0 2 1 2 2s-1 2-2 2h-3v3c0 1-1 2-2 2s-2-1-2-2v-3h-3c-1 0-2-1-2-2s1-2 2-2h3v-3c0-1 1-2 2-2z" fill="%230A0"/></svg>');
+.addButton svg.icon {
+    color: var(--ok);
 }
-.editButton {
-    background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="m21 4-17 17v7h7l17-17zm0 3 4 4-9 9h-4v-4zm-11 15h4l-4 4h-2l-2-2v-2l4-4z" fill="%23444"/></svg>');
-}
-.deleteButton {
-    background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="m10 4v4h2v-2h8v2h2v-4h-10zm-6 6v2h4v16h16v-16h4v-2zm6 2h12v14h-12z" fill="%23d45"/></svg>');
-}
-.undeleteButton {
-    background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="m10 4-2e-6 4h2v-2h8v2h2v-4zm-6 6v2h4v16h16v-16h4v-2zm6 2h12v14h-12z" fill="%23444"/><path d="m25 3-2 1 2 4c-1 0-6 0-8 2-2.7 2.5-3 6-3 10h3c0-3 0-5 2-7s4-2 6-2l-2 4 2 1 4-6.5z" fill="%230A0"/></svg>');
-}
-.todayButton {
-    background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="m8 4v2h-4v22h24v-22h-4v-2h-2v2h-12v-2h-2zm-2 4h2v2h2v-2h12v2h2v-2h2v4h-20v-4zm0 6h20v12h-20v-12zm8 1 1 6-3-2-1 2 5 3 5-3-1-2-3 2 1-6h-4z" fill="%23444"/></svg>');
-}
-.refreshButton,
-.reactivateButton,
-.recurring {
-    background-image: url('data:image/svg+xml;utf8,<svg version="1.1" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="m16 4c-6 0-11 5-11 11s3 8 7 10l1-2c-3-2-6-3-6-8s4-9 9-9 9 4 9 9-4 9-7 9l3-5h-2l-4 6 4 5h2l-3-4c4 0 9-5 9-11s-5-11-11-11z" fill="%23444"/></svg>');
-}
-.mergeButton {
-    background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="m4 8v3s9 4 9 5-9 5-9 5v3s12-6 14-6c2 0 5 0 5 0l-2 5 7-7-7-7 2 5h-5c-2 0-14-6-14-6z"/></svg>');
+.deleteButton svg.icon,
+.exclamation svg.icon {
+    color: var(--danger);
 }
 .exclamation, .note, .recurring {
     display: inline-block;
-    width: 16px;
-    height: 16px;
-    background-size: cover;
-    vertical-align: middle;
+    line-height: 0;
 }
-.exclamation {
-    background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="m17 19v-7h-2v7zm12 8-13-23-13 23zm-22-2 9-17 9 17zm7-2 1 1 2 0 1-1 0-1-1-1-2-0-1 1z" fill="%23d45"/></svg>');
+
+/*********/
+/* Tagify */
+/* the light values are those of vendor/tagify/tagify.css */
+.tagify {
+    --tags-border-color: light-dark(#DDD, #555);
+    --tags-hover-border-color: light-dark(#CCC, #777);
+    --tags-focus-border-color: light-dark(#3595f6, #8ab4ff);
+    --tags-disabled-bg: light-dark(#F1F1F1, #2a2a2d);
+    --tag-bg: light-dark(#E5E5E5, #3a3a3e);
+    --tag-hover: light-dark(#D3E2E2, #4a4a50);
+    --tag-text-color: var(--page-fg);
+    --tag-text-color--edit: var(--page-fg);
+    --tag-remove-btn-color: var(--page-fg);
+    --placeholder-color: light-dark(rgba(0, 0, 0, .4), rgba(255, 255, 255, .45));
+    --placeholder-color-focus: light-dark(rgba(0, 0, 0, .25), rgba(255, 255, 255, .3));
 }
-.recurring {
-    margin-left: 4px;
+
+/*******************/
+/* Color scheme button */
+.themeswitch {
+    padding: 2px;
+    border: 0;
+    border-radius: 3px;
+    background: none;
+    color: var(--icon-fg);
+    line-height: 0;
+    cursor: pointer;
 }
-.note {
-    margin-left: 10px;
-    background-image: url('data:image/svg+xml;utf8,<svg version="1.1" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="m5 4v22l2 2h20v-24zm2 2h18v20h-12l-6-6zm0 16 4 4h-1l-3-3zm0 3 1 1h-1z" fill="%23444"/><path d="m10 10v2h12v-2zm0 4v2h12v-2zm0 4v2h12v-2z" fill="%23bbb"/></svg>');
+.themeswitch:focus-visible {
+    outline: 2px solid var(--focus);
+}
+@media (hover: hover)
+{
+    .themeswitch:hover {
+        background-color: var(--hover-bg);
+    }
+}
+/* the button has the icons of all three schemes, the one of the choice is shown (the root element has data-theme
+   if a scheme was chosen, see js/theme.js) */
+.themeswitch svg.icon {
+    display: none;
+    width: 20px;
+    height: 20px;
+}
+:root:not([data-theme]) .themeswitch .icon-theme-auto,
+:root[data-theme="light"] .themeswitch .icon-theme-light,
+:root[data-theme="dark"] .themeswitch .icon-theme-dark {
+    display: inline-block;
 }
 
 /*******************/
@@ -348,6 +593,8 @@ span.modify_desc {
 }
 .stat_svg {
     display: block;
+    /* the text (headings, labels); the bars and the numbers in them have their own */
+    fill: var(--page-fg);
 }
 .stat_characteristics {
     padding-left: 10px;
@@ -385,44 +632,52 @@ span.modify_desc {
 /* Responsive design */
 @media (max-width: 575px)
 {
-	/* one line per todo: number, start date and effort hidden, a long title is cut off */
-	th.start, td.start, td.effort, .todo_lineNr {
+	/* The line to enter an entry is a bar at the bottom of the screen, where the thumb is, and stays there while the
+	   list scrolls: the text, the due date and the button. The start date is left out (today). The due date is the label
+	   (a calendar icon if empty) with the native date input on top of it, invisible, which opens the picker on tap. */
+	body {
+		font-size: 15px;
+	}
+	#mainContent {
+		padding-bottom: calc(64px + env(safe-area-inset-bottom));
+	}
+	#inputform {
+		position: fixed;
+		z-index: 10;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		box-sizing: border-box;
+		padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+		border-top: 1px solid var(--border);
+		background: var(--page-bg);
+	}
+	#enterLine {
+		flex-wrap: nowrap;
+		margin-bottom: 0;
+	}
+	#enter_todo {
+		min-height: 40px;
+	}
+	#enterLine .start, #enterLine .date_caption {
 		display: none;
 	}
-	#todoTable tbody tr {
-		font-size: 14px;
+	#enterLine .due {
+		display: inline-flex;
+		align-items: center;
 	}
-	#todoTable tbody td {
-		height: 34px;
-		white-space: nowrap;
+	#enterLine .due .date_caption {
+		display: none;
 	}
-	td.todo {
-		width: 100%;
-		max-width: 0;
-		overflow: hidden;
-		text-overflow: ellipsis;
+	#toasts {
+		bottom: calc(76px + env(safe-area-inset-bottom));
 	}
-	#todoTable tbody td.todo {
-		cursor: pointer;
-	}
-	.note, .recurring {
-		margin-left: 4px;
-	}
-	/* due date small and without the current year; overdue in red instead of the icon;
-	   right-aligned so that dates with and without year line up */
-	th.due, td.due {
-		width: auto;
-		padding: 0 4px;
-		text-align: right;
-	}
-	/* due date of a new todo: the label (calendar icon if empty) is shown,
-	   the native date input lies invisibly on top of it and opens the picker on tap */
 	.due_picker {
 		position: relative;
 		display: inline-block;
-		min-width: 28px;
-		height: 28px;
-		line-height: 28px;
+		min-width: 44px;
+		height: 36px;
+		line-height: 36px;
 		vertical-align: middle;
 	}
 	#enter_due {
@@ -437,51 +692,24 @@ span.modify_desc {
 	}
 	#enter_due_label {
 		display: block;
-		font-size: 11px;
+		font-size: 13px;
+		text-align: center;
 		color: var(--muted);
 	}
+	/* the calendar icon of the files, drawn with the color of the icons */
 	#enter_due_label:empty {
-		background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="m8 4v2h-4v22h24v-22h-4v-2h-2v2h-12v-2h-2zm-2 4h2v2h2v-2h12v2h2v-2h2v4h-20v-4zm0 6h20v12h-20v-12zm11 6h6v4h-6z" fill="%23444"/></svg>');
-		background-size: cover;
-		height: 28px;
+		background-color: var(--icon-fg);
+		-webkit-mask: url('webicons/icons/today.svg') center / 28px no-repeat;
+		mask: url('webicons/icons/today.svg') center / 28px no-repeat;
+		height: 36px;
 	}
-	td.due {
-		font-size: 11px;
-		color: var(--muted);
+	/* a date is small and has no year if it is the current one; an overdue one is red, without the icon */
+	.todoDue {
+		min-width: 0;
+		font-size: 13px;
 	}
-	td.due.overdue {
-		color: var(--danger);
-		font-weight: bold;
-	}
-	td.due .exclamation, .date_year {
+	.todoDue .exclamation, .date_year {
 		display: none;
-	}
-	/* the edit dialog opens with a tap on the todo; "do today" is useless for completed ones */
-	td.actions .modify, .todo_completed td.actions .dotoday {
-		display: none;
-	}
-	td.actions {
-		text-align: right;
-	}
-	#todoTable {
-		width: 100%;
-	}
-	#enter_todo {
-		width: 100%;
-		margin-left: 0;
-	}
-	/* header: title and links in first line, tag filter full width below */
-	#headerLine {
-		flex-wrap: wrap;
-		align-items: center;
-	}
-	#filter {
-		order: 1;
-		flex-basis: 100%;
-	}
-	#filter .tagify {
-		width: 100%;
-		box-sizing: border-box;
 	}
 	/* modify / tag dialog: labels above full-width fields */
 	span.modify_desc {
@@ -503,41 +731,147 @@ span.modify_desc {
 		width: 32px;
 		height: 32px;
 	}
-	.completed input[type="checkbox"] {
-		width: 22px;
-		height: 22px;
-		vertical-align: middle;
+	.iconButton svg.icon {
+		width: 20px;
+		height: 20px;
+	}
+	.themeswitch {
+		padding: 6px;
+	}
+	.themeswitch svg.icon {
+		width: 24px;
+		height: 24px;
 	}
 	/* font size of at least 16px prevents iOS from zooming in on focus */
 	input, input[type="text"], input[type="date"], select, textarea, .tagify__input {
 		font-size: 16px;
 	}
 }
-@media (max-width: 950px)
-{
-	#todo_content {
-		display: block;
-		margin-right: auto;
-	}
-	#sidebar {
-		width: 100%;
-		margin-left: auto;
-		margin-right: auto;
-	}
-}
 /********************/
-/* Dialogs    */
-#modify_dialog, #log_dialog, #tag_dialog {
+/* Dialogs          */
+/* <dialog> elements (index.php, js/dialogs.js): a header with the title and the close button, a body which
+   scrolls, and a footer with the buttons; on narrow screens a dialog fills the screen */
+dialog {
+	box-sizing: border-box;
+	width: 500px;
+	max-width: calc(100vw - 20px);
+	max-height: calc(100dvh - 20px);
+	padding: 0;
+	border: 1px solid var(--border);
+	border-radius: 6px;
+	background: var(--page-bg);
+	color: var(--page-fg);
+	/* (the lists of suggestions of the tag fields reach out of the dialog if it is short) */
+	overflow: visible;
+}
+dialog[open] {
+	display: flex;
+	flex-direction: column;
+}
+dialog::backdrop {
+	background: var(--backdrop);
+}
+#tag_dialog {
+	width: 420px;
+}
+#log_dialog {
+	width: 600px;
+}
+.dialog_header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 4px 6px 4px 10px;
+	border-bottom: 1px solid var(--border);
+	border-radius: 5px 5px 0 0;
+	background: var(--surface);
+}
+.dialog_title {
+	margin: 0;
+	font-size: 1.1em;
+}
+.dialog_body {
+	flex: 1 1 auto;
+	padding: 10px;
+	overflow-y: auto;
+}
+/* (focused when the dialog opens, so that the keyboard of a phone does not pop up; no ring for that) */
+.dialog_body:focus {
+	outline: none;
+}
+.dialog_footer {
+	display: flex;
+	flex: none;
+	justify-content: flex-end;
+	align-items: center;
+	gap: 8px;
+	padding: 8px 10px;
+	border-top: 1px solid var(--border);
+	border-radius: 0 0 5px 5px;
+	background: var(--surface);
+}
+.dialog_footer_start {
+	margin-right: auto;
+}
+.dialogButton {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 4px 12px;
+	border: 1px solid var(--border);
+	border-radius: 4px;
+	background: var(--page-bg);
+	color: var(--page-fg);
+	font: inherit;
+	cursor: pointer;
+}
+.dialogButton:focus-visible {
+	outline: 2px solid var(--focus);
+}
+.dialog_actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin-top: 12px;
+}
+.dialog_actions .dialogButton[hidden] {
 	display: none;
 }
-/* never wider than the screen (the width set via dialogWidth() already
-   ensures that, this is a fallback e.g. after rotating the device) */
-.ui-dialog {
-	max-width: calc(100vw - 20px);
+.dialogButton.danger svg.icon {
+	color: var(--danger);
 }
-
-/* keep the almost invisible dialog overlay of the previously vendored jQuery UI theme
-   (the npm base theme uses opacity .3); more specific since jquery-ui.min.css loads later */
-body .ui-widget-overlay {
-    opacity: .003;
+.dialogButton[disabled] {
+	opacity: .5;
+	cursor: default;
+}
+.dialogButton.primary {
+	border-color: var(--ok);
+}
+.dialogButton svg.icon {
+	color: var(--ok);
+}
+@media (hover: hover)
+{
+	.dialogButton:hover {
+		background: var(--hover-bg);
+	}
+}
+@media (max-width: 575px)
+{
+	dialog {
+		width: 100%;
+		max-width: 100%;
+		height: 100dvh;
+		max-height: 100dvh;
+		margin: 0;
+		border: 0;
+		border-radius: 0;
+	}
+	.dialog_header, .dialog_footer {
+		border-radius: 0;
+	}
+	.dialogButton {
+		padding: 8px 16px;
+		font-size: 16px;
+	}
 }

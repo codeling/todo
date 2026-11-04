@@ -1,18 +1,19 @@
 // The entry point of the page (index.php loads only this file, as a module): connects the
 // elements of the page to the code and loads the data.
 //
-// jQuery ($), jQuery UI, $T() (lang-js.php) and Tagify are classic scripts which index.php loads
+// jQuery ($), $T() (lang-js.php) and Tagify are classic scripts which index.php loads
 // before; the modules use them as globals. A module is run when the document is parsed (like a
 // script with defer), so the elements are all there and no "ready" handler is needed.
 import { state, narrowScreenQuery } from './state.js';
+import { notify } from './toast.js';
 import { formatDate, parseDay, dateDiffInDays, addDays } from './dates.js';
-import { logItems, toggleLog } from './log.js';
+import { logItems } from './log.js';
 import { ItemSort } from './items.js';
 import { setupAjax } from './api.js';
-import { enter, emptyTrash, storeItem } from './actions.js';
-import { renderTable, updateEnterDueLabel } from './render.js';
+import { enter, emptyTrash, storeItem, doToday, reactivate, setTrashed } from './actions.js';
+import { toggleTagFilter, updateEnterDueLabel } from './render.js';
 import { reload, refresh, reloadTagList } from './load.js';
-import { keepDialogsInWindow, showLogDialog, toggleRecurrenceAnchor, openTagDialog, tagDialogAction } from './dialogs.js';
+import { setupDialogs, keepSuggestionsInDialog, showLogDialog, showTagsDialog, toggleRecurrenceAnchor, openTagDialog, tagDialogAction } from './dialogs.js';
 
 // The one way to reach the state of the page from outside the modules: the UI tests
 // (tests/ui.test.js) read it, and it helps to look at the page in the browser console.
@@ -37,19 +38,33 @@ function shiftDueWithStart(startSel, dueSel, fillEmptyDue) {
     });
 }
 
-keepDialogsInWindow();
+setupDialogs();
+
+// the actions of the dialog of an entry: they close it
+function onEntryAction(selector, action) {
+    $(selector).on('click', function() {
+        var id = parseInt($('#modify_id').val());
+        $('#modify_dialog')[0].close();
+        action(id);
+    });
+}
+onEntryAction('#modify_dotoday', doToday);
+onEntryAction('#modify_reactivate', reactivate);
+onEntryAction('#modify_trash', function(id) { setTrashed(id, true); });
+onEntryAction('#modify_restore', function(id) { setTrashed(id, false); });
 
 $('#modify_save').on('click', function() {
     // store...
     storeItem();
 });
-$(document.body).on('click', '#taglist .tagify__tag', function() {
-    var tagname = this.__tagifyTagData.value;
-    if (tagname.indexOf("(") != -1)
-    {
-        tagname = tagname.substr(0, tagname.indexOf("(")-1).trim();
-    }
-    openTagDialog(tagname);
+// the chips above the table filter it; the buttons in the dialog "Manage tags" open the dialog of a tag
+$('#tagbar').on('click', '.tagFilter', function() {
+    toggleTagFilter($(this).attr('data-tag'));
+});
+$('#tags_dialog_list').on('click', '.tagManage', function() {
+    var name = $(this).attr('data-tag');
+    $('#tags_dialog')[0].close();
+    openTagDialog(name);
 });
 $('#tag_save').on('click', function() {
     return tagDialogAction('queries/edit-tag.php',
@@ -71,20 +86,22 @@ $('#tag_merge').on('click', function() {
         function(e) { return e.name === mergeTagname; });
     if (result.length == 0 || result.length > 1)
     {
-        alert("Found no tag or more than one tag with that name, aborting merge!");
+        notify("Found no tag or more than one tag with that name, aborting merge!");
         return false;
     }
     return tagDialogAction('queries/merge-tag.php',
         { id: $('#tag_id').val(), merge_id: result[0].id },
         'MERGE_TAG_SUCCESSFUL', 'ERROR_WHILE_MODIFYING');
 });
-state.filterTagify = new Tagify($('#filter_tag_edit')[0]);
-// tagList not set yet here ...
-state.filterTagify.on('change', function() {
-    renderTable();
-} );
-state.modifyTagify = new Tagify($('#modify_tag_edit')[0]);
-state.mergeTagify = new Tagify($('#merge_tag_edit')[0], {
+// The list of suggestions of a tag field in a dialog is put into the dialog: a modal dialog covers everything else on
+// the page, so a list at the end of <body> would be hidden behind it; keepSuggestionsInDialog() places it.
+function tagifyInDialog(selector, dialogSelector, settings) {
+    var tagify = new Tagify($(selector)[0], $.extend({ dropdown: { appendTarget: $(dialogSelector)[0] } }, settings));
+    keepSuggestionsInDialog(tagify);
+    return tagify;
+}
+state.modifyTagify = tagifyInDialog('#modify_tag_edit', '#modify_dialog');
+state.mergeTagify = tagifyInDialog('#merge_tag_edit', '#tag_dialog', {
     enforceWhitelist: true,
     mode: "select"
 });
@@ -99,16 +116,25 @@ $('#inputform, #modifyform').on('submit', function(e) {
     e.preventDefault();
 });
 $('#enter_save').on('click', enter);
-$('#emptyTrash').on('click', function(e) {
-    e.preventDefault();
-    emptyTrash();
+// Enter in one of the fields adds the entry (the form has no submit button, and with three fields the browser does not submit it)
+$('#enter_todo, #enter_start, #enter_due').on('keydown', function(e) {
+    if (e.key === 'Enter' && !e.isComposing) {
+        e.preventDefault();
+        enter();
+    }
 });
-$('#showLog').on('click', function(e) {
-    e.preventDefault();
-    toggleLog();
+// the menu (a popover: the browser opens and closes it, also with Escape and a click outside)
+$('#menu_button').on('click', function() {
+    // below the button, at its right edge
+    var box = this.getBoundingClientRect();
+    $('#main_menu').css({ top: (box.bottom + 4) + 'px', right: Math.max(4, window.innerWidth - box.right) + 'px' });
 });
-
-$("#smallLog").on('click', showLogDialog);
+$('#main_menu .menuItem').on('click', function() {
+    $('#main_menu')[0].hidePopover();
+});
+$('#emptyTrash').on('click', emptyTrash);
+$('#showLog').on('click', showLogDialog);
+$('#manageTags').on('click', showTagsDialog);
 
 $('#loadMoreCompleted').on('click', function(e) {
     e.preventDefault();
@@ -139,10 +165,6 @@ $('#enter_due').on('click', function() {
     if (window.matchMedia(narrowScreenQuery).matches && this.showPicker) {
         try { this.showPicker(); } catch (e) {}
     }
-});
-
-$('#filter .tagify__input').on('focus', function() {
-    state.filterTagify.settings.whitelist = state.tagList.map( (x) => x.name );
 });
 
 $('#refresh').on('click', refresh);

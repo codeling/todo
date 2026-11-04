@@ -2,10 +2,9 @@
 import { escapeHtml } from './html.js';
 
 export const logItems = [$T('STARTING_LOG')];
-// number of lines of the small log in the sidebar
-const logLines = 3;
-let logVisible = true;
 
+
+// shows the last maxCount lines of the log in the element
 export function updateLog(element, maxCount) {
     var logOutput = '';
     var start = Math.max(0, logItems.length-maxCount);
@@ -20,16 +19,6 @@ export function updateLog(element, maxCount) {
 }
 
 
-export function toggleLog() {
-    $('#smallLog').css('display', (logVisible)? 'none': 'block');
-    $('#logLink').css('display', (logVisible)? 'block': 'none');
-    logVisible = !logVisible;
-}
-
-
 export function log(logStr) {
     logItems.push(logStr);
-    updateLog('#smallLog', logLines);
-    $('#smallLog').css('display', 'block');
 }
-

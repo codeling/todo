@@ -10,13 +10,14 @@ export const state = {
     // the tags of the current list with their counts
     tagList: undefined,
 
-    // the Tagify instances (created in main.js): the filter above the table, the tags in the
-    // dialog of a todo, the target of a merge in the dialog of a tag, and the list of all tags
-    // in the sidebar (created when it is first filled)
-    filterTagify: undefined,
+    // the names of the tags which the table is filtered by (the chips above it): entries with any of them are
+    // shown, all entries if there are none
+    filterTags: [],
+
+    // the Tagify instances (created in main.js): the tags in the dialog of a todo and the target of a
+    // merge in the dialog of a tag
     modifyTagify: undefined,
     mergeTagify: undefined,
-    tagListTagify: undefined,
 
     // what is loaded: the age (in days) of the completed todos which are shown, the list, and
     // whether the incomplete ones are shown from all times
