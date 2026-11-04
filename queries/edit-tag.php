@@ -11,12 +11,12 @@
     requireOwnTag($db, $id);
     // names are unique (case-insensitive); the unique key also catches a concurrent rename
     try {
-        $affectedRows = dbExec($db, "UPDATE `tags` SET `name`=? WHERE id=?", array($name, $id))->affected_rows;
+        dbExec($db, "UPDATE `tags` SET `name`=? WHERE id=?", array($name, $id));
     } catch (mysqli_sql_exception $e) {
         if ($e->getCode() != 1062) {
             throw $e;
         }
         rejectRequest(409, "TAG_EXISTS");
     }
-    requireSingleRow($affectedRows, "NO_ROWS_AFFECTED", "MORE_THAN_ONE_TAG_AFFECTED");
+    // (no check of the affected rows: saving the unchanged name changes no row, and the tag was checked above)
     sendOk();

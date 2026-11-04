@@ -66,7 +66,25 @@ $('#tags_dialog_list').on('click', '.tagManage', function() {
     $('#tags_dialog')[0].close();
     openTagDialog(name);
 });
+// a tag chosen in the merge field is part of what is saved: with it, Save merges (a renaming would be lost with the
+// merged tag anyway)
+function mergeTagAction() {
+    var mergeTagname = state.mergeTagify.value.map((tag) => tag.value)[0];
+    var result = $.grep(state.tagList,
+        function(e) { return e.name === mergeTagname; });
+    if (result.length == 0 || result.length > 1)
+    {
+        notify("Found no tag or more than one tag with that name, aborting merge!");
+        return false;
+    }
+    return tagDialogAction('queries/merge-tag.php',
+        { id: $('#tag_id').val(), merge_id: result[0].id },
+        'MERGE_TAG_SUCCESSFUL', 'ERROR_WHILE_MODIFYING');
+}
 $('#tag_save').on('click', function() {
+    if (state.mergeTagify.value.length > 0) {
+        return mergeTagAction();
+    }
     return tagDialogAction('queries/edit-tag.php',
         { id: $('#tag_id').val(), tag_name: $('#tag_name').val() },
         'EDITED_TAG_SUCCESSFUL', 'ERROR_WHILE_MODIFYING');
@@ -80,19 +98,7 @@ $('#tag_delete').on('click', function() {
         { id: $('#tag_id').val() },
         'DELETED_TAG_SUCCESSFUL', 'ERROR_WHILE_DELETING');
 });
-$('#tag_merge').on('click', function() {
-    var mergeTagname = state.mergeTagify.value.map((tag) => tag.value)[0];
-    var result = $.grep(state.tagList,
-        function(e) { return e.name === mergeTagname; });
-    if (result.length == 0 || result.length > 1)
-    {
-        notify("Found no tag or more than one tag with that name, aborting merge!");
-        return false;
-    }
-    return tagDialogAction('queries/merge-tag.php',
-        { id: $('#tag_id').val(), merge_id: result[0].id },
-        'MERGE_TAG_SUCCESSFUL', 'ERROR_WHILE_MODIFYING');
-});
+$('#tag_merge').on('click', mergeTagAction);
 // The list of suggestions of a tag field in a dialog is put into the dialog: a modal dialog covers everything else on
 // the page, so a list at the end of <body> would be hidden behind it; keepSuggestionsInDialog() places it.
 function tagifyInDialog(selector, dialogSelector, settings) {

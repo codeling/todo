@@ -151,6 +151,14 @@ input[type="text"], input[type="date"] {
     margin: 0;
     cursor: pointer;
 }
+/* (the text and the due date; the due date is next to the text, on a narrow screen over its upper right corner) */
+.todoBody {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+}
 .todoMain {
     flex: 1 1 auto;
     min-width: 0;
@@ -703,10 +711,31 @@ svg.icon {
 		mask: url('webicons/icons/today.svg') center / 28px no-repeat;
 		height: 36px;
 	}
-	/* a date is small and has no year if it is the current one; an overdue one is red, without the icon */
+	/* The due date does not take a column of its own: it is at the top right of the entry, and the title
+	   leaves room for it, so that the tags below can use the whole width. The room is that of the date (a date of the
+	   current year has no year on a narrow screen); none if there is no date. */
+	.todoBody {
+		display: block;
+		position: relative;
+		--due-room: 0px;
+	}
+	.todoBody:has(.todoDue:not(:empty)) {
+		--due-room: 6.5em;
+	}
+	.todoBody:has(.date_year) {
+		--due-room: 3.6em;
+	}
 	.todoDue {
+		position: absolute;
+		top: 6px;
+		right: 4px;
 		min-width: 0;
 		font-size: 13px;
+		line-height: 1.4;
+		pointer-events: none;
+	}
+	.todoTitle {
+		padding-right: var(--due-room);
 	}
 	.todoDue .exclamation, .date_year {
 		display: none;
@@ -834,7 +863,7 @@ dialog::backdrop {
 	gap: 8px;
 	margin-top: 12px;
 }
-.dialog_actions .dialogButton[hidden] {
+.dialogButton[hidden] {
 	display: none;
 }
 .dialogButton.danger svg.icon {

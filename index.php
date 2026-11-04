@@ -111,11 +111,11 @@
       <div class="dialog_actions">
         <?php echo(dialogButtonHtml("modify_dotoday", "", TodoLang::_("DOTODAY"), "today")); ?>
         <?php echo(dialogButtonHtml("modify_reactivate", "", TodoLang::_("REACTIVATE"), "repeat")); ?>
-        <?php echo(dialogButtonHtml("modify_trash", "danger", TodoLang::_("DELETE"), "delete")); ?>
-        <?php echo(dialogButtonHtml("modify_restore", "", TodoLang::_("RESTORE"), "restore")); ?>
       </div>
       </div>
       <div class="dialog_footer">
+        <?php echo(dialogButtonHtml("modify_trash", "danger dialog_footer_start", TodoLang::_("DELETE"), "delete")); ?>
+        <?php echo(dialogButtonHtml("modify_restore", "dialog_footer_start", TodoLang::_("RESTORE"), "restore")); ?>
         <?php echo(dialogCancelButtonHtml().dialogButtonHtml("modify_save", "primary", TodoLang::_("SAVE"), "check")); ?>
       </div>
       <div class="dialog_dropdowns" id="modify_dialog_dropdowns"></div>
