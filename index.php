@@ -1,9 +1,10 @@
 <?php include "todo-core.php"; $csrfToken = csrfToken(); ?>
 <!DOCTYPE html>
-<html lang="<?php echo htmlspecialchars(todoConfig('language')); ?>">
+<html lang="<?php echo htmlspecialchars(todoConfig('language')); ?>"<?php echo(themeHtmlAttribute()); ?>>
   <head>
     <meta charset="UTF-8">
     <meta name="csrf-token" content="<?php echo htmlspecialchars($csrfToken); ?>">
+    <?php echo(themeHeadHtml()); ?>
     <title><?php echo(TodoConstants::AppName); ?></title>
     <!-- JQuery & JQuery UI -->
     <script src="<?php echo(assetUrl("vendor/jquery/jquery.min.js")); ?>"></script>
@@ -14,6 +15,7 @@
          Only this URL has a version: the web server makes browsers check the other modules each time
          (Cache-Control: no-cache, see .htaccess and nginx.conf.sample) -->
     <script type="module" src="<?php echo(assetUrl("js/main.js")); ?>"></script>
+    <script src="<?php echo(assetUrl("js/theme.js")); ?>" defer></script>
     <link rel="stylesheet" type="text/css" href="<?php echo(assetUrl("vendor/tagify/tagify.css")); ?>" />
     <link rel="stylesheet" type="text/css" href="<?php echo(assetUrl("todo.css")); ?>" />
     <link rel="stylesheet" type="text/css" href="<?php echo(assetUrl("vendor/jquery-ui/jquery-ui.min.css")); ?>"/>
@@ -31,6 +33,7 @@
           </div>
           <div id="emptytrashlink"><a href="#" id="emptyTrash"><?php echo(TodoLang::_("EMPTY_TRASH"));?></a></div>
           <div id="statisticslink"><a href="statistics.php"><?php echo(TodoLang::_("SHOW_STATISTICS"));?></a></div>
+          <div id="themelink"><?php echo(themeButtonHtml());?></div>
         </div>
         <div id="progress"><span id="progress_done">&nbsp;</span><span id="progress_todo">&nbsp;</span></div>
         <form method="POST" id="inputform">

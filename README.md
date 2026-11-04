@@ -2,6 +2,13 @@
 
 A small PHP / MariaDB (MySQL) to-do list with lists, tags, recurring entries and statistics.
 
+Dark mode: the pages follow the color scheme of the system (`prefers-color-scheme`), and the button
+in the header of the list and of the statistics page chooses the system's scheme, light or dark (kept in
+the cookie `todo_theme`, which holds no personal data). The colors are custom properties with `light-dark()`
+in `todo.css` (Chrome 123, Firefox 120, Safari 17.5 or newer; older browsers show the light scheme).
+The icons are those of [codeling/webicons](https://github.com/codeling/webicons) (the folder `webicons/`, a
+git subtree: update it with `git subtree pull --prefix=webicons https://github.com/codeling/webicons main --squash`).
+
 ## Installation
 
 1. Create a database and load `sql/install.sql`.

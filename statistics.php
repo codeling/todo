@@ -112,18 +112,24 @@
             $charts[$dateName][$unit] = statisticsChart($db, $today, $unit, $dateColumn);
         }
     }
+    // (starts the session for the token which js/theme.js sends)
+    $csrfToken = csrfToken();
 ?><!DOCTYPE html>
-<html lang="<?php echo htmlspecialchars(todoConfig('language')); ?>">
+<html lang="<?php echo htmlspecialchars(todoConfig('language')); ?>"<?php echo(themeHtmlAttribute()); ?>>
   <head>
     <meta charset="UTF-8">
+    <meta name="csrf-token" content="<?php echo statEscape($csrfToken); ?>">
+    <?php echo(themeHeadHtml()); ?>
+
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?php echo statEscape(TodoConstants::AppName); ?> - <?php echo statEscape(TodoLang::_("STATISTICS")); ?></title>
     <link rel="stylesheet" type="text/css" href="<?php echo(assetUrl("todo.css")); ?>" />
     <link rel="icon" href="todo.svg" type="image/svg+xml">
+    <script src="<?php echo(assetUrl("js/theme.js")); ?>" defer></script>
   </head>
   <body>
     <div id="todo_content">
-      <div class="linkblock"><a href="index.php"><?php echo(statEscape(TodoLang::_("TO_TODO")));?></a></div>
+      <div class="linkblock"><a href="index.php"><?php echo(statEscape(TodoLang::_("TO_TODO")));?></a> <?php echo(themeButtonHtml());?></div>
       <h1><?php echo(statEscape(TodoLang::_("STATISTICS"))); ?></h1>
       <div id="main_content">
 <?php

@@ -32,6 +32,11 @@ and filled. Until then step 0 can only be prepared as files in a scratch directo
   version before). "Restore" (undelete) is the `restore` icon (a counter-clockwise arrow with a clock), not the old
   bin with an arrow; the save buttons are `check` instead of the pencil. Two-tone icons (note, undelete) are one color.
 
+* Step 3: dark mode: `light-dark()` tokens in `todo.css`, cookie `todo_theme` (`queries/theme.php`), `js/theme.js`, the button
+  on the list and the statistics page (`themeButtonHtml()`), Tagify variables, favicon, `tests/theme.test.js` (endpoint, cookie,
+  button, persistence, contrast of the texts in both schemes). The light red (`--danger`) is a little darker (`#C3283A`) so that
+  the overdue date has 4.5:1; the muted grey is `#666`.
+
 ## 1. Findings
 
 ### Structure and usability

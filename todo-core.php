@@ -42,6 +42,48 @@ function iconButton($id, $class, $icon, $label) {
     return '<button type="button" id="'.htmlspecialchars($id).'" class="iconButton '.htmlspecialchars($class).
         '" title="'.htmlspecialchars($label).'" aria-label="'.htmlspecialchars($label).'">'.iconSvg($icon).'</button>';
 }
+// The color scheme: the one of the system ("auto"), or the one which was chosen with the button of the pages
+// ("light" or "dark"), kept in the cookie todo_theme (queries/theme.php sets it). The pages write the choice into
+// the root element (data-theme), so they are drawn right from the start, also without a script.
+const TODO_THEME_COOKIE = 'todo_theme';
+const TODO_THEME_MODES = array('auto', 'light', 'dark');
+// the background of the page in the two schemes, for the color of the browser's address bar on phones
+// (the same as --page-bg in todo.css; tests/theme.test.js checks that)
+const TODO_THEME_COLORS = array('light' => '#F8F8F8', 'dark' => '#1c1c1e');
+
+function todoThemeMode() {
+    $value = isset($_COOKIE[TODO_THEME_COOKIE]) ? $_COOKIE[TODO_THEME_COOKIE] : null;
+    return (is_string($value) && in_array($value, TODO_THEME_MODES, true)) ? $value : 'auto';
+}
+// the attribute of the root element; nothing for "auto"
+function themeHtmlAttribute() {
+    $mode = todoThemeMode();
+    return $mode === 'auto' ? '' : ' data-theme="'.$mode.'"';
+}
+// the elements of the head which tell the browser about the schemes: both are supported (so that form controls and
+// scroll bars follow), and the color of the address bar for the scheme of the system; js/theme.js sets both
+// colors to the chosen one if the visitor chose a scheme
+function themeHeadHtml() {
+    return '<meta name="color-scheme" content="light dark">'."\n".
+        '    <meta name="theme-color" media="(prefers-color-scheme: light)" content="'.TODO_THEME_COLORS['light'].'">'."\n".
+        '    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="'.TODO_THEME_COLORS['dark'].'">';
+}
+// The button which changes the scheme: system, light, dark, and again. It has the icons of the three schemes, todo.css
+// shows the one of the scheme in use, js/theme.js changes the choice (and the label, which says what is in use)
+function themeButtonHtml() {
+    $mode = todoThemeMode();
+    $labels = array('auto' => TodoLang::_("THEME_AUTO"), 'light' => TodoLang::_("THEME_LIGHT"), 'dark' => TodoLang::_("THEME_DARK"));
+    $attributes = '';
+    foreach ($labels as $name => $label) {
+        $attributes .= ' data-label-'.$name.'="'.htmlspecialchars($label).'"';
+    }
+    $icons = '';
+    foreach (TODO_THEME_MODES as $name) {
+        $icons .= iconSvg('theme-'.$name);
+    }
+    return '<button type="button" class="themeswitch" title="'.htmlspecialchars($labels[$mode]).'" aria-label="'.
+        htmlspecialchars($labels[$mode]).'"'.$attributes.'>'.$icons.'</button>';
+}
 // the ID of the user whose lists and entries are shown
 // TODO: get that from the current user account
 function todoUserId() {

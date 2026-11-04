@@ -27,7 +27,7 @@ function usedIcons() {
     };
     for (const file of ['index.php', 'statistics.php', 'todo-core.php']) {
         const php = read(file);
-        add(php, /iconSvg\(["']([a-z0-9-]+)["']/g);
+        add(php, /iconSvg\(["']([a-z0-9-]+)["'][,)]/g);
         // iconButton("id", "class", "icon", label)
         add(php, /iconButton\(\s*"[^"]*",\s*"[^"]*",\s*"([a-z0-9-]+)"/g);
     }

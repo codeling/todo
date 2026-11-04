@@ -1,20 +1,35 @@
 /**********/
 /* Colors */
-/* every color of the page is one of these; the dark scheme only has to give them other values */
+/* every color of the page is one of the custom properties below, with a value for each of the two color schemes */
 :root {
-    --page-bg: #F8F8F8;
-    --page-fg: black;
-    --surface: #EEE;
-    --border: black;
-    --muted: #777;
-    --ok: #0A0;
-    --danger: #D45;
-    --hover-bg: #DDD;
-    --icon-fg: #444;
-    --focus: #4466cc;
-    --chart-bar: blue;
+    color-scheme: light dark;
+}
+/* the scheme which the visitor chose with the button (a cookie, see todo-core.php and js/theme.js), else the system's */
+:root[data-theme="light"] {
+    color-scheme: light;
+}
+:root[data-theme="dark"] {
+    color-scheme: dark;
+}
+/* (light-dark() takes the first color in the light scheme and the second in the dark one) */
+:root {
+    --page-bg: light-dark(#F8F8F8, #1c1c1e);
+    --page-fg: light-dark(black, #e4e4e4);
+    --surface: light-dark(#EEE, #2a2a2d);
+    --border: light-dark(black, #8a8a8e);
+    --muted: light-dark(#666, #a0a0a5);
+    --ok: light-dark(#0A0, #4cc764);
+    --danger: light-dark(#C3283A, #ff6b7a);
+    --hover-bg: light-dark(#DDD, #3a3a3e);
+    --icon-fg: light-dark(#444, #e0e0e0);
+    --focus: light-dark(#4466cc, #8ab4ff);
+    --chart-bar: light-dark(blue, #3d6fd8);
     --chart-on-bar: white;
-    --chart-off-label: black;
+    --chart-off-label: light-dark(black, #e4e4e4);
+    --backdrop: light-dark(rgba(0, 0, 0, .4), rgba(0, 0, 0, .65));
+    /* Tagify (vendor/tagify/tagify.css) takes its colors from these */
+    --tagify-dd-text-color: var(--page-fg);
+    --tagify-dd-bg-color: light-dark(white, #2c2c2e);
 }
 
 /**************/
@@ -38,7 +53,9 @@ h2 {
 }
 .linkblock {
     float:right;
-} 
+    white-space: nowrap;
+    margin-right: 10px;
+}
 
 /*************/
 /* ToDo List */
@@ -327,6 +344,64 @@ svg.icon {
     margin-left: 10px;
 }
 
+/*********/
+/* Tagify */
+/* the light values are those of vendor/tagify/tagify.css */
+.tagify {
+    --tags-border-color: light-dark(#DDD, #555);
+    --tags-hover-border-color: light-dark(#CCC, #777);
+    --tags-focus-border-color: light-dark(#3595f6, #8ab4ff);
+    --tags-disabled-bg: light-dark(#F1F1F1, #2a2a2d);
+    --tag-bg: light-dark(#E5E5E5, #3a3a3e);
+    --tag-hover: light-dark(#D3E2E2, #4a4a50);
+    --tag-text-color: var(--page-fg);
+    --tag-text-color--edit: var(--page-fg);
+    --tag-remove-btn-color: var(--page-fg);
+    --placeholder-color: light-dark(rgba(0, 0, 0, .4), rgba(255, 255, 255, .45));
+    --placeholder-color-focus: light-dark(rgba(0, 0, 0, .25), rgba(255, 255, 255, .3));
+}
+
+/*******************/
+/* Color scheme button */
+#themelink {
+    margin-left: 5px;
+    margin-right: 5px;
+    margin-bottom: 3px;
+}
+.linkblock .themeswitch {
+    vertical-align: middle;
+}
+.themeswitch {
+    padding: 2px;
+    border: 0;
+    border-radius: 3px;
+    background: none;
+    color: var(--icon-fg);
+    line-height: 0;
+    cursor: pointer;
+}
+.themeswitch:focus-visible {
+    outline: 2px solid var(--focus);
+}
+@media (hover: hover)
+{
+    .themeswitch:hover {
+        background-color: var(--hover-bg);
+    }
+}
+/* the button has the icons of all three schemes, the one of the choice is shown (the root element has data-theme
+   if a scheme was chosen, see js/theme.js) */
+.themeswitch svg.icon {
+    display: none;
+    width: 20px;
+    height: 20px;
+}
+:root:not([data-theme]) .themeswitch .icon-theme-auto,
+:root[data-theme="light"] .themeswitch .icon-theme-light,
+:root[data-theme="dark"] .themeswitch .icon-theme-dark {
+    display: inline-block;
+}
+
 /*******************/
 /* Statistics page */
 
@@ -344,6 +419,8 @@ svg.icon {
 }
 .stat_svg {
     display: block;
+    /* the text (headings, labels); the bars and the numbers in them have their own */
+    fill: var(--page-fg);
 }
 .stat_characteristics {
     padding-left: 10px;
@@ -505,6 +582,13 @@ svg.icon {
 		width: 20px;
 		height: 20px;
 	}
+	.themeswitch {
+		padding: 6px;
+	}
+	.themeswitch svg.icon {
+		width: 24px;
+		height: 24px;
+	}
 	.completed input[type="checkbox"] {
 		width: 22px;
 		height: 22px;
@@ -542,4 +626,22 @@ svg.icon {
    (the npm base theme uses opacity .3); more specific since jquery-ui.min.css loads later */
 body .ui-widget-overlay {
     opacity: .003;
+}
+
+/* the base theme of jQuery UI has light colors only: these follow the scheme (the light values are its own);
+   the dialogs are native <dialog> elements in a later step, which makes this block unnecessary */
+body .ui-widget-content {
+	border-color: light-dark(#ddd, #555);
+	background: light-dark(#fff, #2a2a2d);
+	color: light-dark(#333, var(--page-fg));
+}
+body .ui-widget-header {
+	border-color: light-dark(#ddd, #555);
+	background: light-dark(#e9e9e9, #3a3a3e);
+	color: light-dark(#333, var(--page-fg));
+}
+body .ui-button {
+	border-color: light-dark(#c5c5c5, #666);
+	background: light-dark(#f6f6f6, #3a3a3e);
+	color: light-dark(#454545, var(--page-fg));
 }
