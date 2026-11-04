@@ -247,7 +247,7 @@ test('an overdue entry has its date in red, with a warning sign on a wide screen
     await narrow.context().close();
 });
 
-test('at 320px a row is at least 44px high, nothing scrolls sideways, and the line to enter an entry fits', async () => {
+test('at 320px a row is at least 44px high, nothing scrolls sideways, and the bar to enter an entry fits', async () => {
     seed();
     const page = await openPage({ viewport: { width: 320, height: 700 } });
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), 'the page is wider than the screen');
@@ -260,9 +260,10 @@ test('at 320px a row is at least 44px high, nothing scrolls sideways, and the li
     }
     const picker = await page.locator('.due_picker').boundingBox();
     assert.ok(picker.width >= 44 && picker.height >= 36, 'the due date can be tapped: ' + JSON.stringify(picker));
-    // the text field has a line of its own, as wide as the screen allows
+    // the text field, the due date and the button are one row (the bar at the bottom), and the field has the rest
     const field = await page.locator('#enter_todo').boundingBox();
-    assert.ok(field.width >= 280, 'the field is wide: ' + field.width);
+    assert.ok(field.width >= 180, 'the field is wide: ' + field.width);
+    assert.ok(Math.abs(field.y + field.height / 2 - (picker.y + picker.height / 2)) < 12, 'one row');
     // an entry which is added shows at once, with a due date
     await page.fill('#enter_todo', 'added on a phone');
     await page.fill('#enter_due', '2099-12-31');

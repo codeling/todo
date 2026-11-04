@@ -1,5 +1,6 @@
 // The requests which modify data, and what a failed request is.
 import { log } from './log.js';
+import { notify } from './toast.js';
 
 // jQuery sends this for all requests of the page (dataType and the like are set per request)
 export function setupAjax() {
@@ -59,11 +60,11 @@ export function postAction(url, data) {
 // the text of the language key prefixKey, a failed transmission is only shown
 export function reportFailure(prefixKey, failure) {
     if (failure.transport) {
-        alert($T('TRANSMISSION_ERROR'));
+        notify($T('TRANSMISSION_ERROR'));
         return;
     }
     log($T(prefixKey)+failure.message);
-    alert($T(prefixKey)+failure.message);
+    notify($T(prefixKey)+failure.message);
 }
 
 // a failed GET request for data (an error status is no .done())

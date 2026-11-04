@@ -1,5 +1,6 @@
 // Loading the lists, the entries and the tags from the server, and showing them.
 import { state } from './state.js';
+import { notify } from './toast.js';
 import { log } from './log.js';
 import { postAction, reportLoadFailure } from './api.js';
 import { renderLists, refreshView, fillTagList } from './render.js';
@@ -24,7 +25,7 @@ export function reload() {
         try {
             state.lists = JSON.parse(responseText);
         } catch (e) {
-            alert($T('SERVER_DELIVERED_INVALID_DATA')+': "'+responseText+
+            notify($T('SERVER_DELIVERED_INVALID_DATA')+': "'+responseText+
                 '";'+$T('JSON_PARSER_MESSAGE')+' : '+e);
         }
         renderLists();
@@ -43,7 +44,7 @@ function loadTodos() {
         try {
             state.itemList = JSON.parse(responseText);
         } catch (e) {
-            alert($T('SERVER_DELIVERED_INVALID_DATA')+': "'+responseText+
+            notify($T('SERVER_DELIVERED_INVALID_DATA')+': "'+responseText+
                 '";'+$T('JSON_PARSER_MESSAGE')+' : '+e);
         }
         for (var i=0; i<state.itemList.length; ++i) {

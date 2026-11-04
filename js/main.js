@@ -5,6 +5,7 @@
 // before; the modules use them as globals. A module is run when the document is parsed (like a
 // script with defer), so the elements are all there and no "ready" handler is needed.
 import { state, narrowScreenQuery } from './state.js';
+import { notify } from './toast.js';
 import { formatDate, parseDay, dateDiffInDays, addDays } from './dates.js';
 import { logItems } from './log.js';
 import { ItemSort } from './items.js';
@@ -85,7 +86,7 @@ $('#tag_merge').on('click', function() {
         function(e) { return e.name === mergeTagname; });
     if (result.length == 0 || result.length > 1)
     {
-        alert("Found no tag or more than one tag with that name, aborting merge!");
+        notify("Found no tag or more than one tag with that name, aborting merge!");
         return false;
     }
     return tagDialogAction('queries/merge-tag.php',
@@ -115,6 +116,13 @@ $('#inputform, #modifyform').on('submit', function(e) {
     e.preventDefault();
 });
 $('#enter_save').on('click', enter);
+// Enter in one of the fields adds the entry (the form has no submit button, and with three fields the browser does not submit it)
+$('#enter_todo, #enter_start, #enter_due').on('keydown', function(e) {
+    if (e.key === 'Enter' && !e.isComposing) {
+        e.preventDefault();
+        enter();
+    }
+});
 // the menu (a popover: the browser opens and closes it, also with Escape and a click outside)
 $('#menu_button').on('click', function() {
     // below the button, at its right edge

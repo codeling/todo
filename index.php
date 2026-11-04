@@ -18,7 +18,10 @@
     <link rel="stylesheet" type="text/css" href="<?php echo(assetUrl("vendor/tagify/tagify.css")); ?>" />
     <link rel="stylesheet" type="text/css" href="<?php echo(assetUrl("todo.css")); ?>" />
     <link rel="icon" href="todo.svg" type="image/svg+xml">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <!-- (the manifest is fetched with the credentials of the page: the web server asks for a login) -->
+    <link rel="manifest" href="<?php echo(assetUrl("manifest.webmanifest")); ?>" crossorigin="use-credentials">
+    <link rel="apple-touch-icon" href="todo-180.png">
   </head>
   <body>
     <div id="todo_content" class="todo_page">
@@ -43,10 +46,10 @@
         <div id="progress"><span id="progress_done">&nbsp;</span><span id="progress_todo">&nbsp;</span></div>
         <form method="POST" id="inputform">
           <div id="enterLine">
-            <input type="text" id="enter_todo" name="enter_todo" maxlength="255" />
+            <input type="text" id="enter_todo" name="enter_todo" maxlength="255" placeholder="<?php echo(htmlspecialchars(TodoLang::_("ENTER_PLACEHOLDER")));?>" enterkeyhint="done" autocomplete="off" autocapitalize="sentences" />
             <span class="start"><span class="date_caption"><?php echo(TodoLang::_("START"));?></span> <input type="date" id="enter_start" name="enter_start" /></span>
             <span class="due"><span class="date_caption"><?php echo(TodoLang::_("DUE"));?></span> <label class="due_picker"><input type="date" id="enter_due" name="enter_due" /><span id="enter_due_label"></span></label></span>
-            <?php echo(iconButton("enter_save", "addButton", "add", TodoLang::_("SAVE")));?>
+            <?php echo(iconButton("enter_save", "addButton", "add", TodoLang::_("ADD")));?>
           </div>
         </form>
         <ul id="todoList"></ul>
@@ -57,6 +60,8 @@
         </div>
       </div>
     </div>
+    <!-- messages (js/toast.js) -->
+    <div id="toasts" class="toasts" popover="manual" aria-live="polite"></div>
     <!-- the dialogs (js/dialogs.js opens them with showModal()) -->
     <dialog id="modify_dialog" aria-labelledby="modify_dialog_title">
       <?php echo(dialogHeaderHtml("modify_dialog_title", TodoLang::_("MODIFY_ENTRY"))); ?>

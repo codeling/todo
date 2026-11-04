@@ -33,6 +33,24 @@ async function openPage(path = '/index.php', ready = () => typeof todoApp !== 'u
     page.on('dialog', (d) => d.accept());
     await page.addInitScript(() => document.addEventListener('securitypolicyviolation',
         (e) => console.error('CSP violation: ' + e.violatedDirective + ' ' + e.blockedURI)));
+    // the messages which report a failure (js/toast.js; they were alert() boxes): counted, and handed to collectAlerts()
+    await page.addInitScript(() => {
+        window.__toastCount = 0;
+        document.addEventListener('DOMContentLoaded', () => {
+            const area = document.getElementById('toasts');
+            if (!area) return;
+            new MutationObserver((records) => {
+                for (const record of records) {
+                    for (const node of record.addedNodes) {
+                        if (node.classList && node.classList.contains('error')) {
+                            window.__toastCount++;
+                            if (window.__toastLog) window.__toastLog(node.querySelector('.toast_text').textContent);
+                        }
+                    }
+                }
+            }).observe(area, { childList: true });
+        });
+    });
     await page.goto(BASE + path);
     await page.waitForFunction(ready);
     return page;
@@ -268,16 +286,12 @@ test('the checkbox is unchecked again when completing an entry fails', async () 
     const page = await openPage();
     await page.waitForSelector('#todoList > li');
     const id = await page.evaluate(() => todoApp.state.itemList[0].id);
-    const alerts = [];
-    page.on('dialog', (d) => alerts.push(d.message()));
+    const alerts = await collectAlerts(page);
 
     // the server refuses with an error message
     await page.route('**/queries/complete.php*', (r) => r.fulfill({
         status: 409, contentType: 'application/json; charset=utf-8', body: JSON.stringify({ error: 'some error' }) }));
-    let dialog = page.waitForEvent('dialog');
-    await page.click('#completed' + id);
-    await dialog;
-    await page.evaluate(() => 0);  // the handler goes on after the alert was accepted
+    await untilAlert(page, () => page.click('#completed' + id));
     assert.equal(alerts.length, 1);
     assert.ok(alerts[0].endsWith('some error'), alerts[0]);
     assert.equal(await page.isChecked('#completed' + id), false);
@@ -285,10 +299,7 @@ test('the checkbox is unchecked again when completing an entry fails', async () 
     // the request fails
     await page.unroute('**/queries/complete.php*');
     await page.route('**/queries/complete.php*', (r) => r.abort());
-    dialog = page.waitForEvent('dialog');
-    await page.click('#completed' + id);
-    await dialog;
-    await page.evaluate(() => 0);
+    await untilAlert(page, () => page.click('#completed' + id));
     assert.equal(alerts.length, 2);
     assert.equal(await page.isChecked('#completed' + id), false);
 
@@ -309,20 +320,21 @@ test('the checkbox is unchecked again when completing an entry fails', async () 
 
 const errorBody = (error) => ({ contentType: 'application/json; charset=utf-8', body: JSON.stringify({ error }) });
 
-// the texts of the alerts of a page from now on (confirm dialogs are not counted)
-function collectAlerts(page) {
+// the texts of the messages about failures which a page shows from now on (they were alert() boxes; confirm() boxes
+// are not counted)
+async function collectAlerts(page) {
     const alerts = [];
-    page.on('dialog', (d) => { if (d.type() === 'alert') alerts.push(d.message()); });
+    await page.exposeFunction('__toastLog', (text) => alerts.push(text));
     return alerts;
 }
 
-// runs the action and waits for the alert which that leads to (not for a confirm() before it, as
-// reactivate shows one: its alert only comes after the request, the test would not wait for it)
+// runs the action and waits for the message about a failure which that leads to (not for a confirm() before it, as
+// reactivate shows one: its message only comes after the request, the test would not wait for it)
 async function untilAlert(page, action) {
-    const dialog = page.waitForEvent('dialog', (d) => d.type() === 'alert');
+    const before = await page.evaluate(() => window.__toastCount);
     await action();
-    await dialog;
-    await page.evaluate(() => 0);  // the handler goes on after the alert was accepted
+    await page.waitForFunction((n) => window.__toastCount > n, before);
+    await page.evaluate(() => 0);  // (what the page reported is delivered before this answer)
 }
 
 const clickForAlert = (page, selector) => untilAlert(page, () => page.click(selector));
@@ -333,7 +345,7 @@ test('an entry moved to the trash or back is shown as before when that fails, al
     const page = await openPage();
     await page.waitForSelector('#todoList > li');
     const id = await page.evaluate(() => todoApp.state.itemList[0].id);
-    const alerts = collectAlerts(page);
+    const alerts = await collectAlerts(page);
     const deleted = () => page.evaluate(() => todoApp.state.itemList[0].deleted);
 
     // the server refuses: the message is shown and the entry is back
@@ -375,7 +387,7 @@ test('a failed creation removes the new entry, and nothing else if the list was 
         "(UTC_TIMESTAMP(), 'one', UTC_DATE(), 0), (UTC_TIMESTAMP(), 'two', UTC_DATE(), 0)");
     const page = await openPage();
     await page.waitForFunction(() => todoApp.state.itemList.length == 2);
-    const alerts = collectAlerts(page);
+    const alerts = await collectAlerts(page);
     const todos = () => page.evaluate(() => todoApp.state.itemList.map((i) => i.todo).sort());
 
     // the entry which is shown while the request is on its way is gone
@@ -404,7 +416,7 @@ test('failed requests for data are reported, and the list works again afterwards
     sql("INSERT INTO todo (creationDate, description, startDate, list_id) VALUES (UTC_TIMESTAMP(), 'one', UTC_DATE(), 0)");
     const page = await openPage();
     await page.waitForFunction(() => todoApp.state.itemList.length == 1);
-    const alerts = collectAlerts(page);
+    const alerts = await collectAlerts(page);
     const loaded = () => page.waitForFunction(() => document.querySelector('#working').style.display == 'none');
 
     // an error status with the message of the server; the loading indicator goes away
@@ -457,7 +469,7 @@ test('reactivating reports the answer of the server in the log, also if it refus
         await page.click('#open' + await page.evaluate(() => todoApp.state.itemList[0].id));
         await click('#modify_reactivate');
     };
-    const alerts = collectAlerts(page);
+    const alerts = await collectAlerts(page);
 
     const loaded = () => page.waitForFunction(() => todoApp.logItems[todoApp.logItems.length - 1] == 'Loading finished');
     await reactivate((selector) => page.click(selector));

@@ -54,6 +54,14 @@ and filled. Until then step 0 can only be prepared as files in a scratch directo
   hidden on phones: do today, reactivate, delete, restore. No effort, line number or start column in the row (the dialog has
   them). `tests/rows.test.js`.
 
+* Step 5c (adding, messages, home screen): Enter adds the entry (the form had no submit button and three fields, so it did not),
+  with a placeholder which says how tags are entered; on a phone the line to enter an entry is a bar at the bottom (thumb, stays
+  while the list scrolls, safe area of the screen); `alert()` is replaced by messages (`js/toast.js`; a failure is `role="alert"`;
+  one inside an open dialog, because everything outside a modal dialog is inert), moving an entry to the trash has an Undo; a web
+  app manifest with icons so that the page can be put on the home screen (`crossorigin="use-credentials"`: the login of the web
+  server). Not done: `pt` to `rem` for all sizes (the sizes of the new elements are in px, the body is 15px on phones).
+  `tests/quickadd.test.js`.
+
 ## 1. Findings
 
 ### Structure and usability

@@ -9,6 +9,9 @@ in `todo.css` (Chrome 123, Firefox 120, Safari 17.5 or newer; older browsers sho
 The icons are those of [codeling/webicons](https://github.com/codeling/webicons) (the folder `webicons/`, a
 git subtree: update it with `git subtree pull --prefix=webicons https://github.com/codeling/webicons main --squash`).
 
+On a phone the page can be put on the home screen (`manifest.webmanifest`, the icons `todo-*.png`): it then opens
+without the address bar. The manifest is requested with the credentials of the page, so it needs the same login.
+
 ## Installation
 
 1. Create a database and load `sql/install.sql`.

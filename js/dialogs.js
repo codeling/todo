@@ -1,5 +1,6 @@
 // The dialogs: an entry, a tag, and the log.
 import { state } from './state.js';
+import { notify } from './toast.js';
 import { findItem, ItemSort, getTodoWithTag } from './items.js';
 import { parseDate, parseDay, formatDate } from './dates.js';
 import { log, logItems, updateLog } from './log.js';
@@ -93,7 +94,7 @@ function fillModifyForm(id) {
     log($T('OPENING_UPDATE_DIALOG'));
     var index = findItem(id);
     if (index == -1) {
-        alert($T('ENTRY_NOT_FOUND'));
+        notify($T('ENTRY_NOT_FOUND'));
         return;
     }
     var item = state.itemList[index];

@@ -89,7 +89,9 @@ function themeButtonHtml() {
 function dialogHeaderHtml($titleId, $title) {
     return '<div class="dialog_header"><h2 id="'.htmlspecialchars($titleId).'" class="dialog_title">'.htmlspecialchars($title).'</h2>'.
         '<button type="button" class="iconButton dialog_close" data-dialog-close title="'.htmlspecialchars(TodoLang::_("CLOSE")).
-        '" aria-label="'.htmlspecialchars(TodoLang::_("CLOSE")).'">'.iconSvg('close').'</button></div>';
+        '" aria-label="'.htmlspecialchars(TodoLang::_("CLOSE")).'">'.iconSvg('close').'</button></div>'.
+        // (the messages which come while the dialog is open, see js/toast.js)
+        '<div class="toasts dialog_toasts" aria-live="polite"></div>';
 }
 // a button of the footer of a dialog: the label is its text, the icon is optional
 function dialogButtonHtml($id, $class, $label, $icon = null) {

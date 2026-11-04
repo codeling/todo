@@ -2,6 +2,7 @@
 // Each action sends a request to the server with postAction() and changes the list on the page
 // (the *Locally() functions), at once and undone if the server refuses, or once the server confirmed.
 import { state } from './state.js';
+import { notify, showToast } from './toast.js';
 import { Todo, copyTodo, findItem } from './items.js';
 import { formatDate, getUTCDate, parseDay } from './dates.js';
 import { log } from './log.js';
@@ -30,7 +31,7 @@ function modifyLocally(item) {
     var index = findItem(item.id);
     if (index == -1)
     {
-        alert($T('ENTRY_NOT_FOUND'));
+        notify($T('ENTRY_NOT_FOUND'));
         return;
     }
     state.itemList[index].todo     = item.todo;
@@ -57,7 +58,7 @@ function addLocally(newItem) {
 function toggleLocally(item) {
     var index = findItem(item.id);
     if (index == -1) {
-        alert($T('ENTRY_NOT_FOUND'));
+        notify($T('ENTRY_NOT_FOUND'));
         return;
     }
     var toggledItem = state.itemList[index];
@@ -97,7 +98,7 @@ export function setTrashed(id, trashed) {
     log($T(trashed ? 'DELETING_ENTRY' : 'RESTORING_ENTRY'));
     var idx = findItem(id);
     if (idx == -1) {
-        alert($T('ENTRY_NOT_FOUND'));
+        notify($T('ENTRY_NOT_FOUND'));
         return;
     }
     var stuff = new Object();
@@ -107,6 +108,10 @@ export function setTrashed(id, trashed) {
     setTrashedLocally(idx, trashed);
     postAction('queries/trash.php', stuff).then(function() {
         log($T(trashed ? 'DELETING_SUCCESSFUL' : 'RESTORING_SUCCESSFUL'));
+        if (trashed) {
+            // (one tap takes it back, no question before it was needed)
+            showToast($T('DELETING_SUCCESSFUL'), { actionLabel: $T('UNDO'), onAction: function() { setTrashed(id, false); } });
+        }
     }, function(failure) {
         reportFailure(trashed ? 'ERROR_WHILE_DELETING' : 'ERROR_WHILE_RESTORING', failure);
         // undo what was shown, also after a transmission error (the list may have been loaded
@@ -133,7 +138,7 @@ function sendReactivate(id) {
         showReactivationResult(answer.message);
     }, function(failure) {
         if (failure.transport) {
-            alert($T('TRANSMISSION_ERROR'));
+            notify($T('TRANSMISSION_ERROR'));
             return;
         }
         showReactivationResult(failure.message);
@@ -144,7 +149,7 @@ function sendReactivate(id) {
 export function reactivate(id) {
     var index = findItem(id);
     if (index == -1) {
-        alert($T('ENTRY_NOT_FOUND'));
+        notify($T('ENTRY_NOT_FOUND'));
         return;
     }
     if (state.itemList[index].completed == 0) {
@@ -170,7 +175,7 @@ function resetCompletedCheckbox(id) {
 export function toggleCompleted(id) {
     var index = findItem(id);
     if (index == -1) {
-        alert($T('ENTRY_NOT_FOUND'));
+        notify($T('ENTRY_NOT_FOUND'));
         return;
     }
     if (state.itemList[index].deleted == 1) {
@@ -263,7 +268,7 @@ export function storeItem() {
     var id = parseInt($('#modify_id').val());
     var idx = findItem(id);
     if (idx == -1) {
-        alert($T('ENTRY_NOT_FOUND'));
+        notify($T('ENTRY_NOT_FOUND'));
         return;
     }
     var stuff = new Todo(id,
@@ -292,11 +297,11 @@ export function storeItem() {
 export function enter() {
     log($T('CREATING_NEW_ENTRY'));
     if ($('#enter_todo').val().length == 0) {
-        alert($T('TODO_MAY_NOT_BE_EMPTY'));
+        notify($T('TODO_MAY_NOT_BE_EMPTY'));
         return;
     }
     if (findItem(-1) != -1) {
-        alert($T('ANOTHER_CREATE_STILL_RUNNING'));
+        notify($T('ANOTHER_CREATE_STILL_RUNNING'));
         return;
     }
     var todo = $('#enter_todo').val();
@@ -310,7 +315,7 @@ export function enter() {
     }
     // incompletely entered date: value is empty, but input isn't
     if ($('#enter_start')[0].validity.badInput || $('#enter_due')[0].validity.badInput) {
-        alert($T('INVALID_DATE'));
+        notify($T('INVALID_DATE'));
         return;
     }
     // start/due inputs are hidden on narrow screens; default like the server:

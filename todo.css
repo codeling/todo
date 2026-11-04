@@ -26,6 +26,9 @@
     --accent: light-dark(#3a5fc0, #8ab4ff);
     --on-accent: light-dark(white, #111);
     --chip-bg: light-dark(#E5E5E5, #3a3a3e);
+    --toast-bg: light-dark(#333333, #3a3a3e);
+    --toast-fg: light-dark(#ffffff, #f0f0f0);
+    --toast-action: #8ab4ff;
     --chart-bar: light-dark(blue, #3d6fd8);
     --chart-on-bar: white;
     --chart-off-label: light-dark(black, #e4e4e4);
@@ -38,6 +41,10 @@
 /**************/
 /* Common CSS */
 
+/* (no delay and no zoom by a double tap on the controls) */
+button, a, input, select, label, summary {
+    touch-action: manipulation;
+}
 body {
     font-family:Tahoma,sans-serif;
     background-color: var(--page-bg);
@@ -395,6 +402,71 @@ button.tagChip {
 .menuItem[hidden] {
     display: none;
 }
+/* messages (js/toast.js): at the bottom, in the top layer (a popover) so that a modal dialog does not cover them */
+.toasts {
+    position: fixed;
+    inset: auto 0 12px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    width: auto;
+    height: auto;
+    margin: 0;
+    padding: 0 12px;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    overflow: visible;
+}
+/* (the area of the page is a popover; an area in a dialog is above the footer of the dialog) */
+#toasts:not(:popover-open) {
+    display: none;
+}
+.dialog_toasts {
+    bottom: 72px;
+}
+.toasts:empty {
+    display: none;
+}
+.toast {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-sizing: border-box;
+    max-width: min(520px, 100%);
+    padding: 6px 6px 6px 14px;
+    border: 1px solid var(--toast-bg);
+    border-radius: 6px;
+    background: var(--toast-bg);
+    color: var(--toast-fg);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .35);
+}
+.toast.error {
+    border-color: var(--danger);
+}
+.toast_action, .toast_close {
+    min-width: 36px;
+    min-height: 36px;
+    padding: 0 8px;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    font: inherit;
+    cursor: pointer;
+}
+.toast_action {
+    color: var(--toast-action);
+    font-weight: bold;
+}
+.toast_close {
+    color: var(--toast-fg);
+    font-size: 1.4em;
+    line-height: 1;
+}
+.toast_action:focus-visible, .toast_close:focus-visible {
+    outline: 2px solid var(--toast-action);
+}
 @media (hover: hover)
 {
     .menuItem:hover {
@@ -560,15 +632,32 @@ svg.icon {
 /* Responsive design */
 @media (max-width: 575px)
 {
-	/* the line to enter an entry: the text on a line of its own, then the dates and the button; the start date is
-	   left out (today), the due date of a new todo is the label (a calendar icon if empty) with the native
-	   date input on top of it, invisible, which opens the picker on tap */
+	/* The line to enter an entry is a bar at the bottom of the screen, where the thumb is, and stays there while the
+	   list scrolls: the text, the due date and the button. The start date is left out (today). The due date is the label
+	   (a calendar icon if empty) with the native date input on top of it, invisible, which opens the picker on tap. */
+	body {
+		font-size: 15px;
+	}
+	#mainContent {
+		padding-bottom: calc(64px + env(safe-area-inset-bottom));
+	}
+	#inputform {
+		position: fixed;
+		z-index: 10;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		box-sizing: border-box;
+		padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+		border-top: 1px solid var(--border);
+		background: var(--page-bg);
+	}
 	#enterLine {
-		flex-wrap: wrap;
+		flex-wrap: nowrap;
+		margin-bottom: 0;
 	}
 	#enter_todo {
-		flex-basis: 100%;
-		width: 100%;
+		min-height: 40px;
 	}
 	#enterLine .start, #enterLine .date_caption {
 		display: none;
@@ -576,10 +665,12 @@ svg.icon {
 	#enterLine .due {
 		display: inline-flex;
 		align-items: center;
-		margin-left: auto;
 	}
 	#enterLine .due .date_caption {
 		display: none;
+	}
+	#toasts {
+		bottom: calc(76px + env(safe-area-inset-bottom));
 	}
 	.due_picker {
 		position: relative;
