@@ -8,6 +8,7 @@ import { log } from './log.js';
 import { postAction, reportFailure } from './api.js';
 import { refreshView, renderTable, updateEnterDueLabel } from './render.js';
 import { reloadTagList, refresh } from './load.js';
+import { closeDialog } from './dialogs.js';
 
 function setTrashedLocally(idx, trashed) {
     state.itemList[idx].deleted = trashed ? 1 : 0;
@@ -283,7 +284,7 @@ export function storeItem() {
         $('#modify_list').val()
     );
     storeItemRemote(stuff, function() {
-        $('#modify_dialog').dialog('close');
+        closeDialog('#modify_dialog');
     });
 }
 

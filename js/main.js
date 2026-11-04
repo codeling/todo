@@ -12,7 +12,7 @@ import { setupAjax } from './api.js';
 import { enter, emptyTrash, storeItem } from './actions.js';
 import { renderTable, updateEnterDueLabel } from './render.js';
 import { reload, refresh, reloadTagList } from './load.js';
-import { keepDialogsInWindow, showLogDialog, toggleRecurrenceAnchor, openTagDialog, tagDialogAction } from './dialogs.js';
+import { setupDialogs, keepSuggestionsInDialog, showLogDialog, toggleRecurrenceAnchor, openTagDialog, tagDialogAction } from './dialogs.js';
 
 // The one way to reach the state of the page from outside the modules: the UI tests
 // (tests/ui.test.js) read it, and it helps to look at the page in the browser console.
@@ -37,7 +37,7 @@ function shiftDueWithStart(startSel, dueSel, fillEmptyDue) {
     });
 }
 
-keepDialogsInWindow();
+setupDialogs();
 
 $('#modify_save').on('click', function() {
     // store...
@@ -83,8 +83,15 @@ state.filterTagify = new Tagify($('#filter_tag_edit')[0]);
 state.filterTagify.on('change', function() {
     renderTable();
 } );
-state.modifyTagify = new Tagify($('#modify_tag_edit')[0]);
-state.mergeTagify = new Tagify($('#merge_tag_edit')[0], {
+// The list of suggestions of a tag field in a dialog is put into the dialog: a modal dialog covers everything else on
+// the page, so a list at the end of <body> would be hidden behind it; keepSuggestionsInDialog() places it.
+function tagifyInDialog(selector, dialogSelector, settings) {
+    var tagify = new Tagify($(selector)[0], $.extend({ dropdown: { appendTarget: $(dialogSelector)[0] } }, settings));
+    keepSuggestionsInDialog(tagify);
+    return tagify;
+}
+state.modifyTagify = tagifyInDialog('#modify_tag_edit', '#modify_dialog');
+state.mergeTagify = tagifyInDialog('#merge_tag_edit', '#tag_dialog', {
     enforceWhitelist: true,
     mode: "select"
 });

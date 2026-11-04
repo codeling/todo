@@ -58,7 +58,6 @@ test('main workflows work (and do not violate the Content-Security-Policy)', asy
     const page = await openPage();
     // runs with the versions from package-lock.json (vendor/ is checked to match them)
     assert.equal(await page.evaluate(() => $.fn.jquery), vendored('jquery'));
-    assert.equal(await page.evaluate(() => $.ui.version), vendored('jquery-ui'));
     await page.fill('#enter_todo', 'tag1: new <i>item</i>');
     await page.click('#enter_save');
     await page.waitForFunction(() => todoApp.state.itemList.length == 1 && todoApp.state.itemList[0].id > 0);

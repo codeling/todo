@@ -37,6 +37,11 @@ and filled. Until then step 0 can only be prepared as files in a scratch directo
   button, persistence, contrast of the texts in both schemes). The light red (`--danger`) is a little darker (`#C3283A`) so that
   the overdue date has 4.5:1; the muted grey is `#666`.
 
+* Step 4: native `<dialog>` elements (`showModal()`, header with the title and the close button, scrolling body, footer
+  with Cancel and Save; a full-screen sheet on narrow screens), jQuery UI removed (`package.json`, `scripts/vendor.sh`, `vendor/`,
+  the overrides in `todo.css`). A modal dialog covers everything else on the page, so Tagify's lists of suggestions are put into
+  the dialog and placed by `keepSuggestionsInDialog()` (Tagify's own placement is wrong inside a dialog). `tests/dialogs.test.js`.
+
 ## 1. Findings
 
 ### Structure and usability

@@ -8,7 +8,6 @@
     <title><?php echo(TodoConstants::AppName); ?></title>
     <!-- JQuery & JQuery UI -->
     <script src="<?php echo(assetUrl("vendor/jquery/jquery.min.js")); ?>"></script>
-    <script src="<?php echo(assetUrl("vendor/jquery-ui/jquery-ui.min.js")); ?>"></script>
     <script src="lang-js.php"></script>
     <script src="<?php echo(assetUrl("vendor/tagify/tagify.js")); ?>"></script>
     <!-- the application: ES modules (js/*.js) which js/main.js imports; they use the scripts above as globals.
@@ -18,7 +17,6 @@
     <script src="<?php echo(assetUrl("js/theme.js")); ?>" defer></script>
     <link rel="stylesheet" type="text/css" href="<?php echo(assetUrl("vendor/tagify/tagify.css")); ?>" />
     <link rel="stylesheet" type="text/css" href="<?php echo(assetUrl("todo.css")); ?>" />
-    <link rel="stylesheet" type="text/css" href="<?php echo(assetUrl("vendor/jquery-ui/jquery-ui.min.css")); ?>"/>
     <link rel="icon" href="todo.svg" type="image/svg+xml">
     <meta name="viewport" content="width=device-width, initial-scale=1">
   </head>
@@ -61,51 +59,6 @@
             <a href="#" id="loadLessCompleted"><?php echo(TodoLang::_("LOAD_LESS_COMPLETED"));?></a>
             <a href="#" id="loadMoreCompleted"><?php echo(TodoLang::_("LOAD_MORE_COMPLETED"));?></a>
         </div>
-        <div id="modify_dialog">
-          <form method="POST" id="modifyform">
-            <input type="hidden" id="modify_id" name="modify_id" />
-            <div class="modify_line" id="modify_info"></div>
-            <div class="modify_line">
-              <span class="modify_desc"><?php echo(TodoLang::_("TODO"));?>: </span>
-              <input type="text" id="modify_todo" name="modify_todo" maxlength="255" />
-            </div><div class="modify_line">
-              <span class="modify_desc"><?php echo(TodoLang::_("START"));?>:</span>
-              <input type="date" id="modify_start" name="modify_start" />
-            </div><div class="modify_line">
-              <span class="modify_desc"><?php echo(TodoLang::_("DUE"));?>: </span>
-              <input type="date" id="modify_due" name="modify_due" />
-            </div><div class="modify_line">
-              <span class="modify_desc"><?php echo(TodoLang::_("EFFORT"));?>:</span>
-              <input type="text" id="modify_effort" name="modify_effort" maxlength="4" /><?php echo(TodoLang::_("EFFORT_REMARK"));?>
-            </div><div class="modify_line">
-              <span class="modify_desc"><?php echo(TodoLang::_("RECURRENCE"));?>:</span>
-              <input type="number" id="modify_recurrenceInterval" name="modify_recurrenceInterval" min="1" max="999" value="1" title="<?php echo(TodoLang::_("RECURRENCE_EVERY"));?>" /><select name="modify_recurrenceMode" id="modify_recurrenceMode">
-                <option value="0"><?php echo(TodoLang::_("DONT_REPEAT"));?></option>
-                <option value="1"><?php echo(TodoLang::_("REPEAT_UNIT_DAYS"));?></option>
-                <option value="2"><?php echo(TodoLang::_("REPEAT_UNIT_WEEKS"));?></option>
-                <option value="3"><?php echo(TodoLang::_("REPEAT_UNIT_MONTHS"));?></option>
-                <option value="4"><?php echo(TodoLang::_("REPEAT_UNIT_YEARS"));?></option>
-              </select>
-            </div><div class="modify_line recurrence_dependent">
-              <span class="modify_desc"><?php echo(TodoLang::_("RECURRENCE_ANCHOR"));?>:</span>
-              <select name="modify_recurrenceAnchor" id="modify_recurrenceAnchor">
-                <option value="0"><?php echo(TodoLang::_("REPEAT_ANCHOR_COMPLETIONDATE"));?></option>
-                <option value="1"><?php echo(TodoLang::_("REPEAT_ANCHOR_ENDDATE"));?></option>
-              </select>
-            </div><div class="modify_line">
-              <span class="modify_desc"><?php echo(TodoLang::_("NOTES"));?>:</span>
-              <textarea type="text" id="modify_notes" name="modify_notes"></textarea>
-            </div><div class="modify_line">
-              <span class="modify_desc"><?php echo(TodoLang::_("TAGS"));?>:</span>
-              <input id="modify_tag_edit" />
-            </div><div class="modify_line">
-              <span class="modify_desc"><?php echo(TodoLang::_("LIST"));?>:</span>
-              <select id="modify_list">
-              </select>
-            </div>
-            <?php echo(iconButton("modify_save", "saveButton", "check", TodoLang::_("SAVE")));?>
-          </form>
-        </div>
       </div>
       <div id="sidebar">
         <div id="smallLog"><?php echo(TodoLang::_("STARTING_LOG"));?></div>
@@ -117,8 +70,66 @@
           <input value="">
         </div>
       </div>
-      <div id="log_dialog"></div>
-      <div id="tag_dialog">
+    </div>
+    <!-- the dialogs (js/dialogs.js opens them with showModal()) -->
+    <dialog id="modify_dialog" aria-labelledby="modify_dialog_title">
+      <?php echo(dialogHeaderHtml("modify_dialog_title", TodoLang::_("MODIFY_ENTRY"))); ?>
+      <div class="dialog_body" tabindex="-1" autofocus>
+      <form method="POST" id="modifyform">
+        <input type="hidden" id="modify_id" name="modify_id" />
+        <div class="modify_line" id="modify_info"></div>
+        <div class="modify_line">
+          <span class="modify_desc"><?php echo(TodoLang::_("TODO"));?>: </span>
+          <input type="text" id="modify_todo" name="modify_todo" maxlength="255" />
+        </div><div class="modify_line">
+          <span class="modify_desc"><?php echo(TodoLang::_("START"));?>:</span>
+          <input type="date" id="modify_start" name="modify_start" />
+        </div><div class="modify_line">
+          <span class="modify_desc"><?php echo(TodoLang::_("DUE"));?>: </span>
+          <input type="date" id="modify_due" name="modify_due" />
+        </div><div class="modify_line">
+          <span class="modify_desc"><?php echo(TodoLang::_("EFFORT"));?>:</span>
+          <input type="text" id="modify_effort" name="modify_effort" maxlength="4" /><?php echo(TodoLang::_("EFFORT_REMARK"));?>
+        </div><div class="modify_line">
+          <span class="modify_desc"><?php echo(TodoLang::_("RECURRENCE"));?>:</span>
+          <input type="number" id="modify_recurrenceInterval" name="modify_recurrenceInterval" min="1" max="999" value="1" title="<?php echo(TodoLang::_("RECURRENCE_EVERY"));?>" /><select name="modify_recurrenceMode" id="modify_recurrenceMode">
+            <option value="0"><?php echo(TodoLang::_("DONT_REPEAT"));?></option>
+            <option value="1"><?php echo(TodoLang::_("REPEAT_UNIT_DAYS"));?></option>
+            <option value="2"><?php echo(TodoLang::_("REPEAT_UNIT_WEEKS"));?></option>
+            <option value="3"><?php echo(TodoLang::_("REPEAT_UNIT_MONTHS"));?></option>
+            <option value="4"><?php echo(TodoLang::_("REPEAT_UNIT_YEARS"));?></option>
+          </select>
+        </div><div class="modify_line recurrence_dependent">
+          <span class="modify_desc"><?php echo(TodoLang::_("RECURRENCE_ANCHOR"));?>:</span>
+          <select name="modify_recurrenceAnchor" id="modify_recurrenceAnchor">
+            <option value="0"><?php echo(TodoLang::_("REPEAT_ANCHOR_COMPLETIONDATE"));?></option>
+            <option value="1"><?php echo(TodoLang::_("REPEAT_ANCHOR_ENDDATE"));?></option>
+          </select>
+        </div><div class="modify_line">
+          <span class="modify_desc"><?php echo(TodoLang::_("NOTES"));?>:</span>
+          <textarea type="text" id="modify_notes" name="modify_notes"></textarea>
+        </div><div class="modify_line">
+          <span class="modify_desc"><?php echo(TodoLang::_("TAGS"));?>:</span>
+          <input id="modify_tag_edit" />
+        </div><div class="modify_line">
+          <span class="modify_desc"><?php echo(TodoLang::_("LIST"));?>:</span>
+          <select id="modify_list">
+          </select>
+        </div>
+      </form>
+      </div>
+      <div class="dialog_footer">
+        <?php echo(dialogCancelButtonHtml().dialogButtonHtml("modify_save", "primary", TodoLang::_("SAVE"), "check")); ?>
+      </div>
+      <div class="dialog_dropdowns" id="modify_dialog_dropdowns"></div>
+    </dialog>
+    <dialog id="log_dialog" aria-labelledby="log_dialog_title">
+      <?php echo(dialogHeaderHtml("log_dialog_title", "Log")); ?>
+      <div class="dialog_body" tabindex="-1" autofocus id="log_dialog_text"></div>
+    </dialog>
+    <dialog id="tag_dialog" aria-labelledby="tag_dialog_title">
+      <?php echo(dialogHeaderHtml("tag_dialog_title", TodoLang::_("EDIT_TAG"))); ?>
+      <div class="dialog_body" tabindex="-1" autofocus>
         <form>
           <div class="modify_line">
             <span class="modify_desc"><?php echo(TodoLang::_("TAG_NAME"));?>: </span>
@@ -132,8 +143,6 @@
             <input id="merge_tag_edit" >
             <?php echo(iconButton("tag_merge", "mergeButton", "merge", TodoLang::_("MERGE")));?>
           </div>
-          <?php echo(iconButton("tag_delete", "deleteButton", "delete", TodoLang::_("DELETE")));?>
-          <?php echo(iconButton("tag_save", "saveButton", "check", TodoLang::_("SAVE")));?>
         </form>
         <div id="tag_todo_container">
           <span id="tag_todo_caption"><?php echo(TodoLang::_("TAG_TODO_LIST_CAPTION"));?></span>
@@ -141,6 +150,11 @@
           </div>
         </div>
       </div>
-    </div>
+      <div class="dialog_footer">
+        <?php echo(iconButton("tag_delete", "deleteButton dialog_footer_start", "delete", TodoLang::_("DELETE")));?>
+        <?php echo(dialogCancelButtonHtml().dialogButtonHtml("tag_save", "primary", TodoLang::_("SAVE"), "check")); ?>
+      </div>
+      <div class="dialog_dropdowns" id="tag_dialog_dropdowns"></div>
+    </dialog>
   </body>
 </html>

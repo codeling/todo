@@ -84,6 +84,22 @@ function themeButtonHtml() {
     return '<button type="button" class="themeswitch" title="'.htmlspecialchars($labels[$mode]).'" aria-label="'.
         htmlspecialchars($labels[$mode]).'"'.$attributes.'>'.$icons.'</button>';
 }
+// The dialogs are <dialog> elements which are opened with showModal() (js/dialogs.js): the header has the title and
+// the button to close it (js/dialogs.js closes the dialog of any element with data-dialog-close)
+function dialogHeaderHtml($titleId, $title) {
+    return '<div class="dialog_header"><h2 id="'.htmlspecialchars($titleId).'" class="dialog_title">'.htmlspecialchars($title).'</h2>'.
+        '<button type="button" class="iconButton dialog_close" data-dialog-close title="'.htmlspecialchars(TodoLang::_("CLOSE")).
+        '" aria-label="'.htmlspecialchars(TodoLang::_("CLOSE")).'">'.iconSvg('close').'</button></div>';
+}
+// a button of the footer of a dialog: the label is its text, the icon is optional
+function dialogButtonHtml($id, $class, $label, $icon = null) {
+    return '<button type="button"'.($id === null ? '' : ' id="'.htmlspecialchars($id).'"').' class="dialogButton '.htmlspecialchars($class).'">'.
+        ($icon === null ? '' : iconSvg($icon)).htmlspecialchars($label).'</button>';
+}
+// the button which closes the dialog without doing anything
+function dialogCancelButtonHtml() {
+    return '<button type="button" class="dialogButton" data-dialog-close>'.htmlspecialchars(TodoLang::_("CANCEL")).'</button>';
+}
 // the ID of the user whose lists and entries are shown
 // TODO: get that from the current user account
 function todoUserId() {
