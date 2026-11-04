@@ -18,6 +18,30 @@ require_once(__DIR__."/webauth/webauth.php");
 function assetUrl($file) {
     return $file."?v=".filemtime(__DIR__."/".$file);
 }
+// The icons are those of codeling/webicons (webicons/icons/*.svg, see webicons/README.md): shapes without colors,
+// which a page shows as an inline SVG that uses the file (<use>), so that todo.css sets the color (also in the
+// dark scheme). The version in the URL is the newest modification time of the files (one for all icons: js/html.js
+// builds the same URLs with the number it gets from lang-js.php).
+function iconVersion() {
+    static $version = null;
+    if ($version === null) {
+        $version = 0;
+        foreach (glob(__DIR__."/webicons/icons/*.svg") ?: array() as $file) {
+            $version = max($version, (int)filemtime($file));
+        }
+    }
+    return $version;
+}
+// an icon next to a text or inside a button which has a label of its own: hidden from assistive technology
+function iconSvg($name, $class = '') {
+    return '<svg class="icon icon-'.htmlspecialchars($name).($class !== '' ? ' '.htmlspecialchars($class) : '').
+        '" viewBox="0 0 16 16" aria-hidden="true"><use href="webicons/icons/'.htmlspecialchars($name).'.svg?v='.iconVersion().'#i"/></svg>';
+}
+// a button with an icon; the label is its tooltip and its name for screen readers
+function iconButton($id, $class, $icon, $label) {
+    return '<button type="button" id="'.htmlspecialchars($id).'" class="iconButton '.htmlspecialchars($class).
+        '" title="'.htmlspecialchars($label).'" aria-label="'.htmlspecialchars($label).'">'.iconSvg($icon).'</button>';
+}
 // the ID of the user whose lists and entries are shown
 // TODO: get that from the current user account
 function todoUserId() {

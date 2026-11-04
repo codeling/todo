@@ -37,7 +37,7 @@
           <table id="todoTable">
             <thead>
             <tr>
-              <th class="todo"><?php echo(TodoLang::_("TODO"));?> <input type="button" class="iconButton refreshButton" id="refresh" alt="refresh" /></th>
+              <th class="todo"><?php echo(TodoLang::_("TODO"));?> <?php echo(iconButton("refresh", "refreshButton", "refresh", TodoLang::_("REFRESH")));?></th>
               <th class="start"><?php echo(TodoLang::_("START"));?></th>
               <th class="due"><?php echo(TodoLang::_("DUE"));?></th>
               <th class="actions" colspan="2"><?php echo(TodoLang::_("ACTIONS"));?></th>
@@ -46,7 +46,7 @@
               <td><input type="text" id="enter_todo" name="enter_todo" maxlength="255" /></td>
               <td class="start"><input type="date" id="enter_start" name="enter_start" /></td>
               <td class="due"><label class="due_picker"><input type="date" id="enter_due" name="enter_due" /><span id="enter_due_label"></span></label></td>
-              <td class="actions" colspan="2"><input type="button" class="iconButton addButton" name="save" id="enter_save" alt="<?php echo(TodoLang::_("SAVE"));?>" /></td>
+              <td class="actions" colspan="2"><?php echo(iconButton("enter_save", "addButton", "add", TodoLang::_("SAVE")));?></td>
             </tr>
             </thead>
             <tbody>
@@ -100,7 +100,7 @@
               <select id="modify_list">
               </select>
             </div>
-            <input type="button" class="iconButton editButton" name="modify_save" id="modify_save" alt="<?php echo(TodoLang::_("SAVE"));?>" />
+            <?php echo(iconButton("modify_save", "saveButton", "check", TodoLang::_("SAVE")));?>
           </form>
         </div>
       </div>
@@ -127,10 +127,10 @@
           </div><div class="modify_line">
             <span class="modify_desc"><?php echo(TodoLang::_("MERGE_TO"));?>: </span>
             <input id="merge_tag_edit" >
-            <input type="button" class="iconButton mergeButton" name="tag_merge" id="tag_merge" alt="<?php echo(TodoLang::_("MERGE"));?>" />
+            <?php echo(iconButton("tag_merge", "mergeButton", "merge", TodoLang::_("MERGE")));?>
           </div>
-          <input type="button" class="iconButton deleteButton" name="tag_delete" id="tag_delete" alt="<?php echo(TodoLang::_("DELETE"));?>" />
-          <input type="button" class="iconButton editButton" name="tag_save" id="tag_save" alt="<?php echo(TodoLang::_("SAVE"));?>" />
+          <?php echo(iconButton("tag_delete", "deleteButton", "delete", TodoLang::_("DELETE")));?>
+          <?php echo(iconButton("tag_save", "saveButton", "check", TodoLang::_("SAVE")));?>
         </form>
         <div id="tag_todo_container">
           <span id="tag_todo_caption"><?php echo(TodoLang::_("TAG_TODO_LIST_CAPTION"));?></span>

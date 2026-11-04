@@ -6,7 +6,7 @@
 // an event happens, and not while the modules are loaded.
 import { state, narrowScreenQuery } from './state.js';
 import { parseDate, parseDay, formatDate } from './dates.js';
-import { escapeHtml, textToHtml } from './html.js';
+import { escapeHtml, textToHtml, icon, iconButton } from './html.js';
 import { ItemSort, getTodoWithTag } from './items.js';
 import { toggleCompleted, setTrashed, doToday, reactivate } from './actions.js';
 import { modifyItem } from './dialogs.js';
@@ -167,8 +167,8 @@ export function getTodoTitleHtml(it, lineNr, tagbasename, spanCssClass, baseElem
     }
     line += '<span class="todo_lineNr">'+(lineNr+1)+'.</span> '+
             '<span>'+textToHtml(it.todo)+'</span>'+
-            (hasNote ? '<span class="note" title="'+textToHtml(it.notes)+'"></span>':'')+
-            (isRecurring ? '<span class="recurring" title="'+repetition+'"></span>':'');
+            (hasNote ? '<span class="note" title="'+textToHtml(it.notes)+'">'+icon('note')+'</span>':'')+
+            (isRecurring ? '<span class="recurring" title="'+repetition+'">'+icon('repeat')+'</span>':'');
     if (hasTags) {
         line += ' <input id="'+tagbasename+it.id+'" class="todo_item_tags" readonly>';
     }
@@ -178,9 +178,8 @@ export function getTodoTitleHtml(it, lineNr, tagbasename, spanCssClass, baseElem
 
 
 // action button; the label is shown as tooltip and read by screen readers
-function actionButton(spanClass, id, buttonClass, label) {
-    return '<span class="'+spanClass+'"><input type="button" id="'+id+'" class="iconButton '+buttonClass+
-        '" title="'+escapeHtml(label)+'" aria-label="'+escapeHtml(label)+'" /></span>';
+function actionButton(spanClass, id, buttonClass, iconName, label) {
+    return '<span class="'+spanClass+'">'+iconButton(id, buttonClass, iconName, label)+'</span>';
 }
 
 
@@ -214,7 +213,7 @@ function renderItem(it, lineNr) {
         ((it.completed==1)?' todo_completed':'')+
         ((it.deleted==1)?' todo_deleted':'')+
             '" id="todo'+it.id+'">';
-    var overdue = isOverdue ? ' <span class="exclamation"></span>':'';
+    var overdue = isOverdue ? ' <span class="exclamation">'+icon('warning')+'</span>':'';
     var tagbasename = 'todo_tags_';
     line += getTodoTitleHtml(it, lineNr, tagbasename, 'todo', 'td', true);
     line +=  '<td class="start">'+((it.start == null)?'undef':formatDate(parseDay(it.start)))+'</td>'+
@@ -222,14 +221,14 @@ function renderItem(it, lineNr) {
         '<td class="effort">'+it.effort+'</td>'+
         '<td class="actions">';
     if (it.recurrenceMode != 0 && it.completed != 0) {
-        line += actionButton('reactivate', 'reactivate'+it.id, 'reactivateButton', $T('REACTIVATE'));
+        line += actionButton('reactivate', 'reactivate'+it.id, 'reactivateButton', 'repeat', $T('REACTIVATE'));
     }
-    line += actionButton('modify', 'modify'+it.id, 'editButton', $T('EDIT'))+
-        actionButton('dotoday', 'dotoday'+it.id, 'todayButton', $T('DOTODAY'));
+    line += actionButton('modify', 'modify'+it.id, 'editButton', 'edit', $T('EDIT'))+
+        actionButton('dotoday', 'dotoday'+it.id, 'todayButton', 'today', $T('DOTODAY'));
     if (it.deleted == 0) {
-        line += actionButton('trash', 'trash'+it.id, 'deleteButton', $T('DELETE'));
+        line += actionButton('trash', 'trash'+it.id, 'deleteButton', 'delete', $T('DELETE'));
     } else {
-        line += actionButton('restore', 'restore'+it.id, 'undeleteButton', $T('RESTORE'));
+        line += actionButton('restore', 'restore'+it.id, 'undeleteButton', 'restore', $T('RESTORE'));
     }
     line += '</td></tr>';
     $('#todoTable tbody').append(line);

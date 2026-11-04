@@ -25,7 +25,12 @@ and filled. Until then step 0 can only be prepared as files in a scratch directo
 * Step 0: `codeling/webicons` has 30 icons, `check.js`, `preview.html`, README (convention), CI. w2wiki uses it
   (PR #105). The icons were drawn new in one outline style (lines of 1.25), because the origin of the old
   w2wiki icons is not recorded; only the three `theme-*` circles are the old ones.
-* Step 1: the colors of `todo.css` are custom properties (this repo, same PR as this file).
+* Step 1: the colors of `todo.css` are custom properties (todo #47, merged; w2wiki #105 merged).
+* Step 2: todo uses the icons of `webicons/` (subtree): `iconSvg()`/`iconButton()` in `todo-core.php`, `icon()`/`iconButton()`
+  in `js/html.js`, buttons are `<button>`s with an inline SVG, the data-URI backgrounds are gone, `tests/icons.test.js`
+  checks the files and that every icon the code uses exists. Layout unchanged (compared in screenshots against the
+  version before). "Restore" (undelete) is the `restore` icon (a counter-clockwise arrow with a clock), not the old
+  bin with an arrow; the save buttons are `check` instead of the pencil. Two-tone icons (note, undelete) are one color.
 
 ## 1. Findings
 
