@@ -93,6 +93,10 @@ export function emptyTrash() {
 }
 
 
+// the last request to move an entry into the trash or back, by id of the entry: the next one is only
+// sent when it is done, as it needs the version of the entry which that one has changed
+var trashRequests = {};
+
 // moves an entry into the trash or back; shown at once and undone if the server refuses
 export function setTrashed(id, trashed) {
     log($T(trashed ? 'DELETING_ENTRY' : 'RESTORING_ENTRY'));
@@ -101,29 +105,42 @@ export function setTrashed(id, trashed) {
         notify($T('ENTRY_NOT_FOUND'));
         return;
     }
-    var stuff = new Object();
-    stuff.id = id;
-    stuff.version = state.itemList[idx].version;
-    stuff.trash   = trashed ? 1 : 0;
     setTrashedLocally(idx, trashed);
-    postAction('queries/trash.php', stuff).then(function(answer) {
-        // the move to the trash is a change of the entry: the next request needs the new version
-        var confirmed = findItem(id);
-        if (confirmed != -1 && answer && answer.version !== undefined) {
-            state.itemList[confirmed].version = answer.version;
-        }
-        log($T(trashed ? 'DELETING_SUCCESSFUL' : 'RESTORING_SUCCESSFUL'));
-        if (trashed) {
-            // (one tap takes it back, no question before it was needed)
-            showToast($T('DELETING_SUCCESSFUL'), { actionLabel: $T('UNDO'), onAction: function() { setTrashed(id, false); } });
-        }
-    }, function(failure) {
-        reportFailure(trashed ? 'ERROR_WHILE_DELETING' : 'ERROR_WHILE_RESTORING', failure);
-        // undo what was shown, also after a transmission error (the list may have been loaded
-        // again meanwhile, so the entry is looked up again)
+    var request = (trashRequests[id] || Promise.resolve()).then(function() {
+        // (the version is read now, the one before may have changed it; the list may have
+        // been loaded again meanwhile, so the entry is looked up again)
         var current = findItem(id);
-        if (current != -1) {
-            setTrashedLocally(current, !trashed);
+        if (current == -1) {
+            return;
+        }
+        var stuff = new Object();
+        stuff.id = id;
+        stuff.version = state.itemList[current].version;
+        stuff.trash   = trashed ? 1 : 0;
+        return postAction('queries/trash.php', stuff).then(function(answer) {
+            // the move to the trash is a change of the entry: the next request needs the new version
+            var confirmed = findItem(id);
+            if (confirmed != -1 && answer.version !== undefined) {
+                state.itemList[confirmed].version = answer.version;
+            }
+            log($T(trashed ? 'DELETING_SUCCESSFUL' : 'RESTORING_SUCCESSFUL'));
+            if (trashed) {
+                // (one tap takes it back, no question before it was needed)
+                showToast($T('DELETING_SUCCESSFUL'), { actionLabel: $T('UNDO'), onAction: function() { setTrashed(id, false); } });
+            }
+        }, function(failure) {
+            reportFailure(trashed ? 'ERROR_WHILE_DELETING' : 'ERROR_WHILE_RESTORING', failure);
+            // undo what was shown, also after a transmission error
+            var failed = findItem(id);
+            if (failed != -1) {
+                setTrashedLocally(failed, !trashed);
+            }
+        });
+    });
+    trashRequests[id] = request;
+    request.then(function() {
+        if (trashRequests[id] === request) {
+            delete trashRequests[id];
         }
     });
 }
