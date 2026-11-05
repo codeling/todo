@@ -106,7 +106,12 @@ export function setTrashed(id, trashed) {
     stuff.version = state.itemList[idx].version;
     stuff.trash   = trashed ? 1 : 0;
     setTrashedLocally(idx, trashed);
-    postAction('queries/trash.php', stuff).then(function() {
+    postAction('queries/trash.php', stuff).then(function(answer) {
+        // the move to the trash is a change of the entry: the next request needs the new version
+        var confirmed = findItem(id);
+        if (confirmed != -1 && answer && answer.version !== undefined) {
+            state.itemList[confirmed].version = answer.version;
+        }
         log($T(trashed ? 'DELETING_SUCCESSFUL' : 'RESTORING_SUCCESSFUL'));
         if (trashed) {
             // (one tap takes it back, no question before it was needed)

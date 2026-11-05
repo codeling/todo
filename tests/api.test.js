@@ -34,11 +34,20 @@ test('create, update, complete, trash and empty trash with valid token', async (
     assertOk(await post('update.php', todoFields({ id, version: 1, todo: 'changed', notes: 'n',
         due: '2026-01-10', start: '2026-01-05', tags: 'c' }), sess), { version: 2 });
     assertOk(await post('complete.php', { id, completed: 1, version: 2 }, sess), { version: 3 });
-    assertOk(await post('trash.php', { id, trash: 1, version: 3 }, sess));
-    // a deleted entry can neither be reopened nor completed
-    assertError(await post('complete.php', { id, completed: 0, version: 3 }, sess), 409,
+    // moving to the trash is a change as well: it answers with the new version
+    assertOk(await post('trash.php', { id, trash: 1, version: 3 }, sess), { version: 4 });
+    // a deleted entry can neither be reopened nor completed, nor edited
+    assertError(await post('complete.php', { id, completed: 0, version: 4 }, sess), 409,
         'Deleted entries cannot be completed or reopened!');
-    assert.deepEqual(sqlRows(`SELECT completed, version FROM todo WHERE id=${id}`), [['1', '3']]);
+    assertError(await post('update.php', todoFields({ id, version: 4, todo: 'edited in the trash' }), sess), 409,
+        'Deleted entries cannot be changed!');
+    assert.deepEqual(sqlRows(`SELECT description, completed, version FROM todo WHERE id=${id}`), [['changed', '1', '4']]);
+    // an edit based on the version from before the trashing is a conflict, not a lost update
+    assertError(await post('trash.php', { id, trash: 0, version: 3 }, sess), 409, /./);
+    assertOk(await post('trash.php', { id, trash: 0, version: 4 }, sess), { version: 5 });
+    assertError(await post('update.php', todoFields({ id, version: 4, todo: 'stale' }), sess), 409, /./);
+    assertOk(await post('update.php', todoFields({ id, version: 5, todo: 'restored and edited' }), sess), { version: 6 });
+    assertOk(await post('trash.php', { id, trash: 1, version: 6 }, sess), { version: 7 });
     assertOk(await post('empty-trash.php', { list_id: 0 }, sess));
     assert.equal(sql('SELECT COUNT(*) FROM todo').trim(), '0');
 });
@@ -327,7 +336,7 @@ test('endpoints answer with an HTTP status and JSON: 200, 403, 405, 409 and 422'
         // success: 200 and {"ok": true}, with the new id (enter.php) or version (complete.php, update.php)
         ['enter', await post('enter.php', { todo: 'b', due: '', start: '', list_id: 0 }, sess), 200, ['ok', 'id']],
         ['complete', await post('complete.php', { id, completed: 1, version: 1 }, sess), 200, ['ok', 'version']],
-        ['trash', await post('trash.php', { id, trash: 1, version: 2 }, sess), 200, ['ok']],
+        ['trash', await post('trash.php', { id, trash: 1, version: 2 }, sess), 200, ['ok', 'version']],
         // the data of the lists: 200 and JSON
         ['lists', await get('query-lists.php'), 200, null],
         ['tags', await get('query-tags.php?list_id=0'), 200, null],
