@@ -131,6 +131,35 @@ test('the tag chips are only those of the entries which are shown, with their co
     await page.context().close();
 });
 
+test('many tag chips take at most two rows on a narrow screen, a button shows all of them', async () => {
+    resetDb();
+    const names = Array.from({ length: 16 }, (_, i) => 'tag-number-' + String(i).padStart(2, '0'));
+    sql("INSERT INTO todo (creationDate, description, startDate, list_id) VALUES (UTC_TIMESTAMP(), 'Many tags', UTC_DATE(), 0); " +
+        "INSERT INTO tags (name) VALUES " + names.map((n) => "('" + n + "')").join(', ') + "; " +
+        "INSERT INTO todo_tags SELECT t.id, g.id FROM todo t, tags g");
+    const page = await openPage('/index.php', { viewport: { width: 360, height: 700 } });
+    const rows = () => page.evaluate(() => new Set([...document.querySelectorAll('#tagbar .tagFilter')]
+        .filter((c) => !c.inert).map((c) => c.offsetTop)).size);
+    const toggle = page.locator('#tagToggle');
+    assert.equal(await toggle.isVisible(), true);
+    assert.equal(await toggle.getAttribute('aria-expanded'), 'false');
+    assert.equal(await rows(), 2);
+    assert.match(await toggle.textContent(), /^\+\d+/);
+    // a chip which does not fit cannot be reached with the keyboard
+    assert.ok(await page.locator('#tagbar .tagFilter[inert]').count() > 0);
+    await toggle.click();
+    assert.equal(await toggle.getAttribute('aria-expanded'), 'true');
+    assert.ok(await rows() > 2);
+    assert.equal(await page.locator('#tagbar .tagFilter[inert]').count(), 0);
+    await toggle.click();
+    assert.equal(await rows(), 2);
+    // on a wide screen everything fits in two rows: no button
+    await page.setViewportSize({ width: 1000, height: 700 });
+    await page.waitForFunction(() => document.querySelector('#tagToggle').hidden);
+    assert.deepEqual(page.errors, []);
+    await page.context().close();
+});
+
 test('a tag which is deleted is no filter any more', async () => {
     seed();
     const page = await openPage();

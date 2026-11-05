@@ -11,7 +11,7 @@ import { logItems } from './log.js';
 import { ItemSort } from './items.js';
 import { setupAjax } from './api.js';
 import { enter, emptyTrash, storeItem, doToday, reactivate, setTrashed } from './actions.js';
-import { toggleTagFilter, updateEnterDueLabel } from './render.js';
+import { toggleTagFilter, toggleTagBarExpanded, updateTagBarOverflow, updateEnterDueLabel } from './render.js';
 import { reload, refresh, reloadTagList } from './load.js';
 import { setupDialogs, keepSuggestionsInDialog, showLogDialog, showTagsDialog, toggleRecurrenceAnchor, openTagDialog, tagDialogAction } from './dialogs.js';
 
@@ -61,6 +61,9 @@ $('#modify_save').on('click', function() {
 $('#tagbar').on('click', '.tagFilter', function() {
     toggleTagFilter($(this).attr('data-tag'));
 });
+$('#tagToggle').on('click', toggleTagBarExpanded);
+// (the chips wrap differently when the width changes)
+$(window).on('resize', updateTagBarOverflow);
 $('#tags_dialog_list').on('click', '.tagManage', function() {
     var name = $(this).attr('data-tag');
     $('#tags_dialog')[0].close();

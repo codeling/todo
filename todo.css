@@ -325,14 +325,32 @@ span.modify_desc {
     outline: 2px solid var(--focus);
 }
 /* the tags: chips (in a row they are plain, above the table they filter) */
-#tagbar {
+#tagbarRow {
     display: flex;
-    flex-wrap: wrap;
+    align-items: flex-start;
     gap: 6px;
     margin: 4px 0 6px;
 }
-#tagbar:empty {
+#tagbarRow:has(#tagbar:empty) {
     display: none;
+}
+#tagbar {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    /* (updateTagBarOverflow() in js/render.js sets max-height to the first rows of chips) */
+    overflow: hidden;
+}
+#tagToggle {
+    flex: none;
+}
+#tagToggle[hidden] {
+    display: none;
+}
+#tagToggle[data-active] {
+    border-color: var(--accent);
 }
 .tagChip {
     display: inline-block;

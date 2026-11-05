@@ -14,6 +14,9 @@ export const state = {
     // shown, all entries if there are none
     filterTags: [],
 
+    // whether the tag bar shows all its chips, or only the first rows of them (see updateTagBarOverflow())
+    tagBarExpanded: false,
+
     // the Tagify instances (created in main.js): the tags in the dialog of a todo and the target of a
     // merge in the dialog of a tag
     modifyTagify: undefined,
