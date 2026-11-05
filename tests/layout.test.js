@@ -153,9 +153,11 @@ test('many tag chips take at most two rows on a narrow screen, a button shows al
     assert.equal(await page.locator('#tagbar .tagFilter[inert]').count(), 0);
     await toggle.click();
     assert.equal(await rows(), 2);
-    // on a wide screen everything fits in two rows: no button
-    await page.setViewportSize({ width: 1000, height: 700 });
-    await page.waitForFunction(() => document.querySelector('#tagToggle').hidden);
+    // a wider window fits more chips into the two rows: fewer are left for the button
+    const hiddenBefore = Number((await toggle.textContent()).match(/\d+/)[0]);
+    await page.setViewportSize({ width: 700, height: 700 });
+    await page.waitForFunction((before) => Number(document.querySelector('#tagToggle').textContent.match(/\d+/)[0]) < before, hiddenBefore);
+    assert.equal(await rows(), 2);
     assert.deepEqual(page.errors, []);
     await page.context().close();
 });
