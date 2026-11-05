@@ -265,6 +265,58 @@ export function renderTagBar()
             .attr('data-tag', name)
             .appendTo('#tagbar');
     });
+    updateTagBarOverflow();
+}
+
+
+// the number of rows of chips which the tag bar shows when it is not expanded
+const TAG_BAR_ROWS = 2;
+
+// A list with many tags would take most of a narrow screen, so the tag bar shows TAG_BAR_ROWS rows of chips and a
+// button ("+3 ▾") for the rest. The chips which do not fit are inert (not reachable by keyboard while hidden). The
+// button is only there if some chips do not fit.
+export function updateTagBarOverflow() {
+    var bar = $('#tagbar');
+    var toggle = $('#tagToggle');
+    var chips = bar.children('.tagFilter');
+    bar.css('max-height', '').find('.tagFilter').prop('inert', false);
+    if (chips.length == 0) {
+        toggle.prop('hidden', true);
+        return;
+    }
+    var rowGap = parseFloat(bar.css('row-gap') || 0);
+    var limit = TAG_BAR_ROWS * (chips[0].offsetHeight + rowGap);
+    // the chips which are below the last row which is shown
+    var findHidden = function() {
+        var firstTop = chips[0].offsetTop;
+        return chips.filter(function() { return this.offsetTop - firstTop >= limit - 1; });
+    };
+    var hidden = findHidden();
+    if (hidden.length == 0) {
+        toggle.prop('hidden', true);
+        return;
+    }
+    toggle.prop('hidden', false).attr('aria-expanded', state.tagBarExpanded ? 'true' : 'false');
+    if (state.tagBarExpanded) {
+        toggle.text('\u25B4').attr({ title: $T('TAGS_SHOW_FEWER'), 'aria-label': $T('TAGS_SHOW_FEWER') });
+        toggle.attr('data-active', null);
+        return;
+    }
+    // (the button takes room from the chips, and its text depends on the number: so measure again with its text)
+    toggle.text('+'+hidden.length+' \u25BE');
+    hidden = findHidden();
+    toggle.text('+'+hidden.length+' \u25BE').attr({ title: $T('TAGS_SHOW_ALL'), 'aria-label': $T('TAGS_SHOW_ALL') });
+    // (the height of the rows without the gap below the last one)
+    bar.css('max-height', (limit - rowGap)+'px');
+    hidden.prop('inert', true);
+    // a pressed chip which is hidden still filters, so the button shows that
+    toggle.attr('data-active', hidden.filter('[aria-pressed="true"]').length > 0 ? 'true' : null);
+}
+
+
+export function toggleTagBarExpanded() {
+    state.tagBarExpanded = !state.tagBarExpanded;
+    updateTagBarOverflow();
 }
 
 
@@ -279,5 +331,6 @@ export function toggleTagFilter(name) {
     $('#tagbar .tagFilter').each(function() {
         $(this).attr('aria-pressed', state.filterTags.indexOf($(this).attr('data-tag')) != -1 ? 'true' : 'false');
     });
+    updateTagBarOverflow();
     renderTable();
 }

@@ -42,7 +42,10 @@
           </div>
         </div>
         <nav id="lists" aria-label="<?php echo(htmlspecialchars(TodoLang::_("LISTS")));?>"></nav>
-        <div id="tagbar" role="group" aria-label="<?php echo(htmlspecialchars(TodoLang::_("TAG_FILTER")));?>"></div>
+        <div id="tagbarRow">
+          <div id="tagbar" role="group" aria-label="<?php echo(htmlspecialchars(TodoLang::_("TAG_FILTER")));?>"></div>
+          <button type="button" id="tagToggle" class="tagChip" aria-expanded="false" aria-controls="tagbar" hidden></button>
+        </div>
         <div id="progress"><span id="progress_done">&nbsp;</span><span id="progress_todo">&nbsp;</span></div>
         <form method="POST" id="inputform">
           <div id="enterLine">
