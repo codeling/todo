@@ -63,6 +63,10 @@ test('the lists are tabs: the one which is shown is marked, a tab shows its entr
     const tabs = () => page.locator('#lists .listTab').evaluateAll((t) => t.map((e) => [e.textContent, e.getAttribute('aria-current')]));
     assert.deepEqual(await tabs(), [['Main', 'true'], ['Work', 'false']]);
     assert.equal(await page.locator('#lists').getAttribute('aria-label'), 'Lists');
+    // the lists are chosen rarely: the tabs are below the entries
+    const list = await page.locator('#todoList').boundingBox();
+    const lists = await page.locator('#lists').boundingBox();
+    assert.ok(lists.y >= list.y + list.height, 'the tabs are below the entries');
     assert.deepEqual((await titles(page)).sort(), ['Buy milk', 'Call Bob', 'Untagged', 'Write report']);
 
     // a filter of this list ...

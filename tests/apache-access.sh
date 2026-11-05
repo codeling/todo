@@ -109,6 +109,8 @@ case "$location" in
 esac
 check vendor/jquery/jquery.min.js 401 200
 check todo.css 401 200
+# the icons are used by the pages, the rest of webicons/ (check.js, the preview page) is not
+check webicons/icons/home.svg 401 200
 # The client is made of ES modules: the browser refuses a module which is not served as JavaScript, and,
 # as only the URL of js/main.js has a version, has to ask the server each time whether a module
 # changed (Cache-Control: no-cache; the answer is 304 without the file if not), see .htaccess.
@@ -143,7 +145,7 @@ for name in $include_only; do
     check "$name.php" 403 403
     check "$name.php/x" 403 403
 done
-for hidden in scripts/migrate.php secrets/todo_password secrets .git/HEAD node_modules/jquery/dist/jquery.js tests/lib.js; do
+for hidden in webicons/check.js webicons/preview.html webicons/preview.css webicons/preview.js webicons/LICENSE scripts/migrate.php secrets/todo_password secrets .git/HEAD node_modules/jquery/dist/jquery.js tests/lib.js; do
     check "$hidden" 401 404
 done
 # migrations written in PHP: sql/ is hidden as a whole, not by the extension (.sql files are denied by it)

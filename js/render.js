@@ -218,7 +218,7 @@ function renderItem(it) {
         ((it.completed==1)?'checked="true" ':'')+((it.deleted==1)?'disabled ':'')+
         'aria-label="'+escapeHtml($T('DONE'))+'" /></span>';
     line += '<span class="todoBody"><button type="button" class="todoMain" id="open'+it.id+'" title="'+todoTooltip(it)+'">'+todoTitleHtml(it)+'</button>';
-    line += '<span class="todoDue">'+dueHtml+(isOverdue ? ' <span class="exclamation">'+icon('warning')+'</span>':'')+'</span></span>';
+    line += '<span class="todoDue">'+dueHtml+'</span></span>';
     line += '<span class="todoActions">';
     if (it.deleted == 0) {
         line += iconButton('trash'+it.id, 'deleteButton', 'delete', $T('DELETE'));

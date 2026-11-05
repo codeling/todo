@@ -44,7 +44,6 @@
             </div>
           </div>
         </div>
-        <nav id="lists" aria-label="<?php echo(htmlspecialchars(TodoLang::_("LISTS")));?>"></nav>
         <div id="tagbarRow">
           <div id="tagbar" role="group" aria-label="<?php echo(htmlspecialchars(TodoLang::_("TAG_FILTER")));?>"></div>
           <button type="button" id="tagToggle" class="tagChip" aria-expanded="false" aria-controls="tagbar" hidden></button>
@@ -59,6 +58,7 @@
           </div>
         </form>
         <ul id="todoList"></ul>
+        <nav id="lists" aria-label="<?php echo(htmlspecialchars(TodoLang::_("LISTS")));?>"></nav>
       </div>
     </div>
     <!-- messages (js/toast.js) -->
