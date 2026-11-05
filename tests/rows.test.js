@@ -187,6 +187,7 @@ test('the actions of the dialog work and close it: do today, delete, restore, re
     assert.equal(await row(page, 'Starts later').locator('.todoStart').count(), 0);
 
     const plain = await idOf(page, 'Plain');
+    const plainVersion = await page.evaluate((i) => todoApp.state.itemList.find((e) => e.id == i).version, plain);
     await row(page, 'Plain').locator('.todoMain').click();
     await page.click('#modify_trash');
     await closed();
@@ -195,7 +196,10 @@ test('the actions of the dialog work and close it: do today, delete, restore, re
     await row(page, 'Plain').locator('.todoMain').click();
     await page.click('#modify_restore');
     await closed();
-    await page.waitForFunction((i) => todoApp.state.itemList.find((e) => e.id == i).deleted == 0, plain);
+    // (shown at once; the version is that of the server's answers: one for the trash, one for the restore)
+    await page.waitForFunction(([i, v]) => todoApp.state.itemList.find((e) => e.id == i).version == v + 2,
+        [plain, plainVersion]);
+    assert.equal(await page.evaluate((i) => todoApp.state.itemList.find((e) => e.id == i).deleted, plain), 0);
     assert.equal(sql(`SELECT deleted FROM todo WHERE id=${plain}`).trim(), '0');
 
     await row(page, 'Done and repeating').locator('.todoMain').click();

@@ -17,6 +17,12 @@
     $recurrenceAnchor = (int)postParam('recurrenceAnchor');
     $list_id  = (int)postParam('list_id');
     requireOwnTodo($db, $id);
+    // deleted entries cannot be changed, like they cannot be completed (deleted=0 in the UPDATE, as
+    // the entry could be deleted between this check and the update)
+    $deleted = dbExec($db, "SELECT 1 FROM todo WHERE id=? AND deleted=1", array($id))->get_result();
+    if ($deleted->num_rows > 0) {
+        rejectRequest(409, "ENTRY_DELETED_NO_EDIT");
+    }
     requireOwnList($db, $list_id);
     $inputError = todoInputError($todo, $start, $due, $tags);
     if ($inputError !== null) {
@@ -49,7 +55,7 @@
                 "recurrenceInterval=?, ".
                 "recurrenceAnchor=?, ".
                 "list_id=? ".
-            "WHERE id=? AND version=?";
+            "WHERE id=? AND version=? AND deleted=0";
     $affectedRows = withTransaction($db, function () use ($db, $sql, $id, $todo, $due, $start, $effort,
         $notes, $version, $recurrenceMode, $recurrenceInterval, $recurrenceAnchor, $list_id, $tags) {
         $affectedRows = dbExec($db, $sql, array($todo,
