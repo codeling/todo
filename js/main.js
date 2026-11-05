@@ -69,7 +69,25 @@ $('#tags_dialog_list').on('click', '.tagManage', function() {
     $('#tags_dialog')[0].close();
     openTagDialog(name);
 });
+// a tag chosen in the merge field is part of what is saved: with it, Save merges (a renaming would be lost with the
+// merged tag anyway)
+function mergeTagAction() {
+    var mergeTagname = state.mergeTagify.value.map((tag) => tag.value)[0];
+    var result = $.grep(state.tagList,
+        function(e) { return e.name === mergeTagname; });
+    if (result.length == 0 || result.length > 1)
+    {
+        notify("Found no tag or more than one tag with that name, aborting merge!");
+        return false;
+    }
+    return tagDialogAction('queries/merge-tag.php',
+        { id: $('#tag_id').val(), merge_id: result[0].id },
+        'MERGE_TAG_SUCCESSFUL', 'ERROR_WHILE_MODIFYING');
+}
 $('#tag_save').on('click', function() {
+    if (state.mergeTagify.value.length > 0) {
+        return mergeTagAction();
+    }
     return tagDialogAction('queries/edit-tag.php',
         { id: $('#tag_id').val(), tag_name: $('#tag_name').val() },
         'EDITED_TAG_SUCCESSFUL', 'ERROR_WHILE_MODIFYING');
@@ -83,19 +101,7 @@ $('#tag_delete').on('click', function() {
         { id: $('#tag_id').val() },
         'DELETED_TAG_SUCCESSFUL', 'ERROR_WHILE_DELETING');
 });
-$('#tag_merge').on('click', function() {
-    var mergeTagname = state.mergeTagify.value.map((tag) => tag.value)[0];
-    var result = $.grep(state.tagList,
-        function(e) { return e.name === mergeTagname; });
-    if (result.length == 0 || result.length > 1)
-    {
-        notify("Found no tag or more than one tag with that name, aborting merge!");
-        return false;
-    }
-    return tagDialogAction('queries/merge-tag.php',
-        { id: $('#tag_id').val(), merge_id: result[0].id },
-        'MERGE_TAG_SUCCESSFUL', 'ERROR_WHILE_MODIFYING');
-});
+$('#tag_merge').on('click', mergeTagAction);
 // The list of suggestions of a tag field in a dialog is put into the dialog: a modal dialog covers everything else on
 // the page, so a list at the end of <body> would be hidden behind it; keepSuggestionsInDialog() places it.
 function tagifyInDialog(selector, dialogSelector, settings) {
@@ -139,24 +145,20 @@ $('#emptyTrash').on('click', emptyTrash);
 $('#showLog').on('click', showLogDialog);
 $('#manageTags').on('click', showTagsDialog);
 
-$('#loadMoreCompleted').on('click', function(e) {
-    e.preventDefault();
-    state.reloadData.age += 10;
+// the completed entries of the last days are loaded, more days on request (the menu); "less" only while there are more
+function loadCompletedAge(change) {
+    state.reloadData.age = Math.max(0, state.reloadData.age + change);
+    $('#loadLessCompleted').prop('disabled', state.reloadData.age == 0);
     reload();
-});
-$('#loadLessCompleted').on('click', function(e) {
-    e.preventDefault();
-    state.reloadData.age -= 10;
-    if (state.reloadData.age < 0)
-    {
-        state.reloadData.age = 0;
-    }
-    reload();
-});
-$('#loadIncomplete').on('click', function(e) {
-    e.preventDefault();
+}
+$('#loadMoreCompleted').on('click', function() { loadCompletedAge(10); });
+$('#loadLessCompleted').on('click', function() { loadCompletedAge(-10); });
+// entries which start later are shown on request ("peek upcoming"): a toggle button in the header
+$('#loadIncomplete').attr('aria-pressed', 'false');
+$('#loadIncomplete').on('click', function() {
     state.reloadData.incomplete = !state.reloadData.incomplete;
-    $('#loadIncomplete').text(state.reloadData.incomplete?$T('LOAD_INCOMPLETE_HIDE'):$T('LOAD_INCOMPLETE'));
+    var label = $T(state.reloadData.incomplete ? 'LOAD_INCOMPLETE_HIDE' : 'LOAD_INCOMPLETE');
+    $(this).attr({ 'aria-pressed': state.reloadData.incomplete, title: label, 'aria-label': label });
     reload();
 });
 

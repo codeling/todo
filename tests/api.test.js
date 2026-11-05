@@ -191,6 +191,13 @@ test('a tag cannot be merged into itself', async () => {
     assert.equal(sql('SELECT COUNT(*) FROM tags').trim(), '2');
 });
 
+test('saving a tag with its unchanged name is not an error', async () => {
+    const sess = await session();
+    const tag = await taggedTodos(sess, 'a', '');
+    assertOk(await post('edit-tag.php', { id: tag.a, tag_name: 'a' }, sess));
+    assert.equal(sql('SELECT name FROM tags').trim(), 'a');
+});
+
 test('merging tags moves the entries and keeps each only once', async () => {
     const sess = await session();
     const tag = await taggedTodos(sess, 'a,b', 'a');
