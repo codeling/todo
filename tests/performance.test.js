@@ -139,7 +139,7 @@ test('completing and trashing a single entry reads a few rows', async (t) => {
     await assertRowsRead(t, 'complete', 100, async () =>
         assertOk(await post('complete.php', { id: row[0], completed: 1, version: row[1] }, sess), { version: Number(row[1]) + 1 }));
     await assertRowsRead(t, 'trash', 100, async () =>
-        assertOk(await post('trash.php', { id: row[0], trash: 1, version: Number(row[1]) + 1 }, sess)));
+        assertOk(await post('trash.php', { id: row[0], trash: 1, version: Number(row[1]) + 1 }, sess), { version: Number(row[1]) + 2 }));
 });
 
 test('the statistics page counts per period without a scan per day', async (t) => {
