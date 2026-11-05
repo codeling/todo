@@ -21,6 +21,9 @@ AuthUserFile /path/outside/webroot/.htpasswd
 
 # never serve internal files directly (webauth/ has its own .htaccess which denies everything)
 RedirectMatch 404 ^.*/(sql|scripts|secrets|tests|node_modules|lang|\.git|\.github)(/|$)
+# webicons/ (a subtree of codeling/webicons): only the icons (webicons/icons/*.svg) are used by the application, not
+# its README, check.js and the preview page
+RedirectMatch 404 ^.*/webicons/(?!icons/)
 # (FilesMatch also applies to requests with a trailing path like db.php/x, unlike
 # a match on the request URI)
 <FilesMatch "(^\.|~$|\.(sql|sh|ini|bak|swp|orig|md|yml|neon|lock|sample)$|^config.*\.php$|^package(-lock)?\.json$|^session\.php$|^todo-core\.php$|^lang\.php$)">

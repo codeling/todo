@@ -120,3 +120,23 @@ test('nginx.conf.sample denies exactly the include-only files of the root', () =
         'location ~ ^/todo/(a|b)\\.php$ { return 404; }');
     assertSameSet(names(list), includeOnly, 'nginx.conf.sample (location for the root)', 'root .php files which are not index.php, not referenced by index.php and not config*.php');
 });
+
+// webicons/ is a subtree: the application only uses webicons/icons/*.svg, so everything else in it (README, check.js,
+// the preview page) is denied by one rule in both files (the rule says "not under icons/")
+function webiconsFiles(dir = 'webicons') {
+    return fs.readdirSync(path.join(ROOT, dir), { withFileTypes: true })
+        .flatMap((e) => e.isDirectory() ? webiconsFiles(path.join(dir, e.name)) : [path.join(dir, e.name)]);
+}
+
+test('.htaccess and nginx.conf.sample deny the files of webicons/ which are not icons', () => {
+    const apache = new RegExp(find('.htaccess', /^RedirectMatch 404 (\^\.\*\/webicons\/\(\?!icons\/\))$/gm, 'RedirectMatch 404 for webicons/'));
+    const nginx = new RegExp(find('nginx.conf.sample', /^\s*location ~ (\^\/todo\/webicons\/\(\?!icons\/\)) \{ return 404; \}/gm, 'location ~ ^/todo/webicons/(?!icons/) { return 404; }'));
+    const files = webiconsFiles();
+    assert.ok(files.some((f) => f.startsWith('webicons/icons/')), 'webicons/icons/ has files');
+    assert.ok(files.some((f) => !f.startsWith('webicons/icons/')), 'webicons/ has files besides the icons (check.js, ...)');
+    for (const f of files) {
+        const icon = f.startsWith('webicons/icons/');
+        assert.equal(apache.test('/todo/' + f), !icon, `.htaccess: ${f}`);
+        assert.equal(nginx.test('/todo/' + f), !icon, `nginx.conf.sample: ${f}`);
+    }
+});

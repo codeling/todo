@@ -73,7 +73,7 @@ test('an entry is a list item: checkbox, text, date and the button for the trash
     await page.context().close();
 });
 
-test('what else there is to know is below the text: a note, that it recurs, a start which is to come, the tags', async () => {
+test('what else there is to know is shown with the text: a note, that it recurs, a start which is to come, the tags', async () => {
     seed();
     const page = await openPage();
     const note = row(page, 'Overdue with a note');
@@ -87,12 +87,27 @@ test('what else there is to know is below the text: a note, that it recurs, a st
     assert.match(await row(page, 'Done and repeating').locator('.recurring').getAttribute('title'), /year/);
     // the tooltip of the entry says when it was created
     assert.match(await row(page, 'Plain').locator('.todoMain').getAttribute('title'), /^Created: \d{4}-\d\d-\d\d/);
-    // below the text, not beside it
-    const title = await note.locator('.todoTitle').boundingBox();
-    const meta = await note.locator('.todoMeta').boundingBox();
-    assert.ok(meta.y >= title.y + title.height - 1, 'the meta line is below the title');
+    // on a wide screen in the line of the text, right-aligned, between the text and the due date
+    const tagged = row(page, 'Plain');
+    const title = await tagged.locator('.todoTitle').boundingBox();
+    const meta = await tagged.locator('.todoMeta').boundingBox();
+    const due = await tagged.locator('.todoDue').boundingBox();
+    assert.ok(meta.y < title.y + title.height && title.y < meta.y + meta.height, 'the tags are in the line of the text');
+    assert.ok(meta.x >= title.x + 1 && meta.x + meta.width <= due.x + 1, 'the tags are right of the text and left of the due date');
+    assert.ok(due.x - (meta.x + meta.width) < 24, 'the tags end next to the due date: ' + (due.x - (meta.x + meta.width)));
     // an entry without any of it has no empty line
     assert.equal(await row(page, 'In the trash').locator('.todoMeta').count(), 0);
+    assert.deepEqual(page.errors, []);
+    await page.context().close();
+});
+
+test('on a narrow screen what else there is to know is below the text', async () => {
+    seed();
+    const page = await openPage({ viewport: { width: 400, height: 700 } });
+    const tagged = row(page, 'Plain');
+    const title = await tagged.locator('.todoTitle').boundingBox();
+    const meta = await tagged.locator('.todoMeta').boundingBox();
+    assert.ok(meta.y >= title.y + title.height - 1, 'the meta line is below the title');
     assert.deepEqual(page.errors, []);
     await page.context().close();
 });
@@ -231,18 +246,22 @@ test('the trash button of a row moves the entry to the trash and back, the check
     await page.context().close();
 });
 
-test('an overdue entry has its date in red, with a warning sign on a wide screen only', async () => {
+test('an overdue entry has only its date in red, on a wide and on a narrow screen (no warning sign, not bold)', async () => {
     seed();
     const wide = await openPage();
     const date = row(wide, 'Overdue with a note').locator('.todoDue');
     assert.equal(await row(wide, 'Overdue with a note').evaluate((e) => e.classList.contains('overdue')), true);
-    assert.equal(await date.locator('.exclamation svg').isVisible(), true);
+    assert.equal(await row(wide, 'Overdue with a note').locator('.exclamation').count(), 0);
+    assert.equal(await date.locator('svg').count(), 0);
     const red = await date.evaluate((e) => getComputedStyle(e).color);
     const plain = await row(wide, 'Plain').locator('.todoDue').evaluate((e) => getComputedStyle(e).color);
     assert.notEqual(red, plain);
+    // only the color differs (the weight of the font and the color of the text do not)
+    const look = (r) => r.evaluate((e) => ({ weight: getComputedStyle(e.querySelector('.todoDue')).fontWeight, text: getComputedStyle(e.querySelector('.todoTitle')).color }));
+    assert.deepEqual(await look(row(wide, 'Overdue with a note')), await look(row(wide, 'Plain')));
     await wide.context().close();
     const narrow = await openPage({ viewport: { width: 400, height: 700 } });
-    assert.equal(await row(narrow, 'Overdue with a note').locator('.exclamation').isVisible(), false);
+    assert.equal(await row(narrow, 'Overdue with a note').locator('.exclamation').count(), 0);
     assert.equal(await row(narrow, 'Overdue with a note').locator('.todoDue').evaluate((e) => getComputedStyle(e).color), red);
     // the year of a date is not shown on a narrow screen if it is the current one
     assert.equal(await row(narrow, 'Overdue with a note').locator('.date_year').isVisible(), false);

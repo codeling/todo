@@ -49,16 +49,16 @@ body {
     font-family:Tahoma,sans-serif;
     background-color: var(--page-bg);
     color: var(--page-fg);
-    font-size: 9pt;
+    font-size: .75rem;
     margin: 5px;
 }
 h1 {
-    font-size: 16pt;
+    font-size: 1.3333rem;
     font-weight: bold;
     margin: 5px auto 3px 5px;
 }
 h2 {
-    font-size: 14pt;
+    font-size: 1.1667rem;
     font-weight: bold;
 }
 
@@ -89,7 +89,7 @@ h2 {
 }
 input[type="text"], input[type="date"] {
     font-family:Tahoma,sans-serif;
-    font-size: 9pt;
+    font-size: .75rem;
 }
 /* the line to enter an entry: the text, the start and due date, and the button */
 #enterLine {
@@ -202,10 +202,30 @@ input[type="text"], input[type="date"] {
 }
 .todoItem.overdue .todoDue {
     color: var(--danger);
-    font-weight: bold;
 }
 .todoActions {
     flex: none;
+}
+/* On a wide screen what else there is to know (note, recurrence, start, tags) is in the line of the text, right-aligned
+   next to the due date, so that the width of the screen is used; on a narrow screen it is below the text (see the
+   media query below). */
+@media (min-width: 576px)
+{
+    .todoMain {
+        display: flex;
+        align-items: center;
+        gap: 4px 12px;
+    }
+    .todoTitle {
+        flex: 1 1 0;
+        min-width: 8em;
+    }
+    .todoMeta {
+        flex: 0 1 auto;
+        justify-content: flex-end;
+        max-width: 60%;
+        margin-top: 0;
+    }
 }
 .todo_deleted .todoTitle {
     text-decoration: line-through;
@@ -302,11 +322,11 @@ span.modify_desc {
 #tag_merge {
     vertical-align: middle;
 }
-/* the lists: tabs which scroll sideways if there are many */
+/* the lists: tabs below the entries (they are changed rarely), which scroll sideways if there are many */
 #lists {
     display: flex;
     gap: 4px;
-    margin: 4px 0;
+    margin: 8px 0 4px;
     overflow-x: auto;
 }
 .listTab {
@@ -508,8 +528,8 @@ button.tagChip {
 /* the icons are inline SVGs which use the files of webicons/icons/ (iconSvg() in todo-core.php, icon() in
    js/html.js); the files have no colors, so an icon has the color of its element */
 svg.icon {
-    width: 16px;
-    height: 16px;
+    width: 1rem;
+    height: 1rem;
     vertical-align: middle;
     color: var(--icon-fg);
 }
@@ -517,8 +537,8 @@ svg.icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 20px;
-    height: 20px;
+    width: 1.25rem;
+    height: 1.25rem;
     padding: 0;
     border: 0;
     background-color: transparent;
@@ -545,11 +565,10 @@ svg.icon {
 .addButton svg.icon {
     color: var(--ok);
 }
-.deleteButton svg.icon,
-.exclamation svg.icon {
+.deleteButton svg.icon {
     color: var(--danger);
 }
-.exclamation, .note, .recurring {
+.note, .recurring {
     display: inline-block;
     line-height: 0;
 }
@@ -595,8 +614,8 @@ svg.icon {
    if a scheme was chosen, see js/theme.js) */
 .themeswitch svg.icon {
     display: none;
-    width: 20px;
-    height: 20px;
+    width: 1.25rem;
+    height: 1.25rem;
 }
 :root:not([data-theme]) .themeswitch .icon-theme-auto,
 :root[data-theme="light"] .themeswitch .icon-theme-light,
@@ -664,7 +683,7 @@ svg.icon {
 	   list scrolls: the text, the due date and the button. The start date is left out (today). The due date is the label
 	   (a calendar icon if empty) with the native date input on top of it, invisible, which opens the picker on tap. */
 	body {
-		font-size: 15px;
+		font-size: .9375rem;
 	}
 	#mainContent {
 		padding-bottom: calc(64px + env(safe-area-inset-bottom));
@@ -720,7 +739,7 @@ svg.icon {
 	}
 	#enter_due_label {
 		display: block;
-		font-size: 13px;
+		font-size: .8125rem;
 		text-align: center;
 		color: var(--muted);
 	}
@@ -750,14 +769,14 @@ svg.icon {
 		top: 6px;
 		right: 4px;
 		min-width: 0;
-		font-size: 13px;
+		font-size: .8125rem;
 		line-height: 1.4;
 		pointer-events: none;
 	}
 	.todoTitle {
 		padding-right: var(--due-room);
 	}
-	.todoDue .exclamation, .date_year {
+	.date_year {
 		display: none;
 	}
 	/* modify / tag dialog: labels above full-width fields */
@@ -777,23 +796,23 @@ svg.icon {
 	}
 	/* larger touch targets */
 	.iconButton {
-		width: 32px;
-		height: 32px;
+		width: 2rem;
+		height: 2rem;
 	}
 	.iconButton svg.icon {
-		width: 20px;
-		height: 20px;
+		width: 1.25rem;
+		height: 1.25rem;
 	}
 	.themeswitch {
 		padding: 6px;
 	}
 	.themeswitch svg.icon {
-		width: 24px;
-		height: 24px;
+		width: 1.5rem;
+		height: 1.5rem;
 	}
-	/* font size of at least 16px prevents iOS from zooming in on focus */
+	/* font size of at least 16px prevents iOS from zooming in on focus (it follows the text size setting above that) */
 	input, input[type="text"], input[type="date"], select, textarea, .tagify__input {
-		font-size: 16px;
+		font-size: max(1rem, 16px);
 	}
 }
 /********************/
@@ -921,6 +940,6 @@ dialog::backdrop {
 	}
 	.dialogButton {
 		padding: 8px 16px;
-		font-size: 16px;
+		font-size: 1rem;
 	}
 }

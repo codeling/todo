@@ -59,8 +59,14 @@ and filled. Until then step 0 can only be prepared as files in a scratch directo
   while the list scrolls, safe area of the screen); `alert()` is replaced by messages (`js/toast.js`; a failure is `role="alert"`;
   one inside an open dialog, because everything outside a modal dialog is inert), moving an entry to the trash has an Undo; a web
   app manifest with icons so that the page can be put on the home screen (`crossorigin="use-credentials"`: the login of the web
-  server). Not done: `pt` to `rem` for all sizes (the sizes of the new elements are in px, the body is 15px on phones).
-  `tests/quickadd.test.js`.
+  server). `tests/quickadd.test.js`.
+
+* Step 6 (after review of the rows): an overdue entry only has its date in the warning color (no warning sign, not bold, at every
+  width); the tabs of the lists are below the entries (rarely used); on a wide screen the note, the recurrence, a start and the
+  tags are in the line of the text, right-aligned next to the due date (below the text on a phone); all font sizes and the icons
+  are in `rem` (the page follows the text size of the browser; the 16px of the fields on phones stay a minimum for iOS, which
+  zooms into smaller ones); the files of `webicons/` which are not icons (README, `check.js`, the preview page) are denied in
+  `.htaccess` and `nginx.conf.sample`.
 
 ## 1. Findings
 

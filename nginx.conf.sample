@@ -25,6 +25,8 @@ location /todo/ {
     location ~ (/\.|~$|\.(sql|sh|ini|bak|swp|orig|md|yml|neon|lock|sample)$|/config[^/]*\.php$|/package(-lock)?\.json$) { return 404; }
     location ~ ^/todo/(session|todo-core|lang)\.php$ { return 404; }
     location ~ ^/todo/webauth/ { return 404; }
+    # only the icons of webicons/ are used (not its README, check.js and the preview page)
+    location ~ ^/todo/webicons/(?!icons/) { return 404; }
     location ~ ^/todo/queries/(db|date|tags|todo-list-query|recurrence|db-connect|endpoint|response|todo-input|limits|statistics-data)\.php$ { return 404; }
 
     # The client is made of ES modules (js/*.js). Only the URL of js/main.js has a version (assetUrl() in
