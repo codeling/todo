@@ -818,7 +818,8 @@ svg.icon {
 /********************/
 /* Dialogs          */
 /* <dialog> elements (index.php, js/dialogs.js): a header with the title and the close button, a body which
-   scrolls, and a footer with the buttons; on narrow screens a dialog fills the screen */
+   scrolls, and a footer with the buttons right below the body; on narrow screens a dialog fills the visible part
+   of the screen (above the on-screen keyboard, see followVisualViewport() in js/dialogs.js) */
 dialog {
 	box-sizing: border-box;
 	width: 500px;
@@ -859,7 +860,8 @@ dialog::backdrop {
 	font-size: 1.1em;
 }
 .dialog_body {
-	flex: 1 1 auto;
+	/* (does not grow: the buttons are right below the fields, not at the bottom of a screen-high dialog) */
+	flex: 0 1 auto;
 	padding: 10px;
 	overflow-y: auto;
 }
@@ -927,16 +929,22 @@ dialog::backdrop {
 @media (max-width: 575px)
 {
 	dialog {
+		top: var(--visual-top, 0px);
+		bottom: auto;
 		width: 100%;
 		max-width: 100%;
-		height: 100dvh;
-		max-height: 100dvh;
+		/* (100dvh too: it follows a smaller window at once, the visual viewport reports that a moment later) */
+		height: min(100dvh, var(--visual-height, 100dvh));
+		max-height: min(100dvh, var(--visual-height, 100dvh));
 		margin: 0;
 		border: 0;
 		border-radius: 0;
 	}
 	.dialog_header, .dialog_footer {
 		border-radius: 0;
+	}
+	.dialog_footer {
+		border-bottom: 1px solid var(--border);
 	}
 	.dialogButton {
 		padding: 8px 16px;

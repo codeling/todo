@@ -11,9 +11,12 @@ test.before(async () => {
 });
 test.after(() => browser.close());
 
-async function openPage(options = {}) {
+async function openPage(options = {}, initScript = null) {
     const context = await browser.newContext({ viewport: { width: 1000, height: 700 }, ...options });
     const page = await context.newPage();
+    if (initScript) {
+        await page.addInitScript(initScript);
+    }
     page.errors = [];
     page.requests = [];
     page.on('console', (m) => { if (m.type() === 'error') page.errors.push(m.text()); });
@@ -180,6 +183,60 @@ test('on a narrow screen a dialog fills the screen, its body scrolls and the foo
     const save = await page.locator('#modify_save').boundingBox();
     assert.ok(save.y >= 0 && save.y + save.height <= 320, 'Save is on the screen: ' + JSON.stringify(save));
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), 'no sideways scrolling');
+    assert.deepEqual(page.errors, []);
+    await page.context().close();
+});
+
+// The on-screen keyboard of a phone makes only the visual viewport smaller (Chrome, Safari), which a desktop browser
+// cannot do: a stand-in for window.visualViewport, which the test changes as the keyboard would.
+function fakeVisualViewport() {
+    const viewport = new EventTarget();
+    Object.assign(viewport, { offsetLeft: 0, offsetTop: 0, pageLeft: 0, pageTop: 0, scale: 1,
+        width: window.innerWidth, height: window.innerHeight });
+    Object.defineProperty(window, 'visualViewport', { value: viewport });
+}
+
+async function changeVisualViewport(page, values) {
+    await page.evaluate((v) => {
+        Object.assign(window.visualViewport, v);
+        window.visualViewport.dispatchEvent(new Event('resize'));
+        window.visualViewport.dispatchEvent(new Event('scroll'));
+    }, values);
+}
+
+test('on a narrow screen the buttons of a dialog are right below its fields, and above the on-screen keyboard', async () => {
+    seed();
+    const page = await openPage({ viewport: { width: 400, height: 700 } }, fakeVisualViewport);
+    await page.locator('#todoList > li').first().locator('.todoMain').click();
+    assert.equal(await isOpen(page, '#modify_dialog'), true);
+    async function boxes() {
+        return {
+            dialog: await page.locator('#modify_dialog').boundingBox(),
+            body: await page.locator('#modify_dialog .dialog_body').boundingBox(),
+            footer: await page.locator('#modify_dialog .dialog_footer').boundingBox(),
+        };
+    }
+    // no empty space between the fields and the buttons
+    let b = await boxes();
+    assert.deepEqual([b.dialog.y, b.dialog.height], [0, 700]);
+    assert.ok(Math.abs(b.footer.y - (b.body.y + b.body.height)) < 1, 'footer below the body: ' + JSON.stringify(b));
+    // the keyboard covers the lower part, the visible part is scrolled down a bit: the dialog covers what is visible,
+    // its body scrolls and the buttons are right above the keyboard
+    await changeVisualViewport(page, { height: 300, offsetTop: 40 });
+    b = await boxes();
+    assert.deepEqual([b.dialog.y, b.dialog.height], [40, 300]);
+    assert.ok(b.footer.y + b.footer.height <= 340.5 && b.footer.y >= 40, 'footer visible: ' + JSON.stringify(b));
+    assert.ok(Math.abs(b.footer.y - (b.body.y + b.body.height)) < 1, 'footer below the body: ' + JSON.stringify(b));
+    const body = await page.locator('#modify_dialog .dialog_body').evaluate((e) => [e.scrollHeight, e.clientHeight]);
+    assert.ok(body[0] > body[1], 'the body scrolls: ' + body);
+    // zoomed in: the dialog keeps the size of the screen
+    await changeVisualViewport(page, { height: 350, offsetTop: 100, scale: 2 });
+    b = await boxes();
+    assert.deepEqual([b.dialog.y, b.dialog.height], [0, 700]);
+    // the keyboard is closed again
+    await changeVisualViewport(page, { height: 700, offsetTop: 0, scale: 1 });
+    b = await boxes();
+    assert.deepEqual([b.dialog.y, b.dialog.height], [0, 700]);
     assert.deepEqual(page.errors, []);
     await page.context().close();
 });
