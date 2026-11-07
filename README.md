@@ -2,6 +2,13 @@
 
 A small PHP / MariaDB (MySQL) to-do list with lists, tags, recurring entries and statistics.
 
+Dates of an entry: the **start** date hides it until then ("Peek upcoming" in the header shows those entries). The
+**due** date is either *soft*, which only orders the list and is never shown as overdue, or *fixed* ("Fixed date"
+in the dialog of the entry): a real deadline. The open entries with a fixed due date which has passed are in the
+section "Overdue" on top of the list, those due today in "Today" (highlighted), all others in "Later". The button
+"Show only overdue and today" in the header hides "Later", and "Do today" in the dialog makes an entry due today
+(as a fixed date; Undo in the message sets the dates back).
+
 Dark mode: the pages follow the color scheme of the system (`prefers-color-scheme`), and the button
 in the header of the list and of the statistics page chooses the system's scheme, light or dark (kept in
 the cookie `todo_theme`, which holds no personal data). The colors are custom properties with `light-dark()`
@@ -69,6 +76,9 @@ rest of the file by hand, or restore the backup and start again. What the migrat
   are. Tags which become equal (like `ä` and `&auml;`) are merged. It only changes data, so it runs in
   one transaction and is applied completely or not at all; the account needs the right to create
   temporary tables.
+* `017`: the due date of an entry can be fixed (a real deadline) or soft (it only orders the list): the column
+  `dueFixed`. All existing due dates become soft, except those of recurring entries which repeat from their due
+  date (like a bill), which become fixed. Afterwards, mark the other real deadlines in the dialog of the entry.
 
 `sql/install.sql` creates a new database with the layout of the latest version (and `db.version`);
 `sql/uninstall.sql` removes it. The scripts of the first versions are in `sql/legacy/`; they cannot be

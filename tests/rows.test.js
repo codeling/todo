@@ -175,8 +175,14 @@ test('the dialog of an entry has the actions which only make sense for that entr
     // an open entry which starts in the future: do today, delete
     assert.deepEqual(await open('Starts later'), ['dotoday', 'trash', 'save']);
     await page.keyboard.press('Escape');
-    // an open one which has started: nothing to do today
-    assert.deepEqual(await open('Plain'), ['trash', 'save']);
+    // an open one which has started, with a due date which is not fixed: it can still be done today
+    assert.deepEqual(await open('Plain'), ['dotoday', 'trash', 'save']);
+    await page.keyboard.press('Escape');
+    // one which is overdue (a fixed due date): it is in "Overdue" already, nothing to do today
+    sql("UPDATE todo SET dueFixed=1 WHERE description='Overdue with a note'");
+    await page.click('#refresh');
+    await page.waitForFunction(() => todoApp.state.itemList.some((i) => i.dueFixed == 1));
+    assert.deepEqual(await open('Overdue with a note'), ['trash', 'save']);
     await page.keyboard.press('Escape');
     // a completed recurring one: reactivate
     assert.deepEqual(await open('Done and repeating'), ['reactivate', 'trash', 'save']);
@@ -248,6 +254,15 @@ test('the trash button of a row moves the entry to the trash and back, the check
 
 test('an overdue entry has only its date in red, on a wide and on a narrow screen (no warning sign, not bold)', async () => {
     seed();
+    // a soft due date only orders the list: it is never red, also when it has passed
+    const soft = await openPage();
+    assert.equal(await row(soft, 'Overdue with a note').evaluate((e) => e.classList.contains('overdue')), false);
+    assert.equal(await row(soft, 'Overdue with a note').evaluate((e) => e.classList.contains('dueSoft')), true);
+    const colorOf = (page, text) => row(page, text).locator('.todoDue').evaluate((e) => getComputedStyle(e).color);
+    assert.equal(await colorOf(soft, 'Overdue with a note'), await colorOf(soft, 'Plain'));
+    await soft.context().close();
+    // a fixed one is
+    sql("UPDATE todo SET dueFixed=1 WHERE description='Overdue with a note'");
     const wide = await openPage();
     const date = row(wide, 'Overdue with a note').locator('.todoDue');
     assert.equal(await row(wide, 'Overdue with a note').evaluate((e) => e.classList.contains('overdue')), true);

@@ -1,7 +1,7 @@
 // The dialogs: an entry, a tag, and the log.
 import { state } from './state.js';
 import { notify } from './toast.js';
-import { findItem, ItemSort, getTodoWithTag } from './items.js';
+import { findItem, ItemSort, getTodoWithTag, dueSection } from './items.js';
 import { parseDate, parseDay, formatDate } from './dates.js';
 import { log, logItems, updateLog } from './log.js';
 import { postAction, reportFailure } from './api.js';
@@ -130,6 +130,8 @@ function fillModifyForm(id) {
     $('#modify_id').val(item.id);
     $('#modify_todo').val(item.todo);
     $('#modify_due').val(formatDate(parseDay(item.due)));
+    $('#modify_dueFixed').prop('checked', item.dueFixed == 1);
+    updateDueFixed();
     $('#modify_start').val(formatDate(parseDay(item.start)));
     $('#modify_start').data('oldVal', formatDate(parseDay(item.start)));
     $('#modify_effort').val(item.effort);
@@ -156,15 +158,20 @@ function fillModifyForm(id) {
     $('#modify_list option:selected').prop('selected', false);
     $('#modify_list option[value="'+item.list_id+'"]').prop('selected', true);
     toggleRecurrenceAnchor();
-    // the actions which only make sense for this entry: starting it today (if it did not start yet, and is open),
-    // reactivating a recurring one which is done, moving it to the trash or back; a deleted entry cannot be changed
-    var start = parseDay(item.start);
-    var open = item.completed == 0 && item.deleted == 0;
-    $('#modify_dotoday').prop('hidden', !(open && (start == null || start > new Date())));
+    // the actions which only make sense for this entry: doing it today (if it is open, and not overdue or due today
+    // already), reactivating a recurring one which is done, moving it to the trash or back; a deleted entry cannot
+    // be changed
+    $('#modify_dotoday').prop('hidden', dueSection(item) != 'later');
     $('#modify_reactivate').prop('hidden', !(item.recurrenceMode != 0 && item.completed != 0));
     $('#modify_trash').prop('hidden', item.deleted != 0);
     $('#modify_restore').prop('hidden', item.deleted == 0);
     $('#modify_save').prop('disabled', item.deleted != 0);
+}
+
+
+// "Fixed date" belongs to the due date: without one there is nothing to fix
+export function updateDueFixed() {
+    $('#modify_dueFixed').prop('disabled', $('#modify_due').val() == '');
 }
 
 

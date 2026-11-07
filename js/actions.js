@@ -38,6 +38,7 @@ function modifyLocally(item) {
     state.itemList[index].start    = (item.start == '') ? null: item.start;
     state.itemList[index].effort   = item.effort;
     state.itemList[index].due      = (item.due == '') ? null: item.due;
+    state.itemList[index].dueFixed = item.dueFixed;
     state.itemList[index].notes    = item.notes;
     state.itemList[index].tags     = item.tags;
     state.itemList[index].version  = item.version;
@@ -223,15 +224,47 @@ export function toggleCompleted(id) {
 }
 
 
+// the dates of an entry which "Do today" changes, to set them back with "Undo"
+function setDates(id, dates, onsucc) {
+    var idx = findItem(id);
+    if (idx == -1) {
+        notify($T('ENTRY_NOT_FOUND'));
+        return;
+    }
+    // a copy: the entry itself is only changed once the server confirmed
+    var stuff = copyTodo(state.itemList[idx]);
+    stuff.due = dates.due;
+    stuff.dueFixed = dates.dueFixed;
+    stuff.start = dates.start;
+    storeItemRemote(stuff, onsucc);
+}
+
+
+// "Do today": the entry is due today, as a fixed date, so that it is in the section "Today" (and, if it is not
+// done today, in "Overdue" afterwards). It replaces the due date it had; the message has an Undo for that. It
+// has to have started by then: a start which is later becomes today too.
 export function doToday(id)
 {
     var idx = findItem(id);
-    var today = new Date();
-    if (state.itemList[idx].start == null || parseDay(state.itemList[idx].start) > today)
-    {
-        state.itemList[idx].start = formatDate(getUTCDate(), false);
-        storeItemRemote(state.itemList[idx], function() {});
+    if (idx == -1) {
+        notify($T('ENTRY_NOT_FOUND'));
+        return;
     }
+    var item = state.itemList[idx];
+    var before = { due: item.due, dueFixed: item.dueFixed, start: item.start };
+    // today as the browser shows the dates; the start is not after the day of the server (which hides
+    // entries which start later) either
+    var today = formatDate(new Date());
+    var serverToday = formatDate(getUTCDate());
+    var start = item.start;
+    if (start == null || formatDate(parseDay(start)) > today) {
+        start = (serverToday < today) ? serverToday : today;
+    }
+    setDates(id, { due: today, dueFixed: 1, start: start }, function() {
+        showToast($T('DOTODAY_DONE'), { actionLabel: $T('UNDO'), onAction: function() {
+            setDates(id, before, function() {});
+        } });
+    });
 }
 
 
@@ -308,7 +341,8 @@ export function storeItem() {
         $('#modify_recurrenceAnchor').val(),
         state.itemList[idx].completionDate,
         state.itemList[idx].creationDate,
-        $('#modify_list').val()
+        $('#modify_list').val(),
+        ($('#modify_dueFixed').prop('checked') && $('#modify_due').val() != '') ? 1 : 0
     );
     storeItemRemote(stuff, function() {
         closeDialog('#modify_dialog');
@@ -353,6 +387,6 @@ export function enter() {
     var stuff = new Todo(-1, todo, due, start, 1 /* effort */ ,
             0, '', tags, 0, 1, 0 /* recurrenceMode */, 1 /* recurrenceInterval */, 0 /* recurrenceAnchor */,
             null, formatDate(getUTCDate(), true),
-            state.reloadData.list_id);
+            state.reloadData.list_id, 0 /* dueFixed: a due date which is entered here only orders the list */);
     addItem(stuff);
 }

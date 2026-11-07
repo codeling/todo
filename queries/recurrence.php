@@ -67,11 +67,12 @@ function copyRecurringEntry($db, $id, $creationDate)
         $nextDue = recurrenceNextSql("IF(recurrenceAnchor=0, completionDate, dueDate)");
         $copied = dbExec($db, "INSERT INTO todo ".
                 "(creationDate, description, startDate, completed, ".
-                "dueDate, notes, version, recurrenceMode, recurrenceInterval, recurrenceAnchor, list_id) ".
+                "dueDate, dueFixed, notes, version, recurrenceMode, recurrenceInterval, recurrenceAnchor, list_id) ".
             "SELECT ?, description, ".
                 "COALESCE(DATE_SUB(".$nextDue.", INTERVAL DATEDIFF(dueDate, startDate) DAY), ".$nextDue."), ".
                 "0, ".   // completed
                 $nextDue.", ".
+                "dueFixed, ".
                 "notes, ".
                 "1, ".   // version
                 "recurrenceMode, recurrenceInterval, recurrenceAnchor, list_id ".

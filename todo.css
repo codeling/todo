@@ -25,6 +25,8 @@
     --focus: light-dark(#4466cc, #8ab4ff);
     --accent: light-dark(#3a5fc0, #8ab4ff);
     --on-accent: light-dark(white, #111);
+    /* the background of an entry which is due today (a tint of --accent) */
+    --today-bg: light-dark(#E3EAFA, #22304B);
     --chip-bg: light-dark(#E5E5E5, #3a3a3e);
     --toast-bg: light-dark(#333333, #3a3a3e);
     --toast-fg: light-dark(#ffffff, #f0f0f0);
@@ -134,8 +136,46 @@ input[type="text"], input[type="date"] {
     min-height: 44px;
     padding: 0 4px;
 }
-.todoItem:nth-child(even) {
+/* (the headings of the sections do not count for the stripes) */
+.todoItem:nth-child(even of .todoItem) {
     background-color: var(--surface);
+}
+/* The sections of the open entries ("Overdue", "Today", "Later"), only if there are fixed due dates which are
+   overdue or today: a heading above each (js/render.js renderTable) */
+.sectionHeading {
+    padding: 10px 8px 4px;
+    border-bottom: 1px solid var(--border);
+}
+.sectionHeading:not(:first-child) {
+    border-top: 1px solid var(--border);
+}
+.sectionTitle {
+    margin: 0;
+    font-size: .8125rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--muted);
+}
+.sectionHeading[data-section="overdue"] .sectionTitle {
+    color: var(--danger);
+}
+.sectionHeading[data-section="today"] .sectionTitle {
+    color: var(--accent);
+}
+.sectionCount {
+    margin-left: .5em;
+    font-weight: normal;
+}
+.sectionEmpty {
+    padding: 12px 8px;
+    color: var(--muted);
+}
+/* an entry which is due today: tinted, with a bar of the accent color at the left (a shadow, so that nothing moves) */
+.todoItem.dueToday,
+.todoItem.dueToday:nth-child(even of .todoItem) {
+    background-color: var(--today-bg);
+    box-shadow: inset 3px 0 0 var(--accent);
 }
 .completed {
     display: flex;
@@ -200,8 +240,16 @@ input[type="text"], input[type="date"] {
     white-space: nowrap;
     color: var(--muted);
 }
+/* a soft due date only orders the list: muted (as all dates are); a fixed one is in the color of the text, in
+   the warning color when it has passed, in the accent color on the day */
+.todoItem.dueFixed .todoDue {
+    color: var(--page-fg);
+}
 .todoItem.overdue .todoDue {
     color: var(--danger);
+}
+.todoItem.dueToday .todoDue {
+    color: var(--accent);
 }
 .todoActions {
     flex: none;
@@ -258,6 +306,23 @@ span.modify_desc {
     display: inline-block;
     width: 80px;
     vertical-align: top;
+}
+/* "Fixed date" next to the due date, and what it means below (a phone shows no tooltips) */
+.modify_dueFixed {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 44px;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+.modify_dueFixed:has(input:disabled) {
+    color: var(--muted);
+}
+.modify_remark {
+    margin: 0 0 6px 84px;
+    font-size: .8125rem;
+    color: var(--muted);
 }
 .modify_line > select, .modify_line > input[type='text'], .modify_line > input[type='date'], .modify_line > textarea, .modify_line > .tagify {
     width: 300px;
@@ -783,6 +848,12 @@ svg.icon {
 	span.modify_desc {
 		display: block;
 		width: auto;
+	}
+	.modify_dueFixed {
+		margin-left: 0;
+	}
+	.modify_remark {
+		margin-left: 0;
 	}
 	.modify_line > select, .modify_line > input[type='text'], .modify_line > input[type='date'], .modify_line > textarea, .modify_line > .tagify,
 	#tag_dialog .tagify {

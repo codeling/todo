@@ -11,9 +11,9 @@ import { logItems } from './log.js';
 import { ItemSort } from './items.js';
 import { setupAjax } from './api.js';
 import { enter, emptyTrash, storeItem, doToday, reactivate, setTrashed } from './actions.js';
-import { toggleTagFilter, toggleTagBarExpanded, updateTagBarOverflow, updateEnterDueLabel } from './render.js';
+import { toggleTagFilter, toggleTagBarExpanded, updateTagBarOverflow, updateEnterDueLabel, toggleTodayOnly } from './render.js';
 import { reload, refresh, reloadTagList } from './load.js';
-import { setupDialogs, keepSuggestionsInDialog, showLogDialog, showTagsDialog, toggleRecurrenceAnchor, openTagDialog, tagDialogAction } from './dialogs.js';
+import { setupDialogs, keepSuggestionsInDialog, showLogDialog, showTagsDialog, toggleRecurrenceAnchor, openTagDialog, tagDialogAction, updateDueFixed } from './dialogs.js';
 
 // The one way to reach the state of the page from outside the modules: the UI tests
 // (tests/ui.test.js) read it, and it helps to look at the page in the browser console.
@@ -162,7 +162,12 @@ $('#loadIncomplete').on('click', function() {
     reload();
 });
 
+// only the open entries which are overdue or due today (fixed due dates), on request: a toggle in the header;
+// the entries are all loaded, so it only changes what is shown
+$('#todayOnly').attr('aria-pressed', 'false').on('click', toggleTodayOnly);
+
 shiftDueWithStart('#modify_start', '#modify_due', false);
+$('#modify_due').on('input change', updateDueFixed);
 shiftDueWithStart('#enter_start', '#enter_due', true);
 $('#enter_due').on('input change', updateEnterDueLabel);
 $('#enter_due').on('click', function() {
