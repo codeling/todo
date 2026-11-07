@@ -99,7 +99,7 @@ test('on a phone the bar to enter an entry is at the bottom and stays there whil
     const last = await page.locator('#todoList > li').last().boundingBox();
     assert.ok(last.y + last.height <= box.y + 1);
     // the field, the due date and the button are one row in it, and big enough
-    for (const selector of ['#enter_todo', '.due_picker', '#enter_today', '#enter_save']) {
+    for (const selector of ['#enter_todo', '.due_picker', '#enter_fixed', '#enter_save']) {
         const b = await page.locator(selector).boundingBox();
         assert.ok(b.y >= box.y && b.y + b.height <= box.y + box.height, `${selector} is in the bar`);
         assert.ok(b.height >= 32, `${selector} is high enough: ${b.height}`);
@@ -113,11 +113,11 @@ test('on a phone the bar to enter an entry is at the bottom and stays there whil
     await page.context().close();
 });
 
-test('on a wide screen the line to enter an entry is part of the page, with the due date and "Today", without a start date', async () => {
+test('on a wide screen the line to enter an entry is part of the page, with the due date and "Fixed date", without a start date', async () => {
     seed(1);
     const page = await openPage();
     assert.equal(await page.locator('#inputform').evaluate((e) => getComputedStyle(e).position), 'static');
-    for (const selector of ['#enter_todo', '#enter_due', '#enter_today', '#enter_save']) {
+    for (const selector of ['#enter_todo', '#enter_due', '#enter_fixed', '#enter_save']) {
         assert.equal(await page.locator(selector).isVisible(), true, selector);
     }
     assert.equal(await page.locator('#enter_start').count(), 0, 'the start date is in the dialog only');

@@ -11,7 +11,7 @@ import { logItems } from './log.js';
 import { ItemSort } from './items.js';
 import { setupAjax } from './api.js';
 import { enter, emptyTrash, storeItem, doToday, reactivate, setTrashed } from './actions.js';
-import { toggleTagFilter, toggleTagBarExpanded, updateTagBarOverflow, updateEnterDueLabel, toggleTodayOnly, setEnterToday, enterTodayPressed } from './render.js';
+import { toggleTagFilter, toggleTagBarExpanded, updateTagBarOverflow, updateEnterDueLabel, toggleTodayOnly, setEnterFixed, enterFixedPressed } from './render.js';
 import { reload, refresh, reloadTagList } from './load.js';
 import { setupDialogs, keepSuggestionsInDialog, showLogDialog, showTagsDialog, toggleRecurrenceAnchor, openTagDialog, tagDialogAction, updateDueFixed } from './dialogs.js';
 
@@ -164,8 +164,8 @@ $('#todayOnly').attr('aria-pressed', 'false').on('click', toggleTodayOnly);
 shiftDueWithStart('#modify_start', '#modify_due');
 $('#modify_due').on('input change', updateDueFixed);
 $('#enter_due').on('input change', updateEnterDueLabel);
-$('#enter_today').on('click', function() {
-    setEnterToday(!enterTodayPressed());
+$('#enter_fixed').attr('aria-pressed', 'false').on('click', function() {
+    setEnterFixed(!enterFixedPressed());
 });
 $('#enter_due').on('click', function() {
     // the date input is invisible on narrow screens: open the picker on any tap

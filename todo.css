@@ -93,7 +93,7 @@ input[type="text"], input[type="date"] {
     font-family:Tahoma,sans-serif;
     font-size: .75rem;
 }
-/* the line to enter an entry: the text, the due date, "Today" and the button (the start date is in the dialog) */
+/* the line to enter an entry: the text, the due date, "Fixed date" and the button (the start date is in the dialog) */
 #enterLine {
     display: flex;
     align-items: center;
@@ -110,22 +110,18 @@ input[type="text"], input[type="date"] {
     flex: 1 1 auto;
     min-width: 0;
 }
-#enterLine .due, #enter_today, #enter_save {
+#enterLine .due, #enter_fixed, #enter_save {
     flex: none;
     white-space: nowrap;
 }
-#enter_today {
-    min-height: 0;
-    padding: 2px 10px;
+/* "Fixed date" is on: the due date is a real deadline, drawn like that of an entry due today */
+#enter_fixed[aria-pressed="true"] svg.icon,
+#enterLine.enterFixed #enter_due,
+#enterLine.enterFixed #enter_due_label {
+    color: var(--accent);
 }
-/* "Today" is on: the new entry is due today (fixed), the due date which may have been picked is not used */
-#enter_today[aria-pressed="true"] {
+#enterLine.enterFixed #enter_due {
     border-color: var(--accent);
-    background: var(--accent);
-    color: var(--on-accent);
-}
-#enterLine.enterToday .due {
-    opacity: .4;
 }
 .date_caption {
     color: var(--muted);
@@ -758,7 +754,7 @@ svg.icon {
 @media (max-width: 575px)
 {
 	/* The line to enter an entry is a bar at the bottom of the screen, where the thumb is, and stays there while the
-	   list scrolls: the text, the due date, "Today" and the button. The due date is the label
+	   list scrolls: the text, the due date, "Fixed date" and the button. The due date is the label
 	   (a calendar icon if empty) with the native date input on top of it, invisible, which opens the picker on tap. */
 	body {
 		font-size: .9375rem;
@@ -787,9 +783,13 @@ svg.icon {
 	#enterLine .date_caption {
 		display: none;
 	}
-	#enter_today {
-		min-height: 36px;
-		padding: 4px 8px;
+	#enter_fixed {
+		width: 36px;
+		height: 36px;
+	}
+	#enter_fixed svg.icon {
+		width: 1.5rem;
+		height: 1.5rem;
 	}
 	#enterLine .due {
 		display: inline-flex;

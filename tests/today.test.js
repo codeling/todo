@@ -185,38 +185,52 @@ test('"Do today" makes any open entry due today (fixed), and Undo brings its dat
     await page.context().close();
 });
 
-test('"Today" in the line to enter an entry adds it due today (fixed); a due date picked there stays soft', async () => {
+test('"Fixed date" in the line to enter an entry makes the due date a deadline; without a date it enters today', async () => {
     seed();
     const page = await openPage();
-    const pressed = () => page.getAttribute('#enter_today', 'aria-pressed');
+    const pressed = () => page.getAttribute('#enter_fixed', 'aria-pressed');
     const added = (text) => page.waitForFunction((t) => todoApp.state.itemList.some((i) => i.todo == t && i.id > 0), text);
+    const today = await page.evaluate(() => new Date().toLocaleDateString('sv'));
+    const isToday = (text) => row(page, text).evaluate((e) => e.classList.contains('dueToday'));
     assert.equal(await pressed(), 'false');
     // a due date of today which is picked only orders the list
     await page.fill('#enter_todo', 'Picked today');
-    await page.fill('#enter_due', await page.evaluate(() => new Date().toLocaleDateString('sv')));
+    await page.fill('#enter_due', today);
     await page.click('#enter_save');
     await added('Picked today');
     assert.equal(sql("SELECT dueDate = UTC_DATE(), dueFixed FROM todo WHERE description='Picked today'").trim(), '1\t0');
-    assert.deepEqual(await row(page, 'Picked today').evaluate((e) => [e.classList.contains('dueSoft'), e.classList.contains('dueToday')]), [true, false]);
-    // "Today": the due date which was picked is not used (and shown as such)
-    await page.fill('#enter_todo', 'work: For today');
-    await page.fill('#enter_due', '2099-01-01');
-    await page.click('#enter_today');
+    assert.equal(await isToday('Picked today'), false);
+    // switched on without a date: today, one click; switched off again, the date goes away
+    await page.click('#enter_fixed');
     assert.equal(await pressed(), 'true');
-    assert.equal(await page.locator('#enter_due').isDisabled(), true);
+    assert.equal(await page.inputValue('#enter_due'), today);
+    await page.click('#enter_fixed');
+    assert.equal(await page.inputValue('#enter_due'), '');
+    await page.fill('#enter_todo', 'work: For today');
+    await page.click('#enter_fixed');
     await page.focus('#enter_todo');
     await page.keyboard.press('Enter');
     await added('For today');
     assert.equal(sql("SELECT startDate = UTC_DATE(), dueDate = UTC_DATE(), dueFixed FROM todo WHERE description='For today'").trim(), '1\t1\t1');
-    assert.equal(await row(page, 'For today').evaluate((e) => e.classList.contains('dueToday')), true);
+    assert.equal(await isToday('For today'), true);
     assert.deepEqual(await headings(page), ['overdue 2', 'today 2', 'later 5']);
     // it is off again for the next one, and the line is empty
     assert.equal(await pressed(), 'false');
-    assert.equal(await page.locator('#enter_due').isDisabled(), false);
     assert.equal(await page.inputValue('#enter_due'), '');
-    // while only overdue and today are shown it is on, else a new entry would not be seen
+    // a date which was picked stays when it is switched on, and off again
+    await page.fill('#enter_todo', 'Deadline later');
+    await page.fill('#enter_due', '2099-01-01');
+    await page.click('#enter_fixed');
+    await page.click('#enter_fixed');
+    assert.equal(await page.inputValue('#enter_due'), '2099-01-01');
+    await page.click('#enter_fixed');
+    await page.click('#enter_save');
+    await added('Deadline later');
+    assert.equal(sql("SELECT dueDate, dueFixed FROM todo WHERE description='Deadline later'").trim(), '2099-01-01\t1');
+    // while only overdue and today are shown it is on (with today), else a new entry would not be seen
     await page.click('#todayOnly');
     assert.equal(await pressed(), 'true');
+    assert.equal(await page.inputValue('#enter_due'), today);
     await page.fill('#enter_todo', 'Seen in today only');
     await page.click('#enter_save');
     await added('Seen in today only');
@@ -224,6 +238,7 @@ test('"Today" in the line to enter an entry adds it due today (fixed); a due dat
     assert.equal(await pressed(), 'true');
     await page.click('#todayOnly');
     assert.equal(await pressed(), 'false');
+    assert.equal(await page.inputValue('#enter_due'), '');
     assert.deepEqual(page.errors, []);
     await page.context().close();
 });

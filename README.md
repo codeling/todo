@@ -7,9 +7,10 @@ Dates of an entry: the **start** date hides it until then ("Peek upcoming" in th
 in the dialog of the entry): a real deadline. The open entries with a fixed due date which has passed are in the
 section "Overdue" on top of the list, those due today in "Today" (highlighted), all others in "Later". The button
 "Show only overdue and today" in the header hides "Later", and "Do today" in the dialog makes an entry due today
-(as a fixed date; Undo in the message sets the dates back). In the line to enter an entry, "Today" adds it due today as
-a fixed date (it is on by default while only overdue and today are shown); a due date picked there is soft. A new entry
-starts today; the start date can be changed in the dialog.
+(as a fixed date; Undo in the message sets the dates back). In the line to enter an entry, the due date is soft unless
+"Fixed date" (the pin) is on; switched on without a due date it enters today, so one click makes an entry for "Today"
+(it is on by default while only overdue and today are shown). A new entry starts today; the start date can be changed
+in the dialog.
 
 Dark mode: the pages follow the color scheme of the system (`prefers-color-scheme`), and the button
 in the header of the list and of the statistics page chooses the system's scheme, light or dark (kept in

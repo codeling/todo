@@ -292,19 +292,19 @@ test('at 320px a row is at least 44px high, nothing scrolls sideways, and the ba
     for (const height of await page.locator('#todoList > li').evaluateAll((rows) => rows.map((r) => r.getBoundingClientRect().height))) {
         assert.ok(height >= 44, 'a row is ' + height + 'px high');
     }
-    for (const selector of ['#enter_todo', '.due_picker', '#enter_today', '#enter_save']) {
+    for (const selector of ['#enter_todo', '.due_picker', '#enter_fixed', '#enter_save']) {
         const box = await page.locator(selector).boundingBox();
         assert.ok(box.x >= 0 && box.x + box.width <= 320, `${selector} is on the screen: ${JSON.stringify(box)}`);
     }
-    for (const selector of ['#enter_today', '#enter_save']) {
+    for (const selector of ['#enter_fixed', '#enter_save']) {
         const box = await page.locator(selector).boundingBox();
         assert.ok(box.width >= 32 && box.height >= 32, `${selector} can be tapped: ${JSON.stringify(box)}`);
     }
     const picker = await page.locator('.due_picker').boundingBox();
     assert.ok(picker.width >= 44 && picker.height >= 36, 'the due date can be tapped: ' + JSON.stringify(picker));
-    // the text field, the due date, "Today" and the button are one row (the bar at the bottom), and the field has the rest
+    // the text field, the due date, "Fixed date" and the button are one row (the bar at the bottom), and the field has the rest
     const field = await page.locator('#enter_todo').boundingBox();
-    assert.ok(field.width >= 140, 'the field is wide: ' + field.width);
+    assert.ok(field.width >= 160, 'the field is wide: ' + field.width);
     assert.ok(Math.abs(field.y + field.height / 2 - (picker.y + picker.height / 2)) < 12, 'one row');
     // an entry which is added shows at once, with a due date
     await page.fill('#enter_todo', 'added on a phone');
