@@ -185,6 +185,49 @@ test('"Do today" makes any open entry due today (fixed), and Undo brings its dat
     await page.context().close();
 });
 
+test('"Today" in the line to enter an entry adds it due today (fixed); a due date picked there stays soft', async () => {
+    seed();
+    const page = await openPage();
+    const pressed = () => page.getAttribute('#enter_today', 'aria-pressed');
+    const added = (text) => page.waitForFunction((t) => todoApp.state.itemList.some((i) => i.todo == t && i.id > 0), text);
+    assert.equal(await pressed(), 'false');
+    // a due date of today which is picked only orders the list
+    await page.fill('#enter_todo', 'Picked today');
+    await page.fill('#enter_due', await page.evaluate(() => new Date().toLocaleDateString('sv')));
+    await page.click('#enter_save');
+    await added('Picked today');
+    assert.equal(sql("SELECT dueDate = UTC_DATE(), dueFixed FROM todo WHERE description='Picked today'").trim(), '1\t0');
+    assert.deepEqual(await row(page, 'Picked today').evaluate((e) => [e.classList.contains('dueSoft'), e.classList.contains('dueToday')]), [true, false]);
+    // "Today": the due date which was picked is not used (and shown as such)
+    await page.fill('#enter_todo', 'work: For today');
+    await page.fill('#enter_due', '2099-01-01');
+    await page.click('#enter_today');
+    assert.equal(await pressed(), 'true');
+    assert.equal(await page.locator('#enter_due').isDisabled(), true);
+    await page.focus('#enter_todo');
+    await page.keyboard.press('Enter');
+    await added('For today');
+    assert.equal(sql("SELECT startDate = UTC_DATE(), dueDate = UTC_DATE(), dueFixed FROM todo WHERE description='For today'").trim(), '1\t1\t1');
+    assert.equal(await row(page, 'For today').evaluate((e) => e.classList.contains('dueToday')), true);
+    assert.deepEqual(await headings(page), ['overdue 2', 'today 2', 'later 5']);
+    // it is off again for the next one, and the line is empty
+    assert.equal(await pressed(), 'false');
+    assert.equal(await page.locator('#enter_due').isDisabled(), false);
+    assert.equal(await page.inputValue('#enter_due'), '');
+    // while only overdue and today are shown it is on, else a new entry would not be seen
+    await page.click('#todayOnly');
+    assert.equal(await pressed(), 'true');
+    await page.fill('#enter_todo', 'Seen in today only');
+    await page.click('#enter_save');
+    await added('Seen in today only');
+    assert.ok((await titles(page)).includes('Seen in today only'));
+    assert.equal(await pressed(), 'true');
+    await page.click('#todayOnly');
+    assert.equal(await pressed(), 'false');
+    assert.deepEqual(page.errors, []);
+    await page.context().close();
+});
+
 test('on a phone the toggle is in the header row, nothing scrolls sideways, and the sections are shown the same way', async () => {
     seed();
     const page = await openPage({ viewport: { width: 320, height: 700 } });

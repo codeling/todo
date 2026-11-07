@@ -93,14 +93,14 @@ input[type="text"], input[type="date"] {
     font-family:Tahoma,sans-serif;
     font-size: .75rem;
 }
-/* the line to enter an entry: the text, the start and due date, and the button */
+/* the line to enter an entry: the text, the due date, "Today" and the button (the start date is in the dialog) */
 #enterLine {
     display: flex;
     align-items: center;
     gap: 6px;
     margin-bottom: 6px;
 }
-#enter_todo,#enter_start,#enter_due {
+#enter_todo,#enter_due {
     border: 1px solid var(--border);
     border-radius: 3px;
     padding: 4px;
@@ -110,9 +110,22 @@ input[type="text"], input[type="date"] {
     flex: 1 1 auto;
     min-width: 0;
 }
-#enterLine .start, #enterLine .due {
+#enterLine .due, #enter_today, #enter_save {
     flex: none;
     white-space: nowrap;
+}
+#enter_today {
+    min-height: 0;
+    padding: 2px 10px;
+}
+/* "Today" is on: the new entry is due today (fixed), the due date which may have been picked is not used */
+#enter_today[aria-pressed="true"] {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--on-accent);
+}
+#enterLine.enterToday .due {
+    opacity: .4;
 }
 .date_caption {
     color: var(--muted);
@@ -745,7 +758,7 @@ svg.icon {
 @media (max-width: 575px)
 {
 	/* The line to enter an entry is a bar at the bottom of the screen, where the thumb is, and stays there while the
-	   list scrolls: the text, the due date and the button. The start date is left out (today). The due date is the label
+	   list scrolls: the text, the due date, "Today" and the button. The due date is the label
 	   (a calendar icon if empty) with the native date input on top of it, invisible, which opens the picker on tap. */
 	body {
 		font-size: .9375rem;
@@ -771,8 +784,12 @@ svg.icon {
 	#enter_todo {
 		min-height: 40px;
 	}
-	#enterLine .start, #enterLine .date_caption {
+	#enterLine .date_caption {
 		display: none;
+	}
+	#enter_today {
+		min-height: 36px;
+		padding: 4px 8px;
 	}
 	#enterLine .due {
 		display: inline-flex;

@@ -104,6 +104,7 @@ export function toggleTodayOnly() {
     state.todayOnly = !state.todayOnly;
     var label = $T(state.todayOnly ? 'TODAY_ONLY_HIDE' : 'TODAY_ONLY');
     $('#todayOnly').attr({ 'aria-pressed': state.todayOnly ? 'true' : 'false', title: label, 'aria-label': label });
+    setEnterToday(state.todayOnly);
     renderTable();
 }
 
@@ -240,6 +241,22 @@ function dateHtml(date) {
 // there is none) over the invisible date input
 export function updateEnterDueLabel() {
     $('#enter_due_label').html(dateHtml(parseDay($('#enter_due').val())));
+}
+
+
+// "Today" in the line to enter an entry: the new entry is due today as a fixed date, so that it is in the section
+// "Today" (a due date which is picked there is soft, it only orders the list). While it is on, the due date
+// is not used and shown as such. It is on by default while only overdue and today are shown, where an entry without
+// it would not be seen.
+export function setEnterToday(on) {
+    $('#enter_today').attr('aria-pressed', on ? 'true' : 'false');
+    $('#enter_due').prop('disabled', on);
+    $('#enterLine').toggleClass('enterToday', on);
+}
+
+
+export function enterTodayPressed() {
+    return $('#enter_today').attr('aria-pressed') == 'true';
 }
 
 
