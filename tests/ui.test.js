@@ -381,6 +381,50 @@ test('an entry moved to the trash or back is shown as before when that fails, al
     await page.close();
 });
 
+test('an entry taken back from the trash can be completed and saved at once, before the server answered', async () => {
+    resetDb();
+    sql("INSERT INTO todo (creationDate, description, startDate, list_id) VALUES (UTC_TIMESTAMP(), 'open', UTC_DATE(), 0)");
+    const page = await openPage();
+    await page.waitForSelector('#todoList > li');
+    const id = await page.evaluate(() => todoApp.state.itemList[0].id);
+    await Promise.all([page.waitForResponse('**/queries/trash.php*'), page.click('#trash' + id)]);
+
+    // the answer to taking it back is held back: the entry is shown as restored, but the server still has it in
+    // the trash, with the version before; completing it waits for that answer (it was refused before, as deleted
+    // or as a version conflict, depending on which request reached the server first)
+    let release;
+    const held = new Promise((resolve) => { release = resolve; });
+    await page.route('**/queries/trash.php*', async (r) => { await held; await r.continue(); });
+    await page.click('#restore' + id);
+    await page.waitForFunction(() => todoApp.state.itemList[0].deleted == 0);
+    await page.click('#completed' + id);
+    await page.waitForTimeout(200);
+    assert.equal(sql(`SELECT completed FROM todo WHERE id=${id}`).trim(), '0');
+    release();
+    await page.waitForFunction(() => todoApp.state.itemList[0].completed == 1);
+    assert.equal(await page.isChecked('#completed' + id), true);
+    assert.deepEqual(sqlRows(`SELECT deleted, completed FROM todo WHERE id=${id}`), [['0', '1']]);
+
+    // the same for saving it in the dialog
+    await page.click('#completed' + id);
+    await page.waitForFunction(() => todoApp.state.itemList[0].completed == 0);
+    await page.click('#trash' + id);
+    await page.waitForFunction(() => todoApp.state.itemList[0].deleted == 1);
+    const heldAgain = new Promise((resolve) => { release = resolve; });
+    await page.unroute('**/queries/trash.php*');
+    await page.route('**/queries/trash.php*', async (r) => { await heldAgain; await r.continue(); });
+    await page.click('#restore' + id);
+    await page.click('#open' + id);
+    await page.waitForSelector('#modify_dialog[open]');
+    await page.fill('#modify_todo', 'changed');
+    await page.click('#modify_save');
+    release();
+    await page.waitForSelector('#modify_dialog', { state: 'hidden' });
+    assert.deepEqual(sqlRows(`SELECT deleted, description FROM todo WHERE id=${id}`), [['0', 'changed']]);
+    assert.deepEqual(page.errors, []);
+    await page.close();
+});
+
 test('a failed creation removes the new entry, and nothing else if the list was loaded again meanwhile', async () => {
     resetDb();
     sql("INSERT INTO todo (creationDate, description, startDate, list_id) VALUES " +

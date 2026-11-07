@@ -94,9 +94,23 @@ export function emptyTrash() {
 }
 
 
-// the last request to move an entry into the trash or back, by id of the entry: the next one is only
-// sent when it is done, as it needs the version of the entry which that one has changed
-var trashRequests = {};
+// The last request which changes an entry, by id of the entry. Each of these requests sends the version of the
+// entry and the server refuses it if that is not the current one; the change of the one before (moving it into
+// the trash or back, completing it, saving it) gives the entry a new version, and the entry is shown with that
+// change before the server confirmed it. So a request for an entry is only sent once the one before is done,
+// and reads the version then.
+var entryRequests = {};
+
+// send(): sends the request and returns its promise (which handles its failure itself)
+function queueEntryRequest(id, send) {
+    var request = (entryRequests[id] || Promise.resolve()).then(send, send);
+    entryRequests[id] = request;
+    request.then(function() {
+        if (entryRequests[id] === request) {
+            delete entryRequests[id];
+        }
+    });
+}
 
 // moves an entry into the trash or back; shown at once and undone if the server refuses
 export function setTrashed(id, trashed) {
@@ -107,7 +121,7 @@ export function setTrashed(id, trashed) {
         return;
     }
     setTrashedLocally(idx, trashed);
-    var request = (trashRequests[id] || Promise.resolve()).then(function() {
+    queueEntryRequest(id, function() {
         // (the version is read now, the one before may have changed it; the list may have
         // been loaded again meanwhile, so the entry is looked up again)
         var current = findItem(id);
@@ -137,12 +151,6 @@ export function setTrashed(id, trashed) {
                 setTrashedLocally(failed, !trashed);
             }
         });
-    });
-    trashRequests[id] = request;
-    request.then(function() {
-        if (trashRequests[id] === request) {
-            delete trashRequests[id];
-        }
     });
 }
 
@@ -204,22 +212,36 @@ export function toggleCompleted(id) {
     if (state.itemList[index].deleted == 1) {
         return;
     }
-    var stuff = new Object();
-    stuff.id = id;
-    stuff.completed = state.itemList[index].completed == 0 ? 1 : 0;
-    stuff.version   = state.itemList[index].version;
-    stuff.completionDate = stuff.completed == 1 ? formatDate(getUTCDate(), true) : null;
-    // a copy of its own for each request, the item itself is only changed once the server confirmed
-    var item = copyTodo(state.itemList[index]);
-    postAction('queries/complete.php', stuff).then(function(answer) {
-        item.completed = stuff.completed;
-        item.completionDate = stuff.completionDate;
-        item.version   = answer.version;
-        toggleLocally(item);
-        log($T('UPDATE_SUCCESSFUL'));
-    }, function(failure) {
-        reportFailure('ERROR_WHILE_MODIFYING', failure);
-        resetCompletedCheckbox(id);
+    // what the click asked for: the opposite of what is shown now
+    var completed = state.itemList[index].completed == 0 ? 1 : 0;
+    queueEntryRequest(id, function() {
+        // (after the request before, e.g. taking it back from the trash: its version, or the list was loaded again)
+        var current = findItem(id);
+        if (current == -1) {
+            return;
+        }
+        if (state.itemList[current].deleted == 1) {
+            // (moving it back from the trash failed)
+            resetCompletedCheckbox(id);
+            return;
+        }
+        var stuff = new Object();
+        stuff.id = id;
+        stuff.completed = completed;
+        stuff.version   = state.itemList[current].version;
+        stuff.completionDate = stuff.completed == 1 ? formatDate(getUTCDate(), true) : null;
+        // a copy of its own for each request, the item itself is only changed once the server confirmed
+        var item = copyTodo(state.itemList[current]);
+        return postAction('queries/complete.php', stuff).then(function(answer) {
+            item.completed = stuff.completed;
+            item.completionDate = stuff.completionDate;
+            item.version   = answer.version;
+            toggleLocally(item);
+            log($T('UPDATE_SUCCESSFUL'));
+        }, function(failure) {
+            reportFailure('ERROR_WHILE_MODIFYING', failure);
+            resetCompletedCheckbox(id);
+        });
     });
 }
 
@@ -300,7 +322,19 @@ function addItem(stuff) {
 
 function storeItemRemote(stuff, onsucc) {
     log($T('SAVING_MODIFICATIONS'));
-    postAction('queries/update.php', todoParams(stuff)).then(function(answer) {
+    queueEntryRequest(stuff.id, function() {
+        // (the version after the request before, if there was one still running)
+        var current = findItem(stuff.id);
+        if (current != -1) {
+            stuff.version = state.itemList[current].version;
+        }
+        return sendItem(stuff, onsucc);
+    });
+}
+
+
+function sendItem(stuff, onsucc) {
+    return postAction('queries/update.php', todoParams(stuff)).then(function(answer) {
         reloadTagList(); // a tag might have been added or removed
         // if everything went fine, close dialog:
         log($T('SAVING_SUCCESSFUL'));
