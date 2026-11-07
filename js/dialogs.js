@@ -18,6 +18,34 @@ export function setupDialogs() {
     $('#modify_dialog').on('close', function() {
         log($T('MODIFY_DIALOG_CLOSED'));
     });
+    followVisualViewport();
+}
+
+
+// On a phone a dialog fills the screen (todo.css). The on-screen keyboard covers the bottom of the screen, but in
+// Chrome and Safari it makes only the visual viewport (the part of the page which is visible) smaller, not the layout
+// viewport which 100dvh and position: fixed refer to; so the footer with the buttons was behind the keyboard. The
+// size and the position of the visual viewport are given to the CSS as --visual-height and --visual-top, and a
+// dialog on a narrow screen covers just that part. Not while the page is zoomed in: then the dialog keeps its size,
+// as the visible part is only a piece of the dialog.
+function followVisualViewport() {
+    var viewport = window.visualViewport;
+    if (!viewport) {
+        return;
+    }
+    function update() {
+        var style = document.documentElement.style;
+        if (Math.abs(viewport.scale - 1) < 0.01) {
+            style.setProperty('--visual-height', viewport.height + 'px');
+            style.setProperty('--visual-top', viewport.offsetTop + 'px');
+        } else {
+            style.removeProperty('--visual-height');
+            style.removeProperty('--visual-top');
+        }
+    }
+    viewport.addEventListener('resize', update);
+    viewport.addEventListener('scroll', update);
+    update();
 }
 
 
