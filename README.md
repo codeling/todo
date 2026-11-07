@@ -3,7 +3,7 @@
 A small PHP / MariaDB (MySQL) to-do list with lists, tags, recurring entries and statistics.
 
 Dates of an entry: the **start** date hides it until then ("Peek upcoming" in the header shows those entries). The
-**due** date is either *soft*, which only orders the list and is never shown as overdue, or *fixed* ("Fixed date"
+**due** date is either *soft*, which only orders the list and is never shown as overdue, or *fixed* ("Fixed date", the pin,
 in the dialog of the entry): a real deadline. The open entries with a fixed due date which has passed are in the
 section "Overdue" on top of the list, those due today in "Today" (highlighted), all others in "Later". The button
 "Show only overdue and today" in the header hides "Later", and "Do today" in the dialog makes an entry due today

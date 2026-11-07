@@ -121,31 +121,47 @@ test('"Today only" shows only the sections "Overdue" and "Today", also with a ta
     await page.context().close();
 });
 
-test('"Fixed date" in the dialog is saved, needs a due date, and moves the entry into its section', async () => {
+test('"Fixed date" in the dialog is a toggle (the pin), is saved, and moves the entry into its section', async () => {
     seed();
     const page = await openPage();
     await row(page, 'Soft today').locator('.todoMain').click();
     const fixed = page.locator('#modify_dueFixed');
-    assert.equal(await fixed.isChecked(), false);
-    assert.equal(await fixed.isEnabled(), true);
-    // a phone shows no tooltip: what it means is written below
-    assert.match(await page.locator('#modify_dueFixed_remark').textContent(), /real deadline/);
-    await fixed.check();
+    const pressed = () => fixed.getAttribute('aria-pressed');
+    assert.equal(await pressed(), 'false');
+    assert.equal(await fixed.getAttribute('aria-label'), 'Fixed date');
+    // what it means is in the help text of the due date (shown with the help button, else only a tooltip)
+    assert.match(await page.locator('#modify_due_help').textContent(), /real deadline/);
+    assert.equal(await page.locator('#modify_due_help').isVisible(), false);
+    await fixed.click();
+    assert.equal(await pressed(), 'true');
     await page.click('#modify_save');
     await page.waitForFunction(() => todoApp.state.itemList.find((i) => i.todo == 'Soft today').dueFixed == 1);
     assert.equal(sql("SELECT dueFixed FROM todo WHERE description='Soft today'").trim(), '1');
     assert.deepEqual(await headings(page), ['overdue 2', 'today 2', 'later 3']);
     assert.equal(await row(page, 'Soft today').evaluate((e) => e.classList.contains('dueToday')), true);
-    // it is shown checked when the dialog is opened again; without a due date it cannot be checked
+    // it is shown pressed when the dialog is opened again; clearing the due date switches it off
     await row(page, 'Soft today').locator('.todoMain').click();
-    assert.equal(await fixed.isChecked(), true);
+    assert.equal(await pressed(), 'true');
     await page.fill('#modify_due', '');
-    assert.equal(await fixed.isDisabled(), true);
+    assert.equal(await pressed(), 'false');
     await page.keyboard.press('Escape');
+    // as in the line to enter an entry: without a due date it enters today, and takes it away again
     await row(page, 'No due date').locator('.todoMain').click();
-    assert.equal(await fixed.isDisabled(), true);
+    assert.equal(await pressed(), 'false');
+    await fixed.click();
+    assert.equal(await pressed(), 'true');
+    assert.equal(await page.inputValue('#modify_due'), await page.evaluate(() => {
+        const d = new Date();
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }));
+    await fixed.click();
+    assert.equal(await page.inputValue('#modify_due'), '');
     await page.fill('#modify_due', '2099-01-01');
-    assert.equal(await fixed.isEnabled(), true);
+    await fixed.click();
+    assert.equal(await page.inputValue('#modify_due'), '2099-01-01');
+    await page.click('#modify_save');
+    await page.waitForFunction(() => todoApp.state.itemList.find((i) => i.todo == 'No due date').dueFixed == 1);
+    assert.equal(sql("SELECT dueDate, dueFixed FROM todo WHERE description='No due date'").trim(), '2099-01-01\t1');
     await page.keyboard.press('Escape');
     assert.deepEqual(page.errors, []);
     await page.context().close();

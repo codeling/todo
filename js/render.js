@@ -244,12 +244,11 @@ export function updateEnterDueLabel() {
 }
 
 
-// "Fixed date" in the line to enter an entry: the due date of the new entry is a real deadline (without it, it only
+// A "Fixed date" toggle button (a pin) next to a due date input: on, the due date is a real deadline (off, it only
 // orders the list). Switched on without a due date, it enters today, so that one click makes an entry for "Today";
-// switched off again, that date goes away (unless it was changed). It is on by default while only overdue and today
-// are shown, where an entry without it would not be seen.
-export function setEnterFixed(on) {
-    var due = $('#enter_due');
+// switched off again, that date goes away (unless it was changed).
+export function setFixedDate(button, dueInput, on) {
+    var due = $(dueInput);
     if (on && due.val() == '') {
         due.val(formatDate(new Date()));
         due.data('filledIn', due.val());
@@ -259,14 +258,26 @@ export function setEnterFixed(on) {
     if (!on || due.val() != due.data('filledIn')) {
         due.removeData('filledIn');
     }
-    $('#enter_fixed').attr('aria-pressed', on ? 'true' : 'false');
+    $(button).attr('aria-pressed', on ? 'true' : 'false');
+}
+
+
+export function fixedDatePressed(button) {
+    return $(button).attr('aria-pressed') == 'true';
+}
+
+
+// "Fixed date" in the line to enter an entry (see setFixedDate()). It is on by default while only overdue and today
+// are shown, where an entry without it would not be seen.
+export function setEnterFixed(on) {
+    setFixedDate('#enter_fixed', '#enter_due', on);
     $('#enterLine').toggleClass('enterFixed', on);
     updateEnterDueLabel();
 }
 
 
 export function enterFixedPressed() {
-    return $('#enter_fixed').attr('aria-pressed') == 'true';
+    return fixedDatePressed('#enter_fixed');
 }
 
 

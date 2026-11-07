@@ -86,12 +86,26 @@ function themeButtonHtml() {
 }
 // The dialogs are <dialog> elements which are opened with showModal() (js/dialogs.js): the header has the title and
 // the button to close it (js/dialogs.js closes the dialog of any element with data-dialog-close)
-function dialogHeaderHtml($titleId, $title) {
+// (with $help, a toggle button before the close button shows the help texts of the fields, see formLineEndHtml())
+function dialogHeaderHtml($titleId, $title, $help = false) {
     return '<div class="dialog_header"><h2 id="'.htmlspecialchars($titleId).'" class="dialog_title">'.htmlspecialchars($title).'</h2>'.
+        ($help ? iconButton($titleId.'_help', 'toggleButton dialog_help', 'help', TodoLang::_("HELP_SHOW")) : '').
         '<button type="button" class="iconButton dialog_close" data-dialog-close title="'.htmlspecialchars(TodoLang::_("CLOSE")).
         '" aria-label="'.htmlspecialchars(TodoLang::_("CLOSE")).'">'.iconSvg('close').'</button></div>'.
         // (the messages which come while the dialog is open, see js/toast.js)
         '<div class="toasts dialog_toasts" aria-live="polite"></div>';
+}
+// A line of the form of a dialog: the label on the left, in front of the field(s), and the help text below them,
+// which is only shown while the help button of the dialog is on (and as the tooltip of the line on hover):
+//   formLineStartHtml(...) fields formLineEndHtml(...)
+// The field with the ID $for is the one the label is for, and the help text is its description.
+function formLineStartHtml($for, $label, $helpKey = null) {
+    return '<div class="modify_line"'.($helpKey === null ? '' : ' title="'.htmlspecialchars(TodoLang::_($helpKey)).'"').'>'.
+        '<label class="modify_desc" for="'.htmlspecialchars($for).'">'.htmlspecialchars($label).'</label><div class="modify_field">';
+}
+function formLineEndHtml($for, $helpKey = null) {
+    return '</div>'.($helpKey === null ? '' :
+        '<div class="modify_help" id="'.htmlspecialchars($for).'_help">'.htmlspecialchars(TodoLang::_($helpKey)).'</div>').'</div>';
 }
 // a button of the footer of a dialog: the label is its text, the icon is optional
 function dialogButtonHtml($id, $class, $label, $icon = null) {

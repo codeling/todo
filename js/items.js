@@ -11,7 +11,8 @@ export function Todo(id, todo, due, start, effort,
     this.todo      = todo;
     this.due       = due;
     this.start     = start;
-    this.effort    = parseInt(effort);
+    // (0: not estimated)
+    this.effort    = parseInt(effort) || 0;
     this.completed = parseInt(completed);
     this.notes     = notes;
     this.tags      = tags;

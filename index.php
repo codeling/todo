@@ -66,51 +66,51 @@
     <div id="toasts" class="toasts" popover="manual" aria-live="polite"></div>
     <!-- the dialogs (js/dialogs.js opens them with showModal()) -->
     <dialog id="modify_dialog" aria-labelledby="modify_dialog_title">
-      <?php echo(dialogHeaderHtml("modify_dialog_title", TodoLang::_("MODIFY_ENTRY"))); ?>
+      <?php echo(dialogHeaderHtml("modify_dialog_title", TodoLang::_("MODIFY_ENTRY"), true)); ?>
       <div class="dialog_body" tabindex="-1" autofocus>
       <form method="POST" id="modifyform">
         <input type="hidden" id="modify_id" name="modify_id" />
-        <div class="modify_line" id="modify_info"></div>
-        <div class="modify_line">
-          <span class="modify_desc"><?php echo(TodoLang::_("TODO"));?>: </span>
-          <input type="text" id="modify_todo" name="modify_todo" maxlength="255" />
-        </div><div class="modify_line">
-          <span class="modify_desc"><?php echo(TodoLang::_("START"));?>:</span>
-          <input type="date" id="modify_start" name="modify_start" />
-        </div><div class="modify_line">
-          <span class="modify_desc"><?php echo(TodoLang::_("DUE"));?>: </span>
-          <input type="date" id="modify_due" name="modify_due" />
-          <label class="modify_dueFixed"><input type="checkbox" id="modify_dueFixed" name="modify_dueFixed" /><?php echo(TodoLang::_("DUE_FIXED"));?></label>
-          <div class="modify_remark" id="modify_dueFixed_remark"><?php echo(TodoLang::_("DUE_FIXED_REMARK"));?></div>
-        </div><div class="modify_line">
-          <span class="modify_desc"><?php echo(TodoLang::_("EFFORT"));?>:</span>
-          <input type="text" id="modify_effort" name="modify_effort" maxlength="4" /><?php echo(TodoLang::_("EFFORT_REMARK"));?>
-        </div><div class="modify_line">
-          <span class="modify_desc"><?php echo(TodoLang::_("RECURRENCE"));?>:</span>
-          <input type="number" id="modify_recurrenceInterval" name="modify_recurrenceInterval" min="1" max="999" value="1" title="<?php echo(TodoLang::_("RECURRENCE_EVERY"));?>" /><select name="modify_recurrenceMode" id="modify_recurrenceMode">
+        <div id="modify_info"></div>
+        <?php echo(formLineStartHtml("modify_todo", TodoLang::_("TODO"), "TODO_HELP"));?>
+          <input type="text" id="modify_todo" name="modify_todo" maxlength="255" placeholder="<?php echo(htmlspecialchars(TodoLang::_("TODO_PLACEHOLDER")));?>" aria-describedby="modify_todo_help" />
+        <?php echo(formLineEndHtml("modify_todo", "TODO_HELP"));?>
+        <?php echo(formLineStartHtml("modify_start", TodoLang::_("START"), "START_HELP"));?>
+          <input type="date" id="modify_start" name="modify_start" aria-describedby="modify_start_help" />
+        <?php echo(formLineEndHtml("modify_start", "START_HELP"));?>
+        <?php echo(formLineStartHtml("modify_due", TodoLang::_("DUE"), "DUE_HELP"));?>
+          <input type="date" id="modify_due" name="modify_due" aria-describedby="modify_due_help" />
+          <?php echo(iconButton("modify_dueFixed", "toggleButton", "deadline", TodoLang::_("DUE_FIXED")));?>
+        <?php echo(formLineEndHtml("modify_due", "DUE_HELP"));?>
+        <?php echo(formLineStartHtml("modify_effort", TodoLang::_("EFFORT"), "EFFORT_HELP"));?>
+          <input type="number" id="modify_effort" name="modify_effort" min="0" max="9999" step="1" inputmode="numeric" placeholder="<?php echo(htmlspecialchars(TodoLang::_("EFFORT_PLACEHOLDER")));?>" aria-describedby="modify_effort_help" />
+        <?php echo(formLineEndHtml("modify_effort", "EFFORT_HELP"));?>
+        <?php echo(formLineStartHtml("modify_recurrenceMode", TodoLang::_("RECURRENCE"), "RECURRENCE_HELP"));?>
+          <input type="number" id="modify_recurrenceInterval" name="modify_recurrenceInterval" min="1" max="999" value="1" title="<?php echo(htmlspecialchars(TodoLang::_("RECURRENCE_EVERY")));?>" aria-label="<?php echo(htmlspecialchars(TodoLang::_("RECURRENCE_EVERY")));?>" aria-describedby="modify_recurrenceMode_help" /><select name="modify_recurrenceMode" id="modify_recurrenceMode" aria-describedby="modify_recurrenceMode_help">
             <option value="0"><?php echo(TodoLang::_("DONT_REPEAT"));?></option>
             <option value="1"><?php echo(TodoLang::_("REPEAT_UNIT_DAYS"));?></option>
             <option value="2"><?php echo(TodoLang::_("REPEAT_UNIT_WEEKS"));?></option>
             <option value="3"><?php echo(TodoLang::_("REPEAT_UNIT_MONTHS"));?></option>
             <option value="4"><?php echo(TodoLang::_("REPEAT_UNIT_YEARS"));?></option>
           </select>
-        </div><div class="modify_line recurrence_dependent">
-          <span class="modify_desc"><?php echo(TodoLang::_("RECURRENCE_ANCHOR"));?>:</span>
-          <select name="modify_recurrenceAnchor" id="modify_recurrenceAnchor">
+        <?php echo(formLineEndHtml("modify_recurrenceMode", "RECURRENCE_HELP"));?>
+        <div class="recurrence_dependent">
+        <?php echo(formLineStartHtml("modify_recurrenceAnchor", TodoLang::_("RECURRENCE_ANCHOR"), "RECURRENCE_ANCHOR_HELP"));?>
+          <select name="modify_recurrenceAnchor" id="modify_recurrenceAnchor" aria-describedby="modify_recurrenceAnchor_help">
             <option value="0"><?php echo(TodoLang::_("REPEAT_ANCHOR_COMPLETIONDATE"));?></option>
             <option value="1"><?php echo(TodoLang::_("REPEAT_ANCHOR_ENDDATE"));?></option>
           </select>
-        </div><div class="modify_line">
-          <span class="modify_desc"><?php echo(TodoLang::_("NOTES"));?>:</span>
-          <textarea type="text" id="modify_notes" name="modify_notes"></textarea>
-        </div><div class="modify_line">
-          <span class="modify_desc"><?php echo(TodoLang::_("TAGS"));?>:</span>
-          <input id="modify_tag_edit" />
-        </div><div class="modify_line">
-          <span class="modify_desc"><?php echo(TodoLang::_("LIST"));?>:</span>
-          <select id="modify_list">
-          </select>
+        <?php echo(formLineEndHtml("modify_recurrenceAnchor", "RECURRENCE_ANCHOR_HELP"));?>
         </div>
+        <?php echo(formLineStartHtml("modify_notes", TodoLang::_("NOTES"), "NOTES_HELP"));?>
+          <textarea id="modify_notes" name="modify_notes" placeholder="<?php echo(htmlspecialchars(TodoLang::_("NOTES_PLACEHOLDER")));?>" aria-describedby="modify_notes_help"></textarea>
+        <?php echo(formLineEndHtml("modify_notes", "NOTES_HELP"));?>
+        <?php echo(formLineStartHtml("modify_tag_edit", TodoLang::_("TAGS"), "TAGS_HELP"));?>
+          <input id="modify_tag_edit" placeholder="<?php echo(htmlspecialchars(TodoLang::_("TAGS_PLACEHOLDER")));?>" aria-describedby="modify_tag_edit_help" />
+        <?php echo(formLineEndHtml("modify_tag_edit", "TAGS_HELP"));?>
+        <?php echo(formLineStartHtml("modify_list", TodoLang::_("LIST"), "LIST_HELP"));?>
+          <select id="modify_list" aria-describedby="modify_list_help">
+          </select>
+        <?php echo(formLineEndHtml("modify_list", "LIST_HELP"));?>
       </form>
       <div class="dialog_actions">
         <?php echo(dialogButtonHtml("modify_dotoday", "", TodoLang::_("DOTODAY"), "today")); ?>
@@ -136,18 +136,17 @@
       <?php echo(dialogHeaderHtml("tag_dialog_title", TodoLang::_("EDIT_TAG"))); ?>
       <div class="dialog_body" tabindex="-1" autofocus>
         <form>
-          <div class="modify_line">
-            <span class="modify_desc"><?php echo(TodoLang::_("TAG_NAME"));?>: </span>
-            <input type="hidden" id="tag_id" name="tag_id" />
+          <input type="hidden" id="tag_id" name="tag_id" />
+          <?php echo(formLineStartHtml("tag_name", TodoLang::_("TAG_NAME")));?>
             <input type="text" id="tag_name" name="tag_name" maxlength="255" />
-          </div><div class="modify_line">
-            <span class="modify_desc"><?php echo(TodoLang::_("TAG_COUNT"));?>: </span>
+          <?php echo(formLineEndHtml("tag_name"));?>
+          <?php echo(formLineStartHtml("tag_count", TodoLang::_("TAG_COUNT")));?>
             <input type="text" id="tag_count" name="tag_count" readonly="true" />
-          </div><div class="modify_line">
-            <span class="modify_desc"><?php echo(TodoLang::_("MERGE_TO"));?>: </span>
+          <?php echo(formLineEndHtml("tag_count"));?>
+          <?php echo(formLineStartHtml("merge_tag_edit", TodoLang::_("MERGE_TO")));?>
             <input id="merge_tag_edit" >
             <?php echo(iconButton("tag_merge", "mergeButton", "merge", TodoLang::_("MERGE")));?>
-          </div>
+          <?php echo(formLineEndHtml("merge_tag_edit"));?>
         </form>
         <div id="tag_todo_container">
           <span id="tag_todo_caption"><?php echo(TodoLang::_("TAG_TODO_LIST_CAPTION"));?></span>

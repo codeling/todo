@@ -5,7 +5,7 @@ import { findItem, ItemSort, getTodoWithTag, dueSection } from './items.js';
 import { parseDate, parseDay, formatDate } from './dates.js';
 import { log, logItems, updateLog } from './log.js';
 import { postAction, reportFailure } from './api.js';
-import { tagTodoHtml } from './render.js';
+import { tagTodoHtml, setFixedDate, fixedDatePressed } from './render.js';
 import { reloadTagList, refresh } from './load.js';
 
 // The dialogs are <dialog> elements (index.php) which are opened with showModal(): the browser keeps
@@ -18,6 +18,18 @@ export function setupDialogs() {
     $('#modify_dialog').on('close', function() {
         log($T('MODIFY_DIALOG_CLOSED'));
     });
+    // the help button in the header of a dialog: shows the help texts below the fields (else they are only
+    // the tooltips of the lines, which touch devices can't show); it stays on until it is switched off
+    $('.dialog_help').attr('aria-pressed', 'false').on('click', function() {
+        var on = $(this).attr('aria-pressed') != 'true';
+        var label = $T(on ? 'HELP_HIDE' : 'HELP_SHOW');
+        $(this).attr({ 'aria-pressed': on ? 'true' : 'false', title: label, 'aria-label': label });
+        $(this.closest('dialog')).toggleClass('showHelp', on);
+    });
+    $('#modify_dueFixed').attr('aria-pressed', 'false').on('click', function() {
+        setFixedDate(this, '#modify_due', !fixedDatePressed(this));
+    });
+    $('#modify_due').on('input change', updateDueFixed);
     followVisualViewport();
 }
 
@@ -129,12 +141,12 @@ function fillModifyForm(id) {
     // set values:
     $('#modify_id').val(item.id);
     $('#modify_todo').val(item.todo);
-    $('#modify_due').val(formatDate(parseDay(item.due)));
-    $('#modify_dueFixed').prop('checked', item.dueFixed == 1);
-    updateDueFixed();
+    $('#modify_due').val(formatDate(parseDay(item.due))).removeData('filledIn');
+    $('#modify_dueFixed').attr('aria-pressed', item.dueFixed == 1 ? 'true' : 'false');
     $('#modify_start').val(formatDate(parseDay(item.start)));
     $('#modify_start').data('oldVal', formatDate(parseDay(item.start)));
-    $('#modify_effort').val(item.effort);
+    // 0: not estimated, the field is empty (and shows what goes into it)
+    $('#modify_effort').val(item.effort > 0 ? item.effort : '');
     $('#modify_notes').val(item.notes);
     // otherwise only visible in the tooltip, which touch devices can't show:
     $('#modify_info').text($T('CREATED')+': '+formatDate(parseDate(item.creationDate), true)+
@@ -169,9 +181,17 @@ function fillModifyForm(id) {
 }
 
 
-// "Fixed date" belongs to the due date: without one there is nothing to fix
-export function updateDueFixed() {
-    $('#modify_dueFixed').prop('disabled', $('#modify_due').val() == '');
+// "Fixed date" belongs to the due date: when it is cleared, there is nothing fixed any more
+function updateDueFixed() {
+    if ($('#modify_due').val() == '') {
+        $('#modify_dueFixed').attr('aria-pressed', 'false');
+    }
+}
+
+
+// what is saved: fixed only with a due date
+export function modifyDueFixed() {
+    return (fixedDatePressed('#modify_dueFixed') && $('#modify_due').val() != '') ? 1 : 0;
 }
 
 
