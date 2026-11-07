@@ -5,9 +5,9 @@
 // and load.js import each other, which is fine as long as they only call each other's functions when
 // an event happens, and not while the modules are loaded.
 import { state } from './state.js';
-import { parseDate, parseDay, formatDate } from './dates.js';
+import { parseDate, parseDay, formatDate, dateDiffInDays } from './dates.js';
 import { escapeHtml, textToHtml, icon, iconButton } from './html.js';
-import { ItemSort, getTodoWithTag } from './items.js';
+import { ItemSort, getTodoWithTag, dueSection } from './items.js';
 import { toggleCompleted, setTrashed } from './actions.js';
 import { modifyItem } from './dialogs.js';
 import { reload, reloadTagList } from './load.js';
@@ -57,12 +57,54 @@ function getRecurrenceString(recurrenceMode, recurrenceInterval)
 }
 
 
+// The open entries are in sections: "Overdue" and "Today" (fixed due dates) above all others ("Later"). The
+// headings are only there if one of the first two has entries, so a list without fixed due dates looks as before;
+// with "Today only" only these two are shown (and a line which says that there is nothing, if so).
 export function renderTable() {
     clearTable();
     var filtered = filterList();
-    for (var i=0; i<filtered.length; i++) {
-        renderItem(filtered[i]);
+    var today = new Date();
+    var sections = filtered.map(function(item) { return dueSection(item, today); });
+    var counts = { overdue: 0, today: 0, later: 0 };
+    sections.forEach(function(section) {
+        if (section != null) {
+            counts[section]++;
+        }
+    });
+    var urgent = counts.overdue + counts.today;
+    if (state.todayOnly && urgent == 0) {
+        $('#todoList').append($('<li class="sectionEmpty"></li>').text($T('NOTHING_DUE_TODAY')));
+        return;
     }
+    var current = null;
+    for (var i=0; i<filtered.length; i++) {
+        var section = sections[i];
+        if (state.todayOnly && section != 'overdue' && section != 'today') {
+            continue;
+        }
+        if (urgent > 0 && section != null && section != current) {
+            renderSectionHeading(section, counts[section]);
+            current = section;
+        }
+        renderItem(filtered[i], section, today);
+    }
+}
+
+
+function renderSectionHeading(section, count) {
+    var key = 'SECTION_' + section.toUpperCase();
+    var heading = $('<h2 class="sectionTitle"></h2>').text($T(key))
+        .append($('<span class="sectionCount"></span>').text(count));
+    $('<li class="sectionHeading"></li>').attr('data-section', section).append(heading).appendTo('#todoList');
+}
+
+
+// the toggle "Today only" in the header
+export function toggleTodayOnly() {
+    state.todayOnly = !state.todayOnly;
+    var label = $T(state.todayOnly ? 'TODAY_ONLY_HIDE' : 'TODAY_ONLY');
+    $('#todayOnly').attr({ 'aria-pressed': state.todayOnly ? 'true' : 'false', title: label, 'aria-label': label });
+    renderTable();
 }
 
 
@@ -201,24 +243,42 @@ export function updateEnterDueLabel() {
 }
 
 
-function renderItem(it) {
-    var today   = new Date();
+// what the due date of an open entry is, for its tooltip: soft (it only orders the list), fixed, or fixed and
+// overdue for a number of days
+function dueTitle(it, section, dueDate, today) {
+    if (dueDate == null || it.completed != 0) {
+        return '';
+    }
+    if (section == 'overdue') {
+        return $T('OVERDUE_SINCE_PREFIX')+(-dateDiffInDays(today, dueDate))+$T('OVERDUE_SINCE_POSTFIX');
+    }
+    return $T(it.dueFixed == 1 ? 'DUE_FIXED_TITLE' : 'DUE_SOFT_TITLE');
+}
+
+
+function renderItem(it, section, today) {
+    today = today || new Date();
+    section = (section === undefined) ? dueSection(it, today) : section;
     var dueDate = parseDay(it.due);
     var complDate = parseDate(it.completionDate);
     // due date for open, completion date for completed todos
     var dueHtml = (it.completed == 0) ? dateHtml(dueDate): dateHtml(complDate);
-    var isOverdue = it.completed==0 && dueDate != null && (today - dueDate) > 0;
+    var title = dueTitle(it, section, dueDate, today);
+    // only a fixed due date can be overdue; a soft one only orders the list and is shown muted
     var line = '<li class="todoItem'+
         ((it.completed==1)?' todo_completed':'')+
         ((it.deleted==1)?' todo_deleted':'')+
-        (isOverdue ? ' overdue' : '')+
+        (section == 'overdue' ? ' overdue' : '')+
+        (section == 'today' ? ' dueToday' : '')+
+        ((section != null && dueDate != null && it.dueFixed != 1) ? ' dueSoft' : '')+
+        ((section != null && dueDate != null && it.dueFixed == 1) ? ' dueFixed' : '')+
         '" id="todo'+it.id+'">';
     // deleted todos cannot be completed or reopened
     line += '<span class="completed"><input type="checkbox" id="completed'+it.id+'" '+
         ((it.completed==1)?'checked="true" ':'')+((it.deleted==1)?'disabled ':'')+
         'aria-label="'+escapeHtml($T('DONE'))+'" /></span>';
     line += '<span class="todoBody"><button type="button" class="todoMain" id="open'+it.id+'" title="'+todoTooltip(it)+'">'+todoTitleHtml(it)+'</button>';
-    line += '<span class="todoDue">'+dueHtml+'</span></span>';
+    line += '<span class="todoDue"'+(title == '' ? '' : ' title="'+escapeHtml(title)+'"')+'>'+dueHtml+'</span></span>';
     line += '<span class="todoActions">';
     if (it.deleted == 0) {
         line += iconButton('trash'+it.id, 'deleteButton', 'delete', $T('DELETE'));

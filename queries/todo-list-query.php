@@ -11,7 +11,7 @@ function todoListWhere($incomplete)
 
 function todoListQuery($incomplete = true)
 {
-    return "SELECT todo.id, description as todo, dueDate as due, startDate as start, effort, ".
+    return "SELECT todo.id, description as todo, dueDate as due, dueFixed, startDate as start, effort, ".
         "completed, notes, version, recurrenceMode, recurrenceInterval, recurrenceAnchor, completionDate, ".
         "creationDate, deleted, list_id ".
         "FROM todo WHERE ".todoListWhere($incomplete);

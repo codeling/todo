@@ -30,6 +30,7 @@
           <h1><?php echo(TodoConstants::AppTitle); ?></h1>
           <div id="working"><?php echo(TodoLang::_("WORKING"));?></div>
           <div id="headerActions">
+            <?php echo(iconButton("todayOnly", "toggleButton", "today", TodoLang::_("TODAY_ONLY")));?>
             <?php echo(iconButton("loadIncomplete", "toggleButton", "peek", TodoLang::_("LOAD_INCOMPLETE")));?>
             <?php echo(iconButton("refresh", "refreshButton", "refresh", TodoLang::_("REFRESH")));?>
             <?php echo(themeButtonHtml());?>
@@ -79,6 +80,8 @@
         </div><div class="modify_line">
           <span class="modify_desc"><?php echo(TodoLang::_("DUE"));?>: </span>
           <input type="date" id="modify_due" name="modify_due" />
+          <label class="modify_dueFixed"><input type="checkbox" id="modify_dueFixed" name="modify_dueFixed" /><?php echo(TodoLang::_("DUE_FIXED"));?></label>
+          <div class="modify_remark" id="modify_dueFixed_remark"><?php echo(TodoLang::_("DUE_FIXED_REMARK"));?></div>
         </div><div class="modify_line">
           <span class="modify_desc"><?php echo(TodoLang::_("EFFORT"));?>:</span>
           <input type="text" id="modify_effort" name="modify_effort" maxlength="4" /><?php echo(TodoLang::_("EFFORT_REMARK"));?>

@@ -80,7 +80,7 @@ test('values outside of their range are rejected by the database', () => {
     const insert = (col, value) => `INSERT INTO todo (creationDate, description, list_id, ${col}) ` +
         `VALUES (UTC_TIMESTAMP(), 'a', 0, ${value})`;
     for (const [col, value] of [['completed', 2], ['deleted', 2], ['recurrenceAnchor', 2], ['recurrenceMode', 5],
-        ['recurrenceInterval', 0], ['recurrenceInterval', 1000], ['effort', 10000], ['effort', -1]]) {
+        ['recurrenceInterval', 0], ['recurrenceInterval', 1000], ['effort', 10000], ['effort', -1], ['dueFixed', 2]]) {
         assert.ok(sqlError(insert(col, value)), `${col} = ${value}`);
     }
     sql(insert('effort', 9999));
@@ -183,13 +183,13 @@ test.describe('migrations', () => {
                     'ON DELETE CASCADE ON UPDATE CASCADE;' : '') + OLD_DATA);
             const res = migrate(DB_OLD, '--yes');
             assert.equal(res.status, 0, res.err);
-            assert.match(res.out, /done, database version: 16/);
+            assert.match(res.out, /done, database version: 17/);
             // duplicates merged into the tag with the lowest id, their entries moved, orphans removed:
             assert.deepEqual(sqlRows(`SELECT id, name FROM ${DB_OLD}.tags ORDER BY id`), [['1', 'Work'], ['3', 'home'], ['5', 'unused']]);
             assert.deepEqual(sqlRows(`SELECT todo_id, tag_id FROM ${DB_OLD}.todo_tags ORDER BY 1, 2`), [['1', '1'], ['2', '1'], ['2', '3']]);
             assert.deepEqual(sqlRows(`SELECT todo_id FROM ${DB_OLD}.recurringCopied`), [['1']]);
             assert.equal(sql(`SELECT COUNT(*) FROM ${DB_OLD}.todo`).trim(), '2');
-            assert.equal(sql(`SELECT value FROM ${DB_OLD}.settings WHERE \`key\`='db.version'`).trim(), '16');
+            assert.equal(sql(`SELECT value FROM ${DB_OLD}.settings WHERE \`key\`='db.version'`).trim(), '17');
             assert.equal(schemaOf(DB_OLD), schemaOf(DB_FRESH));
         });
     }
@@ -207,7 +207,7 @@ test.describe('migrations', () => {
         assert.deepEqual(sqlRows(`SELECT recurrenceMode, recurrenceInterval FROM ${DB_OLD}.todo ORDER BY id`), [
             [0, 1], [1, 1], [2, 1], [1, 10], [2, 2], [3, 1], [3, 2], [3, 3], [3, 4], [3, 6], [4, 1], [4, 2], [4, 5],
         ].map((row) => row.map(String)));
-        assert.equal(sql(`SELECT value FROM ${DB_OLD}.settings WHERE \`key\`='db.version'`).trim(), '16');
+        assert.equal(sql(`SELECT value FROM ${DB_OLD}.settings WHERE \`key\`='db.version'`).trim(), '17');
         assert.equal(schemaOf(DB_OLD), schemaOf(DB_FRESH));
     });
 
@@ -275,7 +275,7 @@ test.describe('migrations', () => {
         // the entries of the merged tags have the kept one, once
         assert.deepEqual(sqlRows(`SELECT todo_id, tag_id FROM ${DB_OLD}.todo_tags ORDER BY 1, 2`),
             [['1', '1'], ['1', '3'], ['2', '1'], ['2', '5'], ['2', '6'], ['3', '1'], ['4', '4'], ['4', '6']]);
-        assert.equal(sql(`SELECT value FROM ${DB_OLD}.settings WHERE \`key\`='db.version'`).trim(), '16');
+        assert.equal(sql(`SELECT value FROM ${DB_OLD}.settings WHERE \`key\`='db.version'`).trim(), '17');
         assert.equal(schemaOf(DB_OLD), schemaOf(DB_FRESH));
     });
 
@@ -294,11 +294,29 @@ test.describe('migrations', () => {
         assert.equal(sql(`SELECT value FROM ${DB_OLD}.settings WHERE \`key\`='db.version'`).trim(), '15');
     });
 
+    test('017: due dates become soft, those of recurring entries which repeat from their due date fixed', () => {
+        createDb(DB_OLD, sqlFile('tests', 'fixtures', 'install-v16.sql') + `
+            INSERT INTO todo (id, creationDate, description, dueDate, completed, recurrenceMode, recurrenceAnchor, list_id) VALUES
+                (1, UTC_TIMESTAMP(), 'plain with due date', '2026-01-10', 0, 0, 0, 0),
+                (2, UTC_TIMESTAMP(), 'no due date', NULL, 0, 0, 0, 0),
+                (3, UTC_TIMESTAMP(), 'monthly from the due date', '2026-01-10', 0, 3, 1, 0),
+                (4, UTC_TIMESTAMP(), 'completed, weekly from the due date', '2026-01-10', 1, 2, 1, 0),
+                (5, UTC_TIMESTAMP(), 'weekly from the completion', '2026-01-10', 0, 2, 0, 0),
+                (6, UTC_TIMESTAMP(), 'from the due date, but without one', NULL, 0, 2, 1, 0);`);
+        const res = migrate(DB_OLD, '--yes');
+        assert.equal(res.status, 0, res.err);
+        assert.match(res.out, /applying 017-due-fixed\.sql \.\.\. ok/);
+        assert.deepEqual(sqlRows(`SELECT id, dueFixed FROM ${DB_OLD}.todo ORDER BY id`),
+            [['1', '0'], ['2', '0'], ['3', '1'], ['4', '1'], ['5', '0'], ['6', '0']]);
+        assert.equal(sql(`SELECT value FROM ${DB_OLD}.settings WHERE \`key\`='db.version'`).trim(), '17');
+        assert.equal(schemaOf(DB_OLD), schemaOf(DB_FRESH));
+    });
+
     test('the runner shows the pending migrations, and does nothing if the database is up to date', () => {
         createDb(DB_OLD, sqlFile('tests', 'fixtures', 'install-v14.sql'));
         let res = migrate(DB_OLD, '--status');
         assert.equal(res.status, 0, res.err);
-        assert.match(res.out, /database version: 14, latest: 16\npending: 015-date-columns\.sql\npending: 016-plain-text\.php\n$/);
+        assert.match(res.out, /database version: 14, latest: 17\npending: 015-date-columns\.sql\npending: 016-plain-text\.php\npending: 017-due-fixed\.sql\n$/);
         assert.equal(sql(`SELECT value FROM ${DB_OLD}.settings WHERE \`key\`='db.version'`).trim(), '14');
         assert.equal(migrate(DB_OLD, '--yes').status, 0);
         res = migrate(DB_OLD, '--yes');
@@ -311,7 +329,7 @@ test.describe('migrations', () => {
         sql(`UPDATE ${DB_OLD}.settings SET value='10' WHERE \`key\`='db.version'`);
         assert.match(migrate(DB_OLD, '--yes').err, /oldest one this script upgrades is 11/);
         sql(`UPDATE ${DB_OLD}.settings SET value='99' WHERE \`key\`='db.version'`);
-        assert.match(migrate(DB_OLD, '--yes').err, /version 99 but this program only knows version 16/);
+        assert.match(migrate(DB_OLD, '--yes').err, /version 99 but this program only knows version 17/);
         sql(`DROP DATABASE ${DB_OLD}; CREATE DATABASE ${DB_OLD}`);
         const res = migrate(DB_OLD, '--yes');
         assert.equal(res.status, 1);

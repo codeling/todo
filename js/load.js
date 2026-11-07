@@ -56,6 +56,7 @@ function loadTodos() {
             state.itemList[i].recurrenceMode = parseInt(state.itemList[i].recurrenceMode);
             state.itemList[i].recurrenceInterval = parseInt(state.itemList[i].recurrenceInterval);
             state.itemList[i].recurrenceAnchor = parseInt(state.itemList[i].recurrenceAnchor);
+            state.itemList[i].dueFixed = parseInt(state.itemList[i].dueFixed) || 0;
         }
         refreshView();
         log($T('LOADING_FINISHED'));

@@ -14,6 +14,8 @@ CREATE TABLE `todo` (
 	`completed` tinyint NOT NULL DEFAULT 0,
 	`completionDate` datetime DEFAULT NULL,
 	`dueDate` date DEFAULT NULL,
+	-- 0: the due date only orders the list; 1: a real deadline (sections "Overdue" and "Today")
+	`dueFixed` tinyint NOT NULL DEFAULT 0,
 	`startDate` date DEFAULT NULL,
 	`notes` varchar(10000) DEFAULT '',
 	`version` int NOT NULL DEFAULT 1,
@@ -35,7 +37,8 @@ CREATE TABLE `todo` (
 	CONSTRAINT `todo_check_recurrenceAnchor` CHECK (`recurrenceAnchor` IN (0, 1)),
 	CONSTRAINT `todo_check_recurrenceMode` CHECK (`recurrenceMode` BETWEEN 0 AND 4),
 	CONSTRAINT `todo_check_recurrenceInterval` CHECK (`recurrenceInterval` BETWEEN 1 AND 999),
-	CONSTRAINT `todo_check_effort` CHECK (`effort` BETWEEN 0 AND 9999)
+	CONSTRAINT `todo_check_effort` CHECK (`effort` BETWEEN 0 AND 9999),
+	CONSTRAINT `todo_check_dueFixed` CHECK (`dueFixed` IN (0, 1))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;
 
 CREATE TABLE `recurringCopied` (
@@ -66,7 +69,7 @@ CREATE TABLE `settings` (
 	PRIMARY KEY(`key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;
 
-INSERT INTO `settings` (`key`, `value`) VALUES ("db.version", "16");
+INSERT INTO `settings` (`key`, `value`) VALUES ("db.version", "17");
 
 -- default list of the default user (todo.list_id defaults to 0):
 SET SESSION sql_mode = CONCAT(@@sql_mode, ',NO_AUTO_VALUE_ON_ZERO');

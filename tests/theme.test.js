@@ -239,10 +239,12 @@ test('the statistics page has the button too, and the choice is shared with the 
 for (const scheme of ['light', 'dark']) {
     test(`texts and borders have enough contrast in the ${scheme} scheme`, async () => {
         resetDb();
-        sql("INSERT INTO todo (creationDate, description, notes, startDate, dueDate, list_id) VALUES " +
-            "(UTC_TIMESTAMP(), 'Overdue entry', 'a note', DATE_SUB(UTC_DATE(), INTERVAL 5 DAY), DATE_SUB(UTC_DATE(), INTERVAL 2 DAY), 0), " +
-            "(UTC_TIMESTAMP(), 'Plain entry', NULL, UTC_DATE(), DATE_ADD(UTC_DATE(), INTERVAL 9 DAY), 0), " +
-            "(UTC_TIMESTAMP(), 'Done entry', NULL, UTC_DATE(), NULL, 0)");
+        sql("INSERT INTO todo (creationDate, description, notes, startDate, dueDate, dueFixed, list_id) VALUES " +
+            "(UTC_TIMESTAMP(), 'Overdue entry', 'a note', DATE_SUB(UTC_DATE(), INTERVAL 5 DAY), DATE_SUB(UTC_DATE(), INTERVAL 2 DAY), 1, 0), " +
+            "(UTC_TIMESTAMP(), 'Due today', NULL, DATE_SUB(UTC_DATE(), INTERVAL 5 DAY), UTC_DATE(), 1, 0), " +
+            "(UTC_TIMESTAMP(), 'Plain entry', NULL, UTC_DATE(), DATE_ADD(UTC_DATE(), INTERVAL 9 DAY), 0, 0), " +
+            "(UTC_TIMESTAMP(), 'Fixed later', NULL, UTC_DATE(), DATE_ADD(UTC_DATE(), INTERVAL 9 DAY), 1, 0), " +
+            "(UTC_TIMESTAMP(), 'Done entry', NULL, UTC_DATE(), NULL, 0, 0)");
         sql("UPDATE todo SET completed=1, completionDate=UTC_TIMESTAMP() WHERE description='Done entry'; " +
             "INSERT INTO tags (name) VALUES ('work'); INSERT INTO todo_tags SELECT t.id, g.id FROM todo t, tags g WHERE t.description='Plain entry'");
         const page = await openPage('/index.php?', { colorScheme: scheme, viewport: { width: 420, height: 800 } });
@@ -254,6 +256,13 @@ for (const scheme of ['light', 'dark']) {
             'a tag in a row': '#todoList .tagChip',
             'an overdue date': '.todoItem.overdue .todoDue',
             'a date': '.todoItem:not(.overdue) .todoDue',
+            'a soft due date': '.todoItem.dueSoft .todoDue',
+            'a fixed due date': '.todoItem.dueFixed:not(.overdue, .dueToday) .todoDue',
+            'an entry due today': '.todoItem.dueToday .todoTitle',
+            'the date of an entry due today': '.todoItem.dueToday .todoDue',
+            'the heading "Overdue"': '.sectionHeading[data-section="overdue"] .sectionTitle',
+            'the heading "Today"': '.sectionHeading[data-section="today"] .sectionTitle',
+            'the heading "Later"': '.sectionHeading[data-section="later"] .sectionTitle',
             'a date shown as a caption': '#enterLine .date_caption',
             'a list': '#lists .listTab[aria-current="false"]',
             'the list which is shown': '#lists .listTab[aria-current="true"]',

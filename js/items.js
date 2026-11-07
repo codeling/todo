@@ -1,11 +1,12 @@
 // The entries of the list: what an entry is and how entries are ordered and found.
 // (The functions which change the list are in actions.js.)
 import { state } from './state.js';
+import { parseDay, dateDiffInDays } from './dates.js';
 
 export function Todo(id, todo, due, start, effort,
         completed, notes, tags, deleted,
         version, recurrenceMode, recurrenceInterval, recurrenceAnchor,
-        completionDate, creationDate, list_id) {
+        completionDate, creationDate, list_id, dueFixed) {
     this.id        = parseInt(id);
     this.todo      = todo;
     this.due       = due;
@@ -22,6 +23,8 @@ export function Todo(id, todo, due, start, effort,
     this.completionDate = completionDate;
     this.creationDate = creationDate;
     this.list_id   = list_id;
+    // 1: the due date is a real deadline (sections "Overdue" and "Today"); 0: it only orders the list
+    this.dueFixed  = parseInt(dueFixed) || 0;
 }
 
 export function copyTodo(item)
@@ -30,7 +33,7 @@ export function copyTodo(item)
         item.id, item.todo, item.due, item.start, item.effort,
         item.completed, item.notes, item.tags, item.deleted,
         item.version, item.recurrenceMode, item.recurrenceInterval, item.recurrenceAnchor,
-        item.completionDate, item.creationDate, item.list_id
+        item.completionDate, item.creationDate, item.list_id, item.dueFixed
     );
 }
 
@@ -51,9 +54,29 @@ function compareKeys(a, b, descending) {
 }
 
 
+// The sections of the open entries, in the order in which they are shown: a fixed due date (a real deadline)
+// which has passed, one which is today, and all others. A soft due date only orders the list, so an entry with
+// one is always in "later", also when the date has passed.
+export const SECTIONS = ['overdue', 'today', 'later'];
+
+// the section of an open entry (compared by calendar day in the time zone of the browser, like the dates are
+// shown); null for a completed or deleted entry
+export function dueSection(item, today) {
+    if (item.completed != 0 || item.deleted != 0) {
+        return null;
+    }
+    var due = parseDay(item.due);
+    if (item.dueFixed != 1 || due == null) {
+        return 'later';
+    }
+    var days = dateDiffInDays(today || new Date(), due);
+    return days < 0 ? 'overdue' : (days == 0 ? 'today' : 'later');
+}
+
+
 // order of the table: not deleted before deleted, open before completed;
-// open by start, due date and description, completed by completion date (newest
-// first), start and description; the id makes it a total order
+// open by section (overdue, today, later; overdue ones by due date, the oldest first), then by start, due date and
+// description, completed by completion date (newest first), start and description; the id makes it a total order
 export function ItemSort(item1, item2) {
     var result = compareKeys(item1.deleted, item2.deleted) ||
         compareKeys(item1.completed, item2.completed);
@@ -61,7 +84,11 @@ export function ItemSort(item1, item2) {
         return result;
     }
     if (item1.completed == 0) {
-        result = compareKeys(item1.start, item2.start) ||
+        var section1 = dueSection(item1);
+        var section2 = dueSection(item2);
+        result = compareKeys(SECTIONS.indexOf(section1), SECTIONS.indexOf(section2)) ||
+            (section1 == 'overdue' ? compareKeys(item1.due, item2.due) : 0) ||
+            compareKeys(item1.start, item2.start) ||
             compareKeys(item1.due, item2.due) ||
             compareKeys(item1.todo, item2.todo);
     } else {

@@ -29,3 +29,14 @@ function todoInputError($todo, $start, $due, $tags)
     }
     return null;
 }
+
+// whether the due date is fixed (1, a real deadline) or soft (0, it only orders the list), from the parameter
+// as sent by the client ("1", "0", or missing: soft); null if the value is invalid. Without a due date there is
+// nothing to fix, so that is always 0.
+function dueFixedValue($param, $due)
+{
+    if ($param !== '' && $param !== '0' && $param !== '1') {
+        return null;
+    }
+    return ($param === '1' && $due != '') ? 1 : 0;
+}

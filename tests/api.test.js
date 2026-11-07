@@ -116,6 +116,41 @@ test('due recurring entries are reactivated by reactivate-due.php', async () => 
     assert.deepEqual(copy.tags, ['w']);
 });
 
+test('a due date is soft unless it is fixed; fixed needs a due date, and the copy of a recurring entry keeps it', async () => {
+    const sess = await session();
+    const dueFixedOf = (id) => sql(`SELECT dueFixed FROM todo WHERE id=${id}`).trim();
+    // missing or 0: soft; 1: fixed; without a due date there is nothing to fix
+    const soft = createdId(await post('enter.php', { todo: 'soft', due: '2026-01-10', start: '', tags: '', list_id: 0 }, sess));
+    assert.equal(dueFixedOf(soft), '0');
+    const fixed = createdId(await post('enter.php', { todo: 'fixed', due: '2026-01-10', start: '2026-01-01', dueFixed: 1, tags: '', list_id: 0 }, sess));
+    assert.equal(dueFixedOf(fixed), '1');
+    const noDue = createdId(await post('enter.php', { todo: 'no due date', due: '', start: '', dueFixed: 1, tags: '', list_id: 0 }, sess));
+    assert.equal(dueFixedOf(noDue), '0');
+    for (const value of ['2', 'yes', '-1', 'true']) {
+        assertError(await post('enter.php', { todo: 'x', due: '2026-01-10', start: '', dueFixed: value, tags: '', list_id: 0 }, sess),
+            422, 'Invalid value for a fixed due date!', value);
+        assertError(await post('update.php', todoFields({ id: soft, version: 1, due: '2026-01-10', dueFixed: value }), sess),
+            422, 'Invalid value for a fixed due date!', value);
+    }
+    assert.equal(sql("SELECT COUNT(*) FROM todo WHERE description='x'").trim(), '0');
+    // update sets and clears it; removing the due date clears it as well
+    assertOk(await post('update.php', todoFields({ id: soft, version: 1, due: '2026-01-10', dueFixed: 1 }), sess), { version: 2 });
+    assert.equal(dueFixedOf(soft), '1');
+    assertOk(await post('update.php', todoFields({ id: soft, version: 2, due: '2026-01-10', dueFixed: 0 }), sess), { version: 3 });
+    assert.equal(dueFixedOf(soft), '0');
+    assertOk(await post('update.php', todoFields({ id: fixed, version: 1, due: '', dueFixed: 1 }), sess), { version: 2 });
+    assert.equal(dueFixedOf(fixed), '0');
+    // the list has it, as a number
+    const items = JSON.parse((await get('query-todos.php?list_id=0&incomplete=true')).text);
+    assert.deepEqual(items.map((i) => i.dueFixed), [0, 0, 0]);
+
+    // a recurring entry: the copy is fixed if the entry was
+    const weekly = await completedDueEntry(sess, 0);
+    sql(`UPDATE todo SET dueFixed=1 WHERE id=${weekly}`);
+    assertOk(await post('reactivate-due.php', {}, sess));
+    assert.deepEqual(sqlRows(`SELECT dueDate, dueFixed FROM todo WHERE description='weekly' AND completed=0`), [['2026-01-17', '1']]);
+});
+
 test('loading the list does not modify any data', async () => {
     const sess = await session();
     await completedDueEntry(sess, 0);

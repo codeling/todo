@@ -28,6 +28,10 @@
     if ($inputError !== null) {
         rejectRequest(422, $inputError);
     }
+    $dueFixed = dueFixedValue(postParam('dueFixed'), $due);
+    if ($dueFixed === null) {
+        rejectRequest(422, "INVALID_DUE_FIXED");
+    }
     // limit of the database column, counted in characters:
     if (charLength($notes) > MAX_NOTES_LENGTH) {
         rejectRequest(422, "NOTES_TOO_LONG");
@@ -47,6 +51,7 @@
     $sql = "UPDATE todo ".
             "SET description=?, ".
                 "dueDate=?, ".
+                "dueFixed=?, ".
                 "startDate=?, ".
                 "effort=?, ".
                 "notes=?, ".
@@ -56,10 +61,11 @@
                 "recurrenceAnchor=?, ".
                 "list_id=? ".
             "WHERE id=? AND version=? AND deleted=0";
-    $affectedRows = withTransaction($db, function () use ($db, $sql, $id, $todo, $due, $start, $effort,
+    $affectedRows = withTransaction($db, function () use ($db, $sql, $id, $todo, $due, $dueFixed, $start, $effort,
         $notes, $version, $recurrenceMode, $recurrenceInterval, $recurrenceAnchor, $list_id, $tags) {
         $affectedRows = dbExec($db, $sql, array($todo,
             ($due == '') ? NULL : $due,
+            $dueFixed,
             ($start == '') ? NULL : $start,
             $effort,
             ($notes == '') ? NULL : $notes,

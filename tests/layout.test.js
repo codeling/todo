@@ -258,14 +258,14 @@ for (const width of [320, 400]) {
         sql("INSERT INTO list (id, name, user_id) VALUES (3, 'A list with a long name', 0), (4, 'Another one', 0), (5, 'And one more', 0)");
         const page = await openPage('/index.php', { viewport: { width, height: 700 } });
         assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), 'the page is wider than the screen');
-        for (const selector of ['#headerLine h1', '.themeswitch', '#menu_button']) {
+        for (const selector of ['#headerLine h1', '#todayOnly', '#loadIncomplete', '.themeswitch', '#menu_button']) {
             const box = await page.locator(selector).boundingBox();
             assert.ok(box.x >= 0 && box.x + box.width <= width, `${selector} is on the screen: ${JSON.stringify(box)}`);
         }
         // many lists scroll in their own row, not the page
         const scroll = await page.locator('#lists').evaluate((e) => [e.clientWidth, e.scrollWidth]);
         assert.ok(scroll[1] > scroll[0], 'the lists scroll: ' + scroll);
-        for (const selector of ['#lists .listTab', '#tagbar .tagFilter', '#menu_button', '.themeswitch']) {
+        for (const selector of ['#lists .listTab', '#tagbar .tagFilter', '#todayOnly', '#menu_button', '.themeswitch']) {
             const box = await page.locator(selector).first().boundingBox();
             assert.ok(box.height >= 32 && box.width >= 32, `${selector} can be tapped: ${JSON.stringify(box)}`);
         }

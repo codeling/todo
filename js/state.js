@@ -14,6 +14,9 @@ export const state = {
     // shown, all entries if there are none
     filterTags: [],
 
+    // whether only the open entries of the sections "Overdue" and "Today" are shown (the toggle in the header)
+    todayOnly: false,
+
     // whether the tag bar shows all its chips, or only the first rows of them (see updateTagBarOverflow())
     tagBarExpanded: false,
 
