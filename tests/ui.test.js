@@ -247,9 +247,9 @@ test('completed entries with the same completion date and start are ordered by d
 test('a todo just added can be started today and tapped to edit without reloading', async () => {
     resetDb();
     const page = await openPage();
-    // start in the future, else "do today" has nothing to change
+    // a soft due date, else "do today" is not offered
     await page.fill('#enter_todo', 'first');
-    await page.fill('#enter_start', '2099-01-01');
+    await page.fill('#enter_due', '2099-01-01');
     await page.click('#enter_save');
     await page.waitForFunction(() => todoApp.state.itemList.length == 1 && todoApp.state.itemList[0].id > 0);
     const first = await page.evaluate(() => todoApp.state.itemList[0].id);
@@ -263,7 +263,7 @@ test('a todo just added can be started today and tapped to edit without reloadin
     assert.equal(await page.locator('#modify_dialog').isVisible(), false);
     assert.deepEqual(await response.json(), { ok: true, version: 2 });
     await page.waitForFunction(() => todoApp.state.itemList[0].version == 2);
-    assert.equal(sql(`SELECT startDate = UTC_DATE() FROM todo WHERE id=${first}`).trim(), '1');
+    assert.equal(sql(`SELECT startDate = UTC_DATE() AND dueDate = UTC_DATE() AND dueFixed = 1 FROM todo WHERE id=${first}`).trim(), '1');
 
     // a tap on the todo opens the dialog, on a narrow screen too
     await page.setViewportSize({ width: 400, height: 800 });

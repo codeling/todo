@@ -11,7 +11,7 @@ import { logItems } from './log.js';
 import { ItemSort } from './items.js';
 import { setupAjax } from './api.js';
 import { enter, emptyTrash, storeItem, doToday, reactivate, setTrashed } from './actions.js';
-import { toggleTagFilter, toggleTagBarExpanded, updateTagBarOverflow, updateEnterDueLabel, toggleTodayOnly } from './render.js';
+import { toggleTagFilter, toggleTagBarExpanded, updateTagBarOverflow, updateEnterDueLabel, toggleTodayOnly, setEnterFixed, enterFixedPressed } from './render.js';
 import { reload, refresh, reloadTagList } from './load.js';
 import { setupDialogs, keepSuggestionsInDialog, showLogDialog, showTagsDialog, toggleRecurrenceAnchor, openTagDialog, tagDialogAction, updateDueFixed } from './dialogs.js';
 
@@ -20,18 +20,13 @@ import { setupDialogs, keepSuggestionsInDialog, showLogDialog, showTagsDialog, t
 // Nothing in the application uses it.
 window.todoApp = { state, ItemSort, logItems, reloadTagList };
 
-// when the start date is changed, move the due date by the same number of days
-// (or, if fillEmptyDue is set and no due date is set yet, set it to the start date)
-function shiftDueWithStart(startSel, dueSel, fillEmptyDue) {
+// when the start date in the dialog is changed, move the due date by the same number of days
+function shiftDueWithStart(startSel, dueSel) {
     $(startSel).on('change', function() {
         var oldVal = parseDay($(startSel).data('oldVal'));
         var newVal = parseDay($(startSel).val());
         var curDue = parseDay($(dueSel).val());
-        if (curDue == null) {
-            if (fillEmptyDue) {
-                $(dueSel).val($(startSel).val());
-            }
-        } else if (oldVal != null && newVal != null) {
+        if (curDue != null && oldVal != null && newVal != null) {
             $(dueSel).val(formatDate(addDays(curDue, dateDiffInDays(oldVal, newVal))));
         }
         $(startSel).data('oldVal', $(startSel).val());
@@ -125,8 +120,8 @@ $('#inputform, #modifyform').on('submit', function(e) {
     e.preventDefault();
 });
 $('#enter_save').on('click', enter);
-// Enter in one of the fields adds the entry (the form has no submit button, and with three fields the browser does not submit it)
-$('#enter_todo, #enter_start, #enter_due').on('keydown', function(e) {
+// Enter in one of the fields adds the entry (the form has no submit button, and with two fields the browser does not submit it)
+$('#enter_todo, #enter_due').on('keydown', function(e) {
     if (e.key === 'Enter' && !e.isComposing) {
         e.preventDefault();
         enter();
@@ -166,10 +161,12 @@ $('#loadIncomplete').on('click', function() {
 // the entries are all loaded, so it only changes what is shown
 $('#todayOnly').attr('aria-pressed', 'false').on('click', toggleTodayOnly);
 
-shiftDueWithStart('#modify_start', '#modify_due', false);
+shiftDueWithStart('#modify_start', '#modify_due');
 $('#modify_due').on('input change', updateDueFixed);
-shiftDueWithStart('#enter_start', '#enter_due', true);
 $('#enter_due').on('input change', updateEnterDueLabel);
+$('#enter_fixed').attr('aria-pressed', 'false').on('click', function() {
+    setEnterFixed(!enterFixedPressed());
+});
 $('#enter_due').on('click', function() {
     // the date input is invisible on narrow screens: open the picker on any tap
     if (window.matchMedia(narrowScreenQuery).matches && this.showPicker) {

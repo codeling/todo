@@ -93,14 +93,14 @@ input[type="text"], input[type="date"] {
     font-family:Tahoma,sans-serif;
     font-size: .75rem;
 }
-/* the line to enter an entry: the text, the start and due date, and the button */
+/* the line to enter an entry: the text, the due date, "Fixed date" and the button (the start date is in the dialog) */
 #enterLine {
     display: flex;
     align-items: center;
     gap: 6px;
     margin-bottom: 6px;
 }
-#enter_todo,#enter_start,#enter_due {
+#enter_todo,#enter_due {
     border: 1px solid var(--border);
     border-radius: 3px;
     padding: 4px;
@@ -110,9 +110,18 @@ input[type="text"], input[type="date"] {
     flex: 1 1 auto;
     min-width: 0;
 }
-#enterLine .start, #enterLine .due {
+#enterLine .due, #enter_fixed, #enter_save {
     flex: none;
     white-space: nowrap;
+}
+/* "Fixed date" is on: the due date is a real deadline, drawn like that of an entry due today */
+#enter_fixed[aria-pressed="true"] svg.icon,
+#enterLine.enterFixed #enter_due,
+#enterLine.enterFixed #enter_due_label {
+    color: var(--accent);
+}
+#enterLine.enterFixed #enter_due {
+    border-color: var(--accent);
 }
 .date_caption {
     color: var(--muted);
@@ -745,7 +754,7 @@ svg.icon {
 @media (max-width: 575px)
 {
 	/* The line to enter an entry is a bar at the bottom of the screen, where the thumb is, and stays there while the
-	   list scrolls: the text, the due date and the button. The start date is left out (today). The due date is the label
+	   list scrolls: the text, the due date, "Fixed date" and the button. The due date is the label
 	   (a calendar icon if empty) with the native date input on top of it, invisible, which opens the picker on tap. */
 	body {
 		font-size: .9375rem;
@@ -771,8 +780,16 @@ svg.icon {
 	#enter_todo {
 		min-height: 40px;
 	}
-	#enterLine .start, #enterLine .date_caption {
+	#enterLine .date_caption {
 		display: none;
+	}
+	#enter_fixed {
+		width: 36px;
+		height: 36px;
+	}
+	#enter_fixed svg.icon {
+		width: 1.5rem;
+		height: 1.5rem;
 	}
 	#enterLine .due {
 		display: inline-flex;

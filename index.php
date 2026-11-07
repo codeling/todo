@@ -53,8 +53,8 @@
         <form method="POST" id="inputform">
           <div id="enterLine">
             <input type="text" id="enter_todo" name="enter_todo" maxlength="255" placeholder="<?php echo(htmlspecialchars(TodoLang::_("ENTER_PLACEHOLDER")));?>" enterkeyhint="done" autocomplete="off" autocapitalize="sentences" />
-            <span class="start"><span class="date_caption"><?php echo(TodoLang::_("START"));?></span> <input type="date" id="enter_start" name="enter_start" /></span>
             <span class="due"><span class="date_caption"><?php echo(TodoLang::_("DUE"));?></span> <label class="due_picker"><input type="date" id="enter_due" name="enter_due" /><span id="enter_due_label"></span></label></span>
+            <?php echo(iconButton("enter_fixed", "toggleButton", "deadline", TodoLang::_("ENTER_FIXED")));?>
             <?php echo(iconButton("enter_save", "addButton", "add", TodoLang::_("ADD")));?>
           </div>
         </form>

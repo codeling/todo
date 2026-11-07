@@ -104,6 +104,7 @@ export function toggleTodayOnly() {
     state.todayOnly = !state.todayOnly;
     var label = $T(state.todayOnly ? 'TODAY_ONLY_HIDE' : 'TODAY_ONLY');
     $('#todayOnly').attr({ 'aria-pressed': state.todayOnly ? 'true' : 'false', title: label, 'aria-label': label });
+    setEnterFixed(state.todayOnly);
     renderTable();
 }
 
@@ -240,6 +241,32 @@ function dateHtml(date) {
 // there is none) over the invisible date input
 export function updateEnterDueLabel() {
     $('#enter_due_label').html(dateHtml(parseDay($('#enter_due').val())));
+}
+
+
+// "Fixed date" in the line to enter an entry: the due date of the new entry is a real deadline (without it, it only
+// orders the list). Switched on without a due date, it enters today, so that one click makes an entry for "Today";
+// switched off again, that date goes away (unless it was changed). It is on by default while only overdue and today
+// are shown, where an entry without it would not be seen.
+export function setEnterFixed(on) {
+    var due = $('#enter_due');
+    if (on && due.val() == '') {
+        due.val(formatDate(new Date()));
+        due.data('filledIn', due.val());
+    } else if (!on && due.val() != '' && due.val() == due.data('filledIn')) {
+        due.val('');
+    }
+    if (!on || due.val() != due.data('filledIn')) {
+        due.removeData('filledIn');
+    }
+    $('#enter_fixed').attr('aria-pressed', on ? 'true' : 'false');
+    $('#enterLine').toggleClass('enterFixed', on);
+    updateEnterDueLabel();
+}
+
+
+export function enterFixedPressed() {
+    return $('#enter_fixed').attr('aria-pressed') == 'true';
 }
 
 

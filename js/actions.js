@@ -7,7 +7,7 @@ import { Todo, copyTodo, findItem } from './items.js';
 import { formatDate, getUTCDate, parseDay } from './dates.js';
 import { log } from './log.js';
 import { postAction, reportFailure } from './api.js';
-import { refreshView, renderTable, updateEnterDueLabel } from './render.js';
+import { refreshView, renderTable, updateEnterDueLabel, setEnterFixed, enterFixedPressed } from './render.js';
 import { reloadTagList, refresh } from './load.js';
 import { closeDialog } from './dialogs.js';
 
@@ -304,9 +304,7 @@ function addItem(stuff) {
         log($T('CREATING_SUCCESSFUL'));
         $('#enter_todo').val('');
         $('#enter_due').val('');
-        updateEnterDueLabel();
-        $('#enter_start').val('');
-        $('#enter_start').data('oldVal', '');
+        setEnterFixed(state.todayOnly);
         // the item in the list is stuff; it has its id now, so it is shown like all others
         stuff.id = answer.id;
         refreshView();
@@ -404,23 +402,25 @@ export function enter() {
         todo = todo.substr(colon+1);
     }
     // incompletely entered date: value is empty, but input isn't
-    if ($('#enter_start')[0].validity.badInput || $('#enter_due')[0].validity.badInput) {
+    if ($('#enter_due')[0].validity.badInput) {
         notify($T('INVALID_DATE'));
         return;
-    }
-    // start/due inputs are hidden on narrow screens; default like the server:
-    // start today, no due date
-    var start = $('#enter_start').val();
-    if (start == '') {
-        start = formatDate(getUTCDate());
     }
     var due = $('#enter_due').val();
     if (due == '') {
         due = null;
     }
+    // "Fixed date": the due date is a real deadline, else it only orders the list
+    var dueFixed = (enterFixedPressed() && due != null) ? 1 : 0;
+    // the line has no start date (the dialog has): the entry starts today, the day of the server, unless it is due
+    // before that (a due date in the past, or today in a time zone behind UTC)
+    var start = formatDate(getUTCDate());
+    if (due != null && due < start) {
+        start = due;
+    }
     var stuff = new Todo(-1, todo, due, start, 1 /* effort */ ,
             0, '', tags, 0, 1, 0 /* recurrenceMode */, 1 /* recurrenceInterval */, 0 /* recurrenceAnchor */,
             null, formatDate(getUTCDate(), true),
-            state.reloadData.list_id, 0 /* dueFixed: a due date which is entered here only orders the list */);
+            state.reloadData.list_id, dueFixed);
     addItem(stuff);
 }
