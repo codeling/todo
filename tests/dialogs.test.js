@@ -273,3 +273,94 @@ test('the dialogs follow the color scheme: dark background, readable title, a vi
     assert.deepEqual(page.errors, []);
     await page.context().close();
 });
+
+test('the entry dialog: two columns, each label centered in front of its field, a short text in the empty fields', async () => {
+    seed();
+    const page = await openPage();
+    await edit(page);
+    // the label is in the middle of the height of the field(s) of its line (the notes: in front of the first line)
+    for (const id of ['modify_todo', 'modify_start', 'modify_due', 'modify_effort', 'modify_recurrenceMode', 'modify_list']) {
+        const [label, field] = await page.evaluate((id) => {
+            const box = (e) => { const r = e.getBoundingClientRect(); return { left: r.left, right: r.right, middle: r.top + r.height / 2 }; };
+            return [box(document.querySelector(`label[for="${id}"]`)), box(document.getElementById(id))];
+        }, id);
+        assert.ok(Math.abs(label.middle - field.middle) <= 1, `${id}: label at ${label.middle}, field at ${field.middle}`);
+        assert.ok(label.right < field.left, id);
+    }
+    // nothing after the fields (the effort has no "(in hours)" any more: that is the text in the empty field)
+    assert.equal(await page.locator('#modify_dialog .modify_line').evaluateAll((lines) =>
+        lines.filter((l) => l.children.length > 3).length), 0);
+    assert.equal(await page.getAttribute('#modify_effort', 'placeholder'), 'in hours');
+    assert.equal(await page.getAttribute('#modify_todo', 'placeholder'), 'What is to be done?');
+    assert.equal(await page.getAttribute('#modify_notes', 'placeholder'), 'Details, links, …');
+    assert.equal(await page.locator('#modify_dialog .tagify__input').getAttribute('data-placeholder'), 'Add tags…');
+    assert.equal(await page.locator('#modify_dueFixed').evaluate((b) => b.tagName), 'BUTTON');
+    assert.equal(await page.locator('#modify_dialog input[type="checkbox"]').count(), 0);
+    assert.deepEqual(page.errors, []);
+    await page.context().close();
+});
+
+test('the help button of the entry dialog shows a help text below each field, else they are only tooltips', async () => {
+    seed();
+    const page = await openPage();
+    await edit(page);
+    const help = page.locator('#modify_dialog_title_help');
+    const texts = page.locator('#modify_dialog .modify_help');
+    assert.equal(await texts.count(), 9);
+    // in the header, right before the close button
+    assert.equal(await help.evaluate((b) => b.nextElementSibling.classList.contains('dialog_close')), true);
+    assert.equal(await help.getAttribute('aria-pressed'), 'false');
+    assert.equal(await help.getAttribute('aria-label'), 'Show help for the fields');
+    for (const t of await texts.all()) {
+        assert.equal(await t.isVisible(), false);
+        // the tooltip of the line, and the description of its field for screen readers
+        const id = await t.getAttribute('id');
+        assert.equal(await t.evaluate((e) => e.parentElement.title), await t.textContent());
+        assert.ok(await page.locator(`[aria-describedby="${id}"]`).count() >= 1, id);
+    }
+    await help.click();
+    assert.equal(await help.getAttribute('aria-pressed'), 'true');
+    assert.equal(await help.getAttribute('aria-label'), 'Hide help for the fields');
+    // (the line of "Starts with" is hidden while the entry does not repeat)
+    assert.equal(await page.locator('#modify_dialog .modify_help:visible').count(), 8);
+    // below its field, in the column of the fields
+    const [field, text] = await page.evaluate(() => [document.getElementById('modify_effort').getBoundingClientRect().toJSON(),
+        document.getElementById('modify_effort_help').getBoundingClientRect().toJSON()]);
+    assert.ok(text.top >= field.bottom && Math.abs(text.left - field.left) <= 1, JSON.stringify([field, text]));
+    // it stays on for the next entry, until it is switched off
+    await page.keyboard.press('Escape');
+    await page.locator('#todoList > li').nth(1).locator('.todoMain').click();
+    assert.equal(await page.locator('#modify_todo_help').isVisible(), true);
+    await help.click();
+    assert.equal(await page.locator('#modify_todo_help').isVisible(), false);
+    assert.deepEqual(page.errors, []);
+    await page.context().close();
+});
+
+test('the effort is empty unless it was estimated: new entries have none, an empty field saves none', async () => {
+    seed();
+    const page = await openPage();
+    await page.fill('#enter_todo', 'New entry');
+    await page.click('#enter_save');
+    await page.waitForFunction(() => todoApp.state.itemList.some((i) => i.todo == 'New entry' && i.id > 0));
+    assert.equal(sql("SELECT effort FROM todo WHERE description='New entry'").trim(), '0');
+    await page.locator('#todoList > li', { hasText: 'New entry' }).locator('.todoMain').click();
+    assert.equal(await page.inputValue('#modify_effort'), '');
+    await page.fill('#modify_effort', '3');
+    await page.click('#modify_save');
+    await page.waitForFunction(() => todoApp.state.itemList.find((i) => i.todo == 'New entry').effort == 3);
+    assert.equal(sql("SELECT effort FROM todo WHERE description='New entry'").trim(), '3');
+    await page.locator('#todoList > li', { hasText: 'New entry' }).locator('.todoMain').click();
+    assert.equal(await page.inputValue('#modify_effort'), '3');
+    // not a whole number: not saved
+    await page.fill('#modify_effort', '1.5');
+    await page.click('#modify_save');
+    await page.locator('#modify_dialog .toast', { hasText: 'Invalid effort!' }).waitFor();
+    assert.equal(await isOpen(page, '#modify_dialog'), true);
+    await page.fill('#modify_effort', '');
+    await page.click('#modify_save');
+    await page.waitForFunction(() => todoApp.state.itemList.find((i) => i.todo == 'New entry').effort === 0);
+    assert.equal(sql("SELECT effort FROM todo WHERE description='New entry'").trim(), '0');
+    assert.deepEqual(page.errors, []);
+    await page.context().close();
+});

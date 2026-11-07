@@ -9,7 +9,7 @@ import { log } from './log.js';
 import { postAction, reportFailure } from './api.js';
 import { refreshView, renderTable, updateEnterDueLabel, setEnterFixed, enterFixedPressed } from './render.js';
 import { reloadTagList, refresh } from './load.js';
-import { closeDialog } from './dialogs.js';
+import { closeDialog, modifyDueFixed } from './dialogs.js';
 
 function setTrashedLocally(idx, trashed) {
     state.itemList[idx].deleted = trashed ? 1 : 0;
@@ -358,11 +358,16 @@ export function storeItem() {
         notify($T('ENTRY_NOT_FOUND'));
         return;
     }
+    // (a number field: what is not a whole number from 0 to 9999 is invalid, and its value is empty)
+    if (!$('#modify_effort')[0].checkValidity()) {
+        notify($T('INVALID_EFFORT'));
+        return;
+    }
     var stuff = new Todo(id,
         $('#modify_todo').val(),
         $('#modify_due').val(),
         $('#modify_start').val(),
-        $('#modify_effort').val(),
+        $('#modify_effort').val(),  // (empty: not estimated, 0)
         0,  // currently not taken into account on server, and not modifiable at server
         $('#modify_notes').val().trim(),
         state.modifyTagify.value.map((tag) => tag.value),
@@ -374,7 +379,7 @@ export function storeItem() {
         state.itemList[idx].completionDate,
         state.itemList[idx].creationDate,
         $('#modify_list').val(),
-        ($('#modify_dueFixed').prop('checked') && $('#modify_due').val() != '') ? 1 : 0
+        modifyDueFixed()
     );
     storeItemRemote(stuff, function() {
         closeDialog('#modify_dialog');
@@ -418,7 +423,7 @@ export function enter() {
     if (due != null && due < start) {
         start = due;
     }
-    var stuff = new Todo(-1, todo, due, start, 1 /* effort */ ,
+    var stuff = new Todo(-1, todo, due, start, 0 /* effort: not estimated */ ,
             0, '', tags, 0, 1, 0 /* recurrenceMode */, 1 /* recurrenceInterval */, 0 /* recurrenceAnchor */,
             null, formatDate(getUTCDate(), true),
             state.reloadData.list_id, dueFixed);

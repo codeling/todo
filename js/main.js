@@ -13,7 +13,7 @@ import { setupAjax } from './api.js';
 import { enter, emptyTrash, storeItem, doToday, reactivate, setTrashed } from './actions.js';
 import { toggleTagFilter, toggleTagBarExpanded, updateTagBarOverflow, updateEnterDueLabel, toggleTodayOnly, setEnterFixed, enterFixedPressed } from './render.js';
 import { reload, refresh, reloadTagList } from './load.js';
-import { setupDialogs, keepSuggestionsInDialog, showLogDialog, showTagsDialog, toggleRecurrenceAnchor, openTagDialog, tagDialogAction, updateDueFixed } from './dialogs.js';
+import { setupDialogs, keepSuggestionsInDialog, showLogDialog, showTagsDialog, toggleRecurrenceAnchor, openTagDialog, tagDialogAction } from './dialogs.js';
 
 // The one way to reach the state of the page from outside the modules: the UI tests
 // (tests/ui.test.js) read it, and it helps to look at the page in the browser console.
@@ -162,7 +162,6 @@ $('#loadIncomplete').on('click', function() {
 $('#todayOnly').attr('aria-pressed', 'false').on('click', toggleTodayOnly);
 
 shiftDueWithStart('#modify_start', '#modify_due');
-$('#modify_due').on('input change', updateDueFixed);
 $('#enter_due').on('input change', updateEnterDueLabel);
 $('#enter_fixed').attr('aria-pressed', 'false').on('click', function() {
     setEnterFixed(!enterFixedPressed());

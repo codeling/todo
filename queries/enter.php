@@ -20,7 +20,7 @@
     $sql = "INSERT INTO todo ".
             "(creationDate, description, dueDate, dueFixed, startDate, effort, notes, list_id) ".
         "VALUES ".
-            "(UTC_TIMESTAMP(), ?, ?, ?, COALESCE(?, UTC_DATE()), 1, NULL, ?)";
+            "(UTC_TIMESTAMP(), ?, ?, ?, COALESCE(?, UTC_DATE()), 0, NULL, ?)";   // effort 0: not estimated
     $todo_id = withTransaction($db, function () use ($db, $sql, $todo, $due, $dueFixed, $start, $list_id, $tags) {
         dbExec($db, $sql, array($todo, ($due == '') ? NULL : $due, $dueFixed,
             ($start == '') ? NULL : $start, $list_id));

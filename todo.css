@@ -89,7 +89,7 @@ h2 {
     align-items: center;
     gap: 4px;
 }
-input[type="text"], input[type="date"] {
+input[type="text"], input[type="date"], input[type="number"] {
     font-family:Tahoma,sans-serif;
     font-size: .75rem;
 }
@@ -311,39 +311,81 @@ input[disabled="disabled"] {
     background-color:var(--surface);
     float: right;
 }
-span.modify_desc {
-    display: inline-block;
-    width: 80px;
-    vertical-align: top;
-}
-/* "Fixed date" next to the due date, and what it means below (a phone shows no tooltips) */
-.modify_dueFixed {
-    display: inline-flex;
+/* A line of the form of a dialog (formLineStartHtml() in todo-core.php): the label on the left, centered in front of
+   the field(s), and the help text below them, which is only shown while the help button of the dialog is on */
+.modify_line {
+    display: grid;
+    grid-template-columns: 90px minmax(0, 1fr);
     align-items: center;
-    gap: 4px;
-    min-height: 44px;
-    margin-left: 8px;
-    vertical-align: middle;
+    column-gap: 8px;
+    margin-bottom: 6px;
 }
-.modify_dueFixed:has(input:disabled) {
-    color: var(--muted);
+.modify_field {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
 }
-.modify_remark {
-    margin: 0 0 6px 84px;
+.modify_field > input[type='text'], .modify_field > select, .modify_field > textarea, .modify_field > .tagify {
+    flex: 1 1 auto;
+    min-width: 0;
+    box-sizing: border-box;
+}
+.modify_field > input, .modify_field > select, .modify_field > textarea {
+    min-height: 28px;
+    box-sizing: border-box;
+    /* (the same font in all fields: selects and text areas have their own by default) */
+    font-family: inherit;
+    font-size: inherit;
+}
+/* (a multi-line field: the label is in front of its first line) */
+.modify_line:has(textarea) .modify_desc {
+    align-self: start;
+    padding-top: 5px;
+}
+.modify_help {
+    display: none;
+    grid-column: 2;
+    margin-top: 2px;
     font-size: .8125rem;
     color: var(--muted);
 }
-.modify_line > select, .modify_line > input[type='text'], .modify_line > input[type='date'], .modify_line > textarea, .modify_line > .tagify {
-    width: 300px;
-    box-sizing: border-box;
+dialog.showHelp .modify_help {
+    display: block;
+}
+#modify_info {
+    color: var(--muted);
+    margin-bottom: 8px;
+}
+#modify_notes {
+    min-height: 4.5em;
+    resize: vertical;
+}
+#modify_effort {
+    width: 100px;
 }
 #modify_recurrenceInterval {
+    flex: none;
     width: 70px;
-    box-sizing: border-box;
-    margin-right: 6px;
 }
-#modify_recurrenceMode {
-    width: 224px;
+/* "Fixed date" next to the due date: a toggle button (a pin) as in the line to enter an entry; when it is on, the due
+   date is drawn like that of an entry due today */
+#modify_dueFixed {
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+}
+#modify_dueFixed[aria-pressed="true"] {
+    border-color: var(--accent);
+    outline: none;
+}
+#modify_dueFixed[aria-pressed="true"] svg.icon,
+.modify_field:has(#modify_dueFixed[aria-pressed="true"]) #modify_due {
+    color: var(--accent);
+}
+.modify_field:has(#modify_dueFixed[aria-pressed="true"]) #modify_due {
+    border-color: var(--accent);
 }
 .tagify {
     --tag-hide-transition: 0s;
@@ -361,13 +403,6 @@ span.modify_desc {
 .tagify__tag {
     margin-block: 2px;
 }
-.modify_line {
-    margin-bottom: 1px;
-}
-#modify_info {
-    color: var(--muted);
-    margin-bottom: 5px;
-}
 #progress {
     border: 1px solid var(--border);
     border-radius: 4px;
@@ -384,17 +419,11 @@ span.modify_desc {
     width: 50%;
     display: inline-block;
 }
-#tag_dialog .tagify {
-    width: 280px;
-}
 #tag_todo_container {
     margin-top: 10px;
 }
 #tag_todo_caption {
     font-weight: bold;
-}
-#tag_merge {
-    vertical-align: middle;
 }
 /* the lists: tabs below the entries (they are changed rarely), which scroll sideways if there are many */
 #lists {
@@ -862,25 +891,37 @@ svg.icon {
 		display: none;
 	}
 	/* modify / tag dialog: labels above full-width fields */
-	span.modify_desc {
-		display: block;
-		width: auto;
+	.modify_line {
+		grid-template-columns: minmax(0, 1fr);
+		margin-bottom: 8px;
 	}
-	.modify_dueFixed {
-		margin-left: 0;
+	.modify_line:has(textarea) .modify_desc {
+		padding-top: 0;
 	}
-	.modify_remark {
-		margin-left: 0;
+	.modify_help {
+		grid-column: 1;
 	}
-	.modify_line > select, .modify_line > input[type='text'], .modify_line > input[type='date'], .modify_line > textarea, .modify_line > .tagify,
-	#tag_dialog .tagify {
-		width: 100%;
+	.modify_field > input[type='date'] {
+		flex: 1 1 auto;
+		min-width: 0;
+	}
+	.modify_field > input, .modify_field > select, .modify_field > textarea, #modify_dueFixed {
+		min-height: 36px;
+	}
+	#modify_dueFixed {
+		flex: none;
+		width: 36px;
+		height: 36px;
+	}
+	#modify_dueFixed svg.icon {
+		width: 1.5rem;
+		height: 1.5rem;
+	}
+	#modify_effort {
+		width: 120px;
 	}
 	#modify_recurrenceInterval {
 		width: 80px;
-	}
-	#modify_recurrenceMode {
-		width: calc(100% - 90px);
 	}
 	/* larger touch targets */
 	.iconButton {
@@ -899,7 +940,7 @@ svg.icon {
 		height: 1.5rem;
 	}
 	/* font size of at least 16px prevents iOS from zooming in on focus (it follows the text size setting above that) */
-	input, input[type="text"], input[type="date"], select, textarea, .tagify__input {
+	input, input[type="text"], input[type="date"], input[type="number"], select, textarea, .tagify__input {
 		font-size: max(1rem, 16px);
 	}
 }
@@ -946,6 +987,11 @@ dialog::backdrop {
 .dialog_title {
 	margin: 0;
 	font-size: 1.1em;
+}
+/* (the help button is next to the close button) */
+.dialog_help {
+	margin-left: auto;
+	margin-right: 4px;
 }
 .dialog_body {
 	/* (does not grow: the buttons are right below the fields, not at the bottom of a screen-high dialog) */
