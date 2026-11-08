@@ -182,6 +182,24 @@ test('a tag which is deleted is no filter any more', async () => {
     await page.context().close();
 });
 
+test('the chips and their counts follow the tags of an entry which is edited', async () => {
+    seed();
+    const page = await openPage();
+    assert.deepEqual(await chips(page), [['home', 'false', '2'], ['work', 'false', '2']]);
+    // the last entry with "work" ("Call Bob" keeps "home") loses it, and "Buy milk" gets a new tag
+    for (const [title, tags] of [['Write report', []], ['Call Bob', ['home']], ['Buy milk', ['home', 'shop']]]) {
+        await page.locator('#todoList > li', { hasText: title }).locator('.todoMain').click();
+        await page.waitForSelector('#modify_dialog', { state: 'visible' });
+        await page.evaluate((t) => { todoApp.state.modifyTagify.removeAllTags(); todoApp.state.modifyTagify.addTags(t); }, tags);
+        await page.click('#modify_save');
+        await page.waitForSelector('#modify_dialog', { state: 'hidden' });
+    }
+    await page.waitForFunction(() => !document.querySelector('#tagbar .tagFilter[data-tag="work"]'));
+    assert.deepEqual(await chips(page), [['home', 'false', '2'], ['shop', 'false', '1']]);
+    assert.deepEqual(page.errors, []);
+    await page.context().close();
+});
+
 test('the menu has Statistics, Manage tags, Show log, and Empty trash only if there is something in the trash', async () => {
     seed();
     const page = await openPage();
