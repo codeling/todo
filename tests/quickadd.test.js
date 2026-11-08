@@ -64,6 +64,34 @@ test('Enter in the field adds the entry, the field is cleared and keeps the focu
     await page.context().close();
 });
 
+test('the tags are before the first colon with a space after it: a URL or a time is no tag', async () => {
+    seed(0);
+    const page = await openPage();
+    const cases = [
+        ['work: read https://example.org/a:b', 'read https://example.org/a:b', ['work']],
+        ['https://example.org/page', 'https://example.org/page', []],
+        ['see https://example.org: later', 'see https://example.org: later', []],
+        ['10:30 call Bob', '10:30 call Bob', []],
+        ['home, errands: note: milk', 'note: milk', ['home', 'errands']],
+        [': Note: the colon stays', 'Note: the colon stays', []],
+    ];
+    for (const [typed, todo, tags] of cases) {
+        await page.fill('#enter_todo', typed);
+        await page.press('#enter_todo', 'Enter');
+        await page.waitForFunction((t) => todoApp.state.itemList.some((i) => i.todo == t && i.id > 0), todo);
+        assert.deepEqual(await page.evaluate((t) => todoApp.state.itemList.find((i) => i.todo == t).tags, todo), tags, typed);
+    }
+    assert.equal(sql("SELECT GROUP_CONCAT(name ORDER BY name) FROM tags").trim(), 'errands,home,work');
+    // only tags: nothing to enter
+    await page.fill('#enter_todo', 'work: ');
+    await page.press('#enter_todo', 'Enter');
+    await toast(page).waitFor();
+    assert.equal(await toast(page).locator('.toast_text').textContent(), 'Todo may not be empty!');
+    assert.equal(sql('SELECT COUNT(*) FROM todo').trim(), String(cases.length));
+    assert.deepEqual(page.errors, []);
+    await page.context().close();
+});
+
 test('an empty entry is refused with a message, not with a box', async () => {
     seed(0);
     const page = await openPage();

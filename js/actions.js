@@ -7,7 +7,7 @@ import { Todo, copyTodo, findItem } from './items.js';
 import { formatDate, getUTCDate, parseDay } from './dates.js';
 import { log } from './log.js';
 import { postAction, reportFailure } from './api.js';
-import { refreshView, renderTable, updateEnterDueLabel, setEnterFixed, enterFixedPressed } from './render.js';
+import { refreshView, updateEnterDueLabel, setEnterFixed, enterFixedPressed } from './render.js';
 import { reloadTagList, refresh } from './load.js';
 import { closeDialog, modifyDueFixed } from './dialogs.js';
 
@@ -45,7 +45,8 @@ function modifyLocally(item) {
     state.itemList[index].recurrenceMode = item.recurrenceMode;
     state.itemList[index].recurrenceInterval = item.recurrenceInterval;
     state.itemList[index].recurrenceAnchor = item.recurrenceAnchor;
-    renderTable();
+    // (the tags may have changed: the chips above the table and their counts too)
+    refreshView();
 }
 
 
@@ -387,6 +388,22 @@ export function storeItem() {
 }
 
 
+// "a, b: todo" in the line to enter an entry: the tags are the text before the first colon of the text, if a space
+// follows it; so a URL ("https://...") or a time ("10:30") is no list of tags, and neither is a text with a colon
+// after one of them ("see https://x.org: ..."). A colon at the start enters a text with a colon without tags
+// (": Note: ..."). Empty tags are ignored like on the server.
+export function splitTags(text) {
+    var match = /^([^:]*):\s+([\s\S]*)$/.exec(text);
+    if (match === null) {
+        return { tags: [], todo: text };
+    }
+    return {
+        tags: match[1].split(',').map((tag) => tag.trim()).filter((tag) => tag != ''),
+        todo: match[2]
+    };
+}
+
+
 export function enter() {
     log($T('CREATING_NEW_ENTRY'));
     if ($('#enter_todo').val().length == 0) {
@@ -397,14 +414,10 @@ export function enter() {
         notify($T('ANOTHER_CREATE_STILL_RUNNING'));
         return;
     }
-    var todo = $('#enter_todo').val();
-    var colon = todo.lastIndexOf(':');
-    var tags = [];
-    if (colon != -1) {
-        // "a, b: todo" (as typed, empty tags are ignored like on the server)
-        tags = todo.substr(0, colon).split(',').map((tag) => tag.trim()).filter((tag) => tag != '');
-        if (todo.charAt(colon+1) == ' ') { colon++; }
-        todo = todo.substr(colon+1);
+    var { tags, todo } = splitTags($('#enter_todo').val());
+    if (todo.trim() == '') {
+        notify($T('TODO_MAY_NOT_BE_EMPTY'));
+        return;
     }
     // incompletely entered date: value is empty, but input isn't
     if ($('#enter_due')[0].validity.badInput) {

@@ -12,6 +12,11 @@ section "Overdue" on top of the list, those due today in "Today" (highlighted), 
 (it is on by default while only overdue and today are shown). A new entry starts today; the start date can be changed
 in the dialog.
 
+Tags can be typed in front of the text in the line to enter an entry: `home, errands: buy milk`. The tags are the
+text before the first colon, if a space follows it, so a URL (`https://...`) or a time (`10:30`) is no tag, and
+the text may contain more colons (`work: read https://example.org`). A colon at the start enters a text which
+contains `: ` without tags (`: Note: ...`).
+
 Dark mode: the pages follow the color scheme of the system (`prefers-color-scheme`), and the button
 in the header of the list and of the statistics page chooses the system's scheme, light or dark (kept in
 the cookie `todo_theme`, which holds no personal data). The colors are custom properties with `light-dark()`
