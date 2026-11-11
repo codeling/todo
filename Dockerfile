@@ -2,7 +2,7 @@
 # The container speaks plain HTTP on port 8080 and runs as an unprivileged user, so it also works
 # with rootless Docker / Podman. The application only runs over HTTPS with HTTP authentication:
 # put a reverse proxy which terminates TLS in front of it.
-FROM php:8.5.12-apache@sha256:4cc63b3d4e05c40da73e7af5d39364ca2678ac07208919497bda3bbab975be95
+FROM php:8.5.12-apache@sha256:08af36df144462d84c7f16190557eec06cb9f656882685610b712a15eec54d46
 
 RUN docker-php-ext-install mysqli \
     && a2enmod headers \
