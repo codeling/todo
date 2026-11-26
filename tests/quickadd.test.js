@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const { chromium } = require('playwright');
-const { BASE, sql, resetDb, session } = require('./lib');
+const { BASE, sql, sqlEventually, resetDb, session } = require('./lib');
 
 // Adding an entry (Enter, the bar at the bottom of a phone), the messages (they were alert() boxes), and the web app
 // manifest. Needs the server and the database, see tests/README.md.
@@ -171,7 +171,7 @@ test('moving an entry to the trash shows a message with Undo, which takes it bac
     assert.equal(await toast(page).locator('.toast_action').textContent(), 'Undo');
     await toast(page).locator('.toast_action').click();
     await page.waitForFunction((i) => todoApp.state.itemList.find((e) => e.id == i).deleted == 0, id);
-    assert.equal(sql(`SELECT deleted FROM todo WHERE id=${id}`).trim(), '0');
+    assert.equal(await sqlEventually(`SELECT deleted FROM todo WHERE id=${id}`, '0'), '0');
     assert.equal(await toast(page).count(), 0, 'the message is gone');
     // (restoring from the trash shows no message of this kind)
     assert.deepEqual(page.errors, []);
