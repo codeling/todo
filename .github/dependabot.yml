@@ -15,6 +15,13 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    ignore:
+      # only stable releases: Dependabot has no way to skip pre-releases of image tags, and reads
+      # e.g. 8.6.0RC7-apache as a new minor version. So only the patch releases of the PHP minor
+      # version in use come as pull requests. A new minor version (8.6) is changed by hand, once it
+      # is released, along with the PHP versions of tests.yml (and the required checks, see README.md)
+      - dependency-name: "php"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
   # the database image of compose.yaml (tests.yml and tests/container.sh use the same one:
   # update them along with it)
   - package-ecosystem: "docker-compose"
