@@ -9,5 +9,5 @@ $sql = "SELECT id, name, COUNT(todo_id) AS tagCount FROM tags t ".
     "LEFT JOIN todo_tags r ON t.id=r.tag_id ".
 	"WHERE EXISTS (SELECT 1 FROM todo i WHERE r.todo_id=i.id AND i.list_id=?)".
     "GROUP BY t.id ".
-    "ORDER BY tagCount DESC";
+    "ORDER BY tagCount DESC, t.name";
 sendJson(jsonQueryResults($db, $sql, array($list_id)));
