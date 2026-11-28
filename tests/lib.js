@@ -17,6 +17,17 @@ function sqlRows(query) {
         .map((l) => l.split('\t').map((v) => (v === 'NULL' ? null : v)));
 }
 
+// the result of a query once it is `expected`: the page shows a change at once, the server stores it a moment later
+async function sqlEventually(query, expected, timeout = 5000) {
+    const end = Date.now() + timeout;
+    let result = sql(query).trim();
+    while (result !== expected && Date.now() < end) {
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        result = sql(query).trim();
+    }
+    return result;
+}
+
 function resetDb() {
     sql("SET FOREIGN_KEY_CHECKS=0; TRUNCATE recurringCopied; TRUNCATE todo_tags; TRUNCATE tags; " +
         "TRUNCATE todo; TRUNCATE list; SET FOREIGN_KEY_CHECKS=1; " +
@@ -92,4 +103,4 @@ function createdId(res, what) {
     return res.json.id;
 }
 
-module.exports = { BASE, sql, sqlRows, resetDb, session, post, get, answer, assertOk, assertError, createdId };
+module.exports = { BASE, sql, sqlRows, sqlEventually, resetDb, session, post, get, answer, assertOk, assertError, createdId };

@@ -286,5 +286,9 @@ build of `container.yml` publishes them. For that, enable in the repository sett
   runs stays "expected"). GitHub also suggests names of earlier runs (e.g. `php-lint` without
   a version), which do not run any more.
 
+Only stable releases are tested: Dependabot cannot skip pre-releases of image tags (it proposed
+`php:8.6.0RC7-apache`), so the PHP image only gets patch updates, and a new PHP minor version is changed by hand
+once it is released (in the `Dockerfile` and the PHP versions of `tests.yml`, see above).
+
 Minor and major updates, npm updates (`vendor/` has to be regenerated, see `dependabot.yml`) and
 updates of only the image digest (rebuilds of the same version) are left to be merged by hand.
